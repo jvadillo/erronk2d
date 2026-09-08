@@ -4,6 +4,7 @@ namespace App\Domain\Grades;
 
 use App\Models\Challenge;
 use App\Models\Classroom;
+use App\Models\User;
 use Brick\Math\BigRational;
 use Illuminate\Support\Collection;
 
@@ -147,11 +148,15 @@ final class Gradebook
 
     public function report(Classroom $classroom): array
     {
-        $classroom->load(['academicYear.periods', 'modules', 'users']);
+        $classroom->load(['academicYear.periods', 'modules']);
         $challenges = $classroom->challenges()->with('publications')->get();
         $books = $challenges->mapWithKeys(fn ($ch) => [$ch->id => $this->challenge($ch)]);
         $rows = [];
-        foreach ($classroom->users->where('role', 'student') as $student) {
+        foreach (User::where('role', 'student')->where(function ($query) use ($classroom) {
+            $query->where('classroom_id', $classroom->id)->orWhereIn('id', function ($participants) use ($classroom) {
+                $participants->select('challenge_student.user_id')->from('challenge_student')->join('challenges', 'challenges.id', '=', 'challenge_student.challenge_id')->where('challenges.classroom_id', $classroom->id);
+            });
+        })->get() as $student) {
             foreach ($classroom->modules as $module) {
                 $periodGrades = [];
                 $periods = [];

@@ -26,8 +26,8 @@ class CreateAdministrator extends Command
 
             return self::FAILURE;
         }
-        $data = ['email' => strtolower($this->argument('email')), 'name' => $this->option('name') ?: $this->ask('Nombre'), 'password' => $this->secret('Contraseña (mínimo 12 caracteres)'), 'password_confirmation' => $this->secret('Repite la contraseña')];
-        $validator = Validator::make($data, ['email' => 'required|email|max:255|unique:users,email', 'name' => 'required|string|max:150', 'password' => 'required|string|min:12|max:200|confirmed']);
+        $data = ['email' => strtolower($this->argument('email')), 'name' => $this->option('name') ?: $this->ask('Nombre'), 'password' => $this->secret('Contraseña (mínimo 10 caracteres)'), 'password_confirmation' => $this->secret('Repite la contraseña')];
+        $validator = Validator::make($data, ['email' => 'required|email|max:255|unique:users,email', 'name' => 'required|string|max:150', 'password' => 'required|string|min:10|max:200|confirmed']);
         if ($validator->fails()) {
             foreach ($validator->errors()->all() as $error) {
                 $this->error($error);

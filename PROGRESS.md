@@ -1,43 +1,62 @@
 # Estado de la tarea
 
 ## Objetivo
-Publicar Erronk2D en https://erronk2d.jonvadillo.com en este VPS compartido, usando Resend API para el correo. Reanudar leyendo este archivo, `git status --short` y `git log -5 --oneline`; abrir solo los archivos necesarios para el siguiente paso. Actualizar este documento y hacer commits por avances verificables.
+Implementar las seis correcciones planificadas en `docs/plan-correcciones.md`, preservando los datos y el aislamiento del VPS. En esta sesión se pidió PLANIFICAR: las correcciones aún no están implementadas. Reanudar con este archivo, `git status --short` y `git log -5 --oneline`; leer después solo los archivos del siguiente paso.
 
 ## Completado
-- Aplicación Laravel 13.30.1/PHP 8.4, Inertia 3/Vue 3 implementada y demostración privada en 127.0.0.1:8082 (`erronk2d-preview`, SQLite ficticia).
-- 34 pruebas PHP/273 aserciones en SQLite y PostgreSQL; 3 pruebas Playwright correctas. Imágenes app/web probadas con PostgreSQL aislado; entorno `erronk2d-test` retirado.
-- Primer commit `7842bb4`; instrucciones de reanudación en AGENTS.md y este archivo.
-- SDK Resend 1.13.0 instalado; `.env.production` privada creada con APP_KEY y contraseña DB nuevas. Dominio Resend creado (sin verificar): id `8ecf5fd6-892f-4fb5-89f1-0798c6b783bf`, región eu-west-1. Usuario avisado por pregunta asíncrona para añadir DNS de `docs/resend.md`; no hay acceso al panel GoDaddy desde aquí.
-- Preparados Compose de producción, Nginx/PHP-FPM propios, sitio Caddy y copia de seguridad. No había commits; se crea ahora una base revisable.
-- DNS comprobado 2026-09-08 11:07 UTC: A del subdominio = 2.28.118.113, sin AAAA ni CAA restrictivo. DNS administrado en domaincontrol.com. No hace falta cambiar A.
+- Producción accesible en https://erronk2d.jonvadillo.com. Última comprobación 2026-09-08: login HTTPS 200 y API vecina 200. PostgreSQL propio; administrador inicial creado, no repetir bootstrap.
+- Laravel 13.30.1/PHP 8.4, Inertia 3/Vue 3. Imágenes app/web `f249689`; configuración de red corregida en `9625eee`. Demo SQLite detenida y conservada; 8082 ahora pertenece a producción.
+- Resend SDK 1.13.0 integrado, recuperación en español y errores controlados. Dominio y tres registros DNS verificados; remitente definitivo `no-reply@erronk2d.jonvadillo.com` aplicado recreando solo app. Envío anterior con remitente provisional confirmado `delivered`; no repetir envíos al reanudar.
+- Copia local privada de producción: `backups/production-20260908-resend`. Copia anterior del gateway: `backups/gateway-20260908T112052Z.tar.gz`. Restauración todavía no ensayada.
+- Diagnóstico de equipos confirmado mediante código y recuentos: clase sin matrícula, reto sin participantes ni equipos. El alta no asigna clase; el reto copia la matrícula al crearse; después la edición de matrícula queda bloqueada.
+- Plan con prioridades, migración segura y criterios de aceptación guardado en commit `c4c8a80`. Documentación de producción actualizada y `git diff --cached --check` correcto. No hubo cambios PHP/Vue ni se repitieron sus pruebas.
+- Validación anterior: 34 pruebas PHP/273 aserciones en SQLite y PostgreSQL, 3 pruebas de navegador sobre demo. Después, 7 pruebas de correo/acceso/57 aserciones correctas; no confundir con una ejecución nueva de toda la suite.
 
 ## Pendiente
-1. Pruebas Resend/acceso: 7 pruebas correctas, HTTP simulado; correos en español, errores del proveedor controlados. SDK listo para desplegar. Esperar DNS de correo/verificar dominio; mientras tanto envío de prueba solo a jvadillo@egibide.org con onboarding@resend.dev. Clave únicamente en `.env.production`.
-2. Producción creada: PostgreSQL `erronk2d-postgres-1`, migraciones aplicadas, volúmenes propios. Imágenes `erronk2d-app:f249689` y `erronk2d-web:f249689` construidas. Cuenta administradora jvadillo@egibide.org ya creada; no repetir bootstrap. Credenciales solo en `ops/production-credentials` (600/ignorado).
-3. Demo `erronk2d-preview` detenida (conservada). Producción app/web/DB arrancada. Docker no publica puertos de contenedores conectados solo a red interna: corregido web a [backend, outbound], recreado y comprobado HTTP local 200.
-4. Copia gateway ya creada: `backups/gateway-20260908T112052Z.tar.gz`. Candidato completo validado sin cambios en gateway activo. Añadido `sites/erronk2d.caddy`; Caddy validado y recargado sin reinicio; comprobar ahora HTTPS público, login y API existente y verificar HTTPS público y API existente.
-5. Verificar correo real autorizado, dejar credenciales iniciales privadas, actualizar documentos/PROGRESS y hacer commit final.
+1. Clase obligatoria y única del estudiante en alta, edición e importación; migrar asociaciones existentes sin inventar matrículas ni perder histórico.
+2. Reparar explícitamente participantes de retos vacíos sin evaluaciones/publicaciones; permitir corregir matrícula actual; errores de equipos claros en español, validación 2–5 y conservación de selecciones.
+3. Contraseñas mínimas de 10 caracteres; renombrar curso conservando Evaluaciones e identificadores cuando estén bloqueadas.
+4. Sustituir Personas por Profesor y Estudiante; mostrar y editar clase del estudiante.
+5. Comando repetible para mantener 40 estudiantes y 10 profesores FICTICIOS activos tras cada despliegue, además de las cuentas manuales. No están cargados aún. No ejecutar el seeder actual en producción.
+6. Aislar navegador de producción antes de ejecutar su suite: actualmente apunta a 8082. Pruebas, imágenes versionadas, copia, migración propia y despliegue por bloques.
+7. Comprobar entrega con remitente definitivo en la siguiente recuperación solicitada; ensayar restauración aislada; acordar copias externas cifradas/retención; medir carga y supervisar TLS/espacio. Exportación XLSX/PDF de servidor quedan como ampliaciones.
 
-## Archivos relevantes
-- `prompt.md`: especificación original; `docs/decisiones.md`: aclaraciones funcionales aceptadas. No releer todo en cada sesión salvo cambio de alcance.
-- `app/Domain/Grades/{Calculator,Gradebook,ChallengeWriter}.php`: cálculo, matriz y escrituras auditadas.
-- `config/mail.php`, `config/services.php`, `app/Http/Controllers/AuthController.php`: correo y recuperación.
-- `compose.production.yml`, `.env.production.example`, `ops/Dockerfile.production`, `ops/erronk2d.caddy`, `ops/backup`.
-- `tests/Feature/AccessTest.php`, `tests/Feature/ImportTest.php`, `tests/Feature/GradebookTest.php`; `tests/Browser/workflows.spec.ts` (solo demo local).
-- `docs/despliegue.md`, `docs/auditoria-vps.md`, `docs/estado-proyecto.md`, `README.md`.
-- PHP/Composer SOLO en Docker: imagen `erronk2d-php:local`; wrapper `bash ops/php`. Pint `--dirty` necesita imagen `composer:2`, que sí contiene Git.
-- Pruebas PostgreSQL: `docker compose -f compose.test.yml run --rm tests`; limpieza exclusivamente `docker compose -f compose.test.yml --profile runtime down`.
+## Archivos relevantes y modificados
+- Modificados en esta sesión: `README.md`, `docs/despliegue.md`, `docs/estado-proyecto.md`, `docs/resend.md`; creado `docs/plan-correcciones.md`. Commit `c4c8a80`.
+- Modificado privado/ignorado: `.env.production`, solo remitente; copia nueva en `backups/`. No incluir secretos ni copias en Git.
+- `PROGRESS.md`: esta actualización es el último cambio solicitado; queda sin commit para no efectuar modificaciones posteriores. Incluirla en el siguiente avance autorizado.
+- Siguiente bloque: `app/Http/Controllers/{SetupController,ChallengeController,ImportController}.php`, `app/Domain/Grades/ChallengeWriter.php`, `app/Models/{User,Classroom,Challenge}.php`, `database/migrations/2026_09_07_000001_create_academic_domain.php` (referencia; crear migración nueva).
+- Interfaz: `resources/js/pages/{Setup,Challenge}.vue`; pruebas: `tests/Feature/{SetupTest,ImportTest,GradebookTest,AccessTest,ResendMailTest}.php`, `tests/Browser/workflows.spec.ts`.
+- Operación: `compose.production.yml`, `compose.test.yml`, `ops/{php,backup,Dockerfile.production,erronk2d.caddy}`. Credenciales iniciales solo en `ops/production-credentials` (600/ignorado), no imprimir.
+- Fuente funcional: `prompt.md` y `docs/decisiones.md`; nuevas aclaraciones/plan en `docs/plan-correcciones.md`. `.ai/rules` no existe en esta revisión; comprobar instrucciones aplicables antes de editar código. PHP/Composer se ejecutan en Docker, no en el host.
 
 ## Decisiones
-- Autorizado por usuario el 2026-09-08: integrar Resend, guardar progreso, commits frecuentes y continuar hasta acceso público por subdominio. El DNS y la incorporación/recarga específica de Caddy están ahora autorizados dentro de ese despliegue.
-- VPS compartido: no instalar/actualizar paquetes del host, no reiniciar Docker ni servicios ajenos, no tocar datos existentes/firewall ni limpiar recursos globalmente.
-- Gateway `/home/deploy/projects/gateway`, Compose `web-gateway`, contenedor `web-gateway-caddy-1`, Caddy 2.11.4 red host 80/443. Importa `/etc/caddy/sites/*.caddy`. Sitio actual `athletes.caddy`: https://2.28.118.113 → 127.0.0.1:8000. API y PostgreSQL athletes deben seguir saludables.
-- Producción Erronk2D: imágenes app/web, PostgreSQL propio, redes/volúmenes propios, 127.0.0.1:8082. Puerto ocupado por demo hasta sustitución; conservar su SQLite.
-- Nota equipo → reparto opcional registrado por profesor → TODAS las defensas → ÚNICA nota final de reto compartida en el 40% de todos los módulos. Un examen y una defensa por estudiante/módulo/reto. Transversales del profesor por estudiante/criterio/reto SIN módulo; auto/coevaluación del alumnado siguen activas.
-- Retos ponderados por Evaluación; media de Evaluaciones para curso; ausencias pendientes, no cero; publicaciones inmutables y reapertura motivada.
-- Secretos/datos excluidos de Git y contexto: `.env`, `.env.production`, `ops/demo-credentials`, SQLite, `test-results/`. Commits locales; no remoto configurado.
+- Una clase ACTUAL por estudiante; propuesta: referencia única con clave foránea, conservando participantes históricos de retos. Profesorado puede pertenecer a varias clases. Resolver matrículas ambiguas expresamente.
+- Reponer solo cuentas ficticias identificadas, sin duplicarlas, reiniciar contraseñas ni sobrescribir notas. Propuesta: dos clases ficticias de 20; administradores y cuentas manuales no cuentan en 40/10. Limpieza solo cuando el usuario la solicite.
+- Unificar mínimo de 10 también en cambio/recuperación de contraseña para mantener coherencia. Renombrar curso no debe recrear periodos.
+- Nota equipo → reparto opcional registrado por profesor → TODAS las defensas → ÚNICA nota final del reto usada en el 40% de TODOS los módulos. Un examen/defensa por estudiante/módulo/reto; transversales del profesor por estudiante/criterio/reto SIN módulo; auto/coevaluación activas.
+- Retos ponderados por Evaluación, curso media de Evaluaciones; ausencias pendientes, no cero; publicaciones inmutables y reapertura motivada.
+- VPS compartido: no tocar servicios ajenos, firewall ni paquetes globales. Gateway compartido `/home/deploy/projects/gateway`, contenedor `web-gateway-caddy-1`; API athletes en 127.0.0.1:8000. Erronk2D web solo 127.0.0.1:8082, DB privada, redes/volúmenes propios.
+- Web necesita redes backend + outbound para publicar loopback en este Docker; problema ya resuelto, no repetir auditoría ni cambiar Docker global. Git local sin remoto.
 
-## Último error
-```text
-Docker 29 no materializó PortBindings de web al tener solo red internal:true (NetworkSettings.Ports era null). RESUELTO: web conectado a backend + outbound, publicación exclusivamente en 127.0.0.1:8082 verificada HTTP 200. No modificar firewall ni Docker global.
+## Último error / errores pendientes
+`The teams.0.students field is required` (y equipo 2): listas vacías porque el reto no tiene participantes; falta corregir matrícula y proporcionar recuperación explícita del reto vacío. No se ha corregido aún. Sigue bloqueado el renombrado de cursos con retos y siguen vigentes las demás limitaciones enumeradas en Pendiente.
+
+## Siguiente acción concreta
+Reproducir en una prueba aislada el flujo «alta sin matrícula → reto vacío → equipos sin integrantes». Después implementar clase actual única y la reparación explícita del reto vacío, con las protecciones históricas del plan. No ejecutar escrituras de prueba sobre producción.
+
+## Comandos para verificarlo
+```sh
+git status --short
+git log -5 --oneline
+git diff --check
+# Regresión del próximo bloque; estas pruebas existentes aún no cubren todas las correcciones:
+bash ops/php vendor/bin/phpunit tests/Feature/SetupTest.php tests/Feature/ImportTest.php tests/Feature/GradebookTest.php
+# PostgreSQL separado; ejecutar cuando corresponda validar la migración:
+docker compose -f compose.test.yml run --rm tests
+docker compose -f compose.test.yml --profile runtime down
+# Lecturas de producción:
+docker compose --env-file .env.production -f compose.production.yml ps
+curl -fsS --max-time 15 -o /dev/null -w 'HTTPS %{http_code}\n' https://erronk2d.jonvadillo.com/login
 ```
+No ejecutar Playwright hasta separar su destino del puerto 8082 de producción. No repetir bootstrap, seeder local, envío de correo, migraciones ni pruebas ya verificadas solo para recuperar contexto.

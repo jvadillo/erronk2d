@@ -23,7 +23,12 @@ class Classroom extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->whereIn('role', ['teacher', 'admin']);
+    }
+
+    public function students(): HasMany
+    {
+        return $this->hasMany(User::class)->where('role', 'student');
     }
 
     public function modules(): HasMany

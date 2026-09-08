@@ -22,8 +22,8 @@ class ImportController extends Controller
         $r->validate(['kind' => 'required|in:student,teacher,module', 'file' => 'required|file|max:2048|extensions:csv,xlsx', 'commit' => 'required|boolean', 'classroom_id' => 'nullable|exists:classrooms,id']);
         $permission = ['student' => 'manage_students', 'teacher' => 'manage_teachers', 'module' => 'manage_modules'][$r->kind];
         abort_unless($r->user()->allows($permission), 403);
-        if ($r->kind === 'module') {
-            $r->validate(['classroom_id' => 'required|exists:classrooms,id']);
+        if (in_array($r->kind, ['student', 'module'], true)) {
+            $r->validate(['classroom_id' => 'required|integer|exists:classrooms,id'], ['classroom_id.required' => 'Selecciona una clase antes de importar.']);
         }
         $path = $r->file('file')->getRealPath();
         $rows = [];
@@ -107,10 +107,9 @@ class ImportController extends Controller
                         $module->teachers()->attach($row['teacher_id']);
                         $module->classroom->users()->syncWithoutDetaching([$row['teacher_id']]);
                     } else {
-                        $user = User::create(['name' => $row['name'], 'email' => strtolower($row['email']), 'role' => $r->kind, 'password' => Str::random(64), 'permissions' => []]);
-                        if ($r->classroom_id) {
+                        $user = User::create(['name' => $row['name'], 'email' => strtolower($row['email']), 'role' => $r->kind, 'password' => Str::random(64), 'permissions' => [], 'classroom_id' => $r->kind === 'student' ? $r->integer('classroom_id') : null]);
+                        if ($r->classroom_id && $r->kind === 'teacher') {
                             $class = Classroom::findOrFail($r->classroom_id);
-                            abort_if($class->challenges()->exists(), 422, 'Importa en una clase sin retos para conservar las matrículas históricas.');
                             $class->users()->attach($user->id);
                         }
                     }
@@ -119,6 +118,6 @@ class ImportController extends Controller
             });
         }
 
-        return response()->json(['count' => count($valid), 'errors' => $errors, 'preview' => array_slice($valid, 0, 10), 'committed' => $r->boolean('commit') && count($errors) === 0]);
+        return response()->json(['count' => count($valid), 'errors' => $errors, 'classroom' => $r->classroom_id ? Classroom::findOrFail($r->classroom_id)->only(['id', 'name']) : null, 'preview' => array_slice($valid, 0, 10), 'committed' => $r->boolean('commit') && count($errors) === 0]);
     }
 }

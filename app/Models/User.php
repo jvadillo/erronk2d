@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
-#[Fillable(['name', 'email', 'password', 'role', 'permissions', 'active'])]
+#[Fillable(['name', 'email', 'password', 'role', 'permissions', 'active', 'classroom_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -36,6 +37,11 @@ class User extends Authenticatable
     }
 
     public const PERMISSIONS = ['manage_academics', 'manage_students', 'manage_teachers', 'manage_modules', 'manage_teams', 'manage_challenges', 'manage_rubrics', 'evaluate_team', 'evaluate_transversal', 'enter_exams', 'enter_defenses', 'modify_grades', 'publish_results'];
+
+    public function classroom(): BelongsTo
+    {
+        return $this->belongsTo(Classroom::class);
+    }
 
     public function allows(string $permission): bool
     {

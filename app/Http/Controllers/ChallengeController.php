@@ -52,7 +52,7 @@ class ChallengeController extends Controller
                 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30],
                 'team_rubric' => ['name' => $team->name, 'items' => $team->items], 'transversal_rubric' => ['name' => $transversal->name, 'items' => $transversal->items]]);
             $ch->modules()->sync($data['module_ids']);
-            $ch->students()->sync($class->users()->where('role', 'student')->where('active', true)->pluck('users.id'));
+            $ch->students()->sync($class->students()->where('active', true)->pluck('users.id'));
             AuditEvent::create(['user_id' => $request->user()->id, 'challenge_id' => $ch->id, 'action' => 'create', 'after' => $ch->toArray()]);
 
             return $ch;

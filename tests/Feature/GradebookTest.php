@@ -42,8 +42,7 @@ class GradebookTest extends TestCase
         $p = $year->periods()->create(['name' => '1.ª Evaluación', 'position' => 1]);
         $year->periods()->create(['name' => '2.ª Evaluación', 'position' => 2]);
         $this->classroom = Classroom::create(['academic_year_id' => $year->id, 'name' => '2DAW-A']);
-        $this->students = User::factory()->count(3)->create(['role' => 'student'])->all();
-        $this->classroom->users()->attach(array_map(fn ($s) => $s->id, $this->students));
+        $this->students = User::factory()->count(3)->create(['role' => 'student', 'classroom_id' => $this->classroom->id])->all();
         $this->modules = [];
         foreach (['PROG', 'DWEC'] as $code) {
             $m = Module::create(['classroom_id' => $this->classroom->id, 'name' => $code, 'code' => $code]);
@@ -63,6 +62,54 @@ class GradebookTest extends TestCase
     private function write(array $data, ?User $actor = null)
     {
         return $this->actingAs($actor ?? $this->admin)->postJson('/challenges/'.$this->challenge->id, ['revision' => $this->challenge->fresh()->revision, ...$data]);
+    }
+
+    public function test_empty_challenge_can_import_current_students_before_organizing_teams(): void
+    {
+        $this->challenge->teams()->delete();
+        $this->challenge->students()->detach();
+        $this->write(['action' => 'teams', 'teams' => [['name' => 'Equipo 1', 'students' => []]]])
+            ->assertUnprocessable()->assertJsonFragment(['teams.0.students' => ['Selecciona entre 2 y 5 estudiantes para el equipo 1.']]);
+        $this->write(['action' => 'participants'])->assertOk()->assertJsonCount(3, 'book.rows');
+        $this->write(['action' => 'teams', 'teams' => [['name' => 'Equipo 1', 'students' => array_map(fn ($student) => $student->id, $this->students)]]])->assertOk();
+        $this->assertSame(3, $this->challenge->memberships()->count());
+        $this->assertDatabaseHas('audit_events', ['challenge_id' => $this->challenge->id, 'action' => 'participants']);
+    }
+
+    public function test_reports_retain_students_after_their_current_class_changes(): void
+    {
+        $this->complete();
+        $before = app(Gradebook::class)->report($this->classroom)['rows'];
+        $other = $this->classroom->academicYear->classrooms()->create(['name' => 'Otra clase']);
+        $this->students[0]->update(['classroom_id' => $other->id]);
+        $this->assertSame($before, app(Gradebook::class)->report($this->classroom)['rows']);
+    }
+
+    public function test_participant_repair_rejects_populated_historical_unauthorized_and_stale_requests(): void
+    {
+        $this->write(['action' => 'participants'])->assertUnprocessable();
+        $this->challenge->teams()->delete();
+        $this->challenge->students()->detach();
+        $this->write(['action' => 'participants'], $this->students[0])->assertForbidden();
+        $this->write(['action' => 'participants', 'revision' => 0])->assertUnprocessable();
+        $this->write(['action' => 'participants', 'revision' => 999])->assertConflict();
+        Publication::create(['challenge_id' => $this->challenge->id, 'version' => 1, 'snapshot' => [], 'published_by' => $this->admin->id]);
+        $this->write(['action' => 'participants'])->assertUnprocessable();
+        $this->assertSame(0, $this->challenge->students()->count());
+        $this->assertDatabaseMissing('audit_events', ['action' => 'participants']);
+    }
+
+    public function test_participant_repair_excludes_inactive_students_and_rejects_empty_class(): void
+    {
+        $this->challenge->teams()->delete();
+        $this->challenge->students()->detach();
+        foreach ($this->students as $student) {
+            $student->update(['active' => false]);
+        }
+        $this->write(['action' => 'participants'])->assertUnprocessable()->assertJsonValidationErrors('participants');
+        $this->students[0]->update(['active' => true]);
+        $this->write(['action' => 'participants'])->assertOk()->assertJsonCount(1, 'book.rows');
+        $this->assertSame([$this->students[0]->id], $this->challenge->students()->pluck('users.id')->all());
     }
 
     private function teamGrade(): void

@@ -65,7 +65,7 @@ class AuthController extends Controller
 
     public function reset(Request $request): RedirectResponse
     {
-        $data = $request->validate(['token' => 'required', 'email' => 'required|email', 'password' => ['required', 'confirmed', 'min:12', 'max:200']]);
+        $data = $request->validate(['token' => 'required', 'email' => 'required|email', 'password' => ['required', 'confirmed', 'min:10', 'max:200']]);
         $status = Password::reset($data, function (User $user, string $password) {
             $user->forceFill(['password' => Hash::make($password)])->setRememberToken(Str::random(60));
             $user->save();

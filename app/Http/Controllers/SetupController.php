@@ -23,7 +23,7 @@ class SetupController extends Controller
     {
         abort_if($request->user()->role === 'student', 403);
 
-        return Inertia::render('Setup', ['years' => AcademicYear::with('periods')->get(), 'classrooms' => Classroom::with('users', 'modules.teachers')->get(), 'users' => User::orderBy('name')->get(), 'rubrics' => Rubric::all(), 'permissions' => User::PERMISSIONS]);
+        return Inertia::render('Setup', ['years' => AcademicYear::with('periods')->withExists(['periods as periods_locked' => fn ($query) => $query->whereHas('challenges')])->get(), 'classrooms' => Classroom::with('users', 'students', 'modules.teachers')->get(), 'users' => User::with('classroom')->orderBy('name')->get(), 'rubrics' => Rubric::all(), 'permissions' => User::PERMISSIONS]);
     }
 
     public function store(Request $r, string $entity): RedirectResponse
@@ -36,31 +36,39 @@ class SetupController extends Controller
             switch ($entity) {
                 case 'year':
                     $data = $r->validate(['name' => ['required', 'string', 'max:100', Rule::unique('academic_years')->ignore($id)], 'periods' => 'required|array|min:1|max:12', 'periods.*' => 'required|string|max:100|distinct']);
-                    $model = $id ? AcademicYear::findOrFail($id) : new AcademicYear;
+                    $model = $id ? AcademicYear::lockForUpdate()->findOrFail($id) : new AcademicYear;
                     $before = $model->toArray();
-                    if ($id && $model->periods()->whereHas('challenges')->exists()) {
+                    $periodsChanged = $model->periods()->orderBy('position')->pluck('name')->all() !== $data['periods'];
+                    if ($id && $periodsChanged && $model->periods()->whereHas('challenges')->exists()) {
                         throw ValidationException::withMessages(['periods' => 'El curso ya tiene retos. Sus Evaluaciones se conservan para proteger el histórico.']);
                     }
                     $model->fill(['name' => $data['name']])->save();
-                    $model->periods()->delete();
-                    foreach ($data['periods'] as $pos => $name) {
-                        $model->periods()->create(['name' => $name, 'position' => $pos + 1]);
+                    if ($periodsChanged) {
+                        $model->periods()->delete();
+                        foreach ($data['periods'] as $pos => $name) {
+                            $model->periods()->create(['name' => $name, 'position' => $pos + 1]);
+                        }
                     }
                     break;
                 case 'classroom':
-                    $data = $r->validate(['name' => ['required', 'string', 'max:100', Rule::unique('classrooms')->where('academic_year_id', $r->academic_year_id)->ignore($id)], 'academic_year_id' => 'required|exists:academic_years,id', 'user_ids' => 'present|array', 'user_ids.*' => 'integer|distinct|exists:users,id']);
+                    $data = $r->validate(['name' => ['required', 'string', 'max:100', Rule::unique('classrooms')->where('academic_year_id', $r->academic_year_id)->ignore($id)], 'academic_year_id' => 'required|exists:academic_years,id', 'user_ids' => 'present|array', 'user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])]]);
                     $model = $id ? Classroom::findOrFail($id) : new Classroom;
-                    if ($id && $model->challenges()->exists()) {
-                        throw ValidationException::withMessages(['name' => 'La matrícula de una clase con retos queda conservada. Crea una nueva clase para cambiar su composición.']);
+                    if ($id && $model->academic_year_id !== (int) $data['academic_year_id'] && ($model->challenges()->exists() || $model->students()->exists())) {
+                        throw ValidationException::withMessages(['academic_year_id' => 'Una clase con estudiantes o retos conserva su curso académico.']);
                     }
                     $before = $model->toArray();
                     $model->fill(collect($data)->except('user_ids')->all())->save();
-                    $model->users()->sync($data['user_ids']);
+                    $removedTeachers = $model->users()->pluck('users.id')->diff($data['user_ids']);
+                    $model->users()->detach($removedTeachers);
+                    $model->users()->syncWithoutDetaching($data['user_ids']);
                     break;
                 case 'student': case 'teacher':
-                    $data = $r->validate(['name' => 'required|string|max:150', 'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($id)], 'password' => ($id ? 'nullable' : 'required').'|string|min:12|max:200', 'active' => 'required|boolean', 'permissions' => 'sometimes|array', 'permissions.*' => [Rule::in(User::PERMISSIONS)]]);
-                    $model = $id ? User::where('role', $entity)->findOrFail($id) : new User(['role' => $entity]);
-                    $before = $model->only(['id', 'name', 'email', 'role', 'permissions', 'active']);
+                    $data = $r->validate(['name' => 'required|string|max:150', 'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($id)], 'password' => ($id ? 'nullable' : 'required').'|string|min:10|max:200', 'active' => 'required|boolean', 'permissions' => 'sometimes|array', 'permissions.*' => [Rule::in(User::PERMISSIONS)]]);
+                    if ($entity === 'student') {
+                        $data += $r->validate(['classroom_id' => 'required|integer|exists:classrooms,id'], ['classroom_id.required' => 'Selecciona una clase para el estudiante.', 'classroom_id.exists' => 'La clase seleccionada no existe.']);
+                    }
+                    $model = $id ? User::where('role', $entity)->lockForUpdate()->findOrFail($id) : new User(['role' => $entity]);
+                    $before = $model->only(['id', 'name', 'email', 'role', 'permissions', 'active', 'classroom_id']);
                     if (isset($data['permissions']) && $r->user()->role !== 'admin') {
                         abort(403, 'Solo el administrador puede conceder permisos.');
                     }

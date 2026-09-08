@@ -32,6 +32,8 @@ final class ChallengeWriter
             }
             $before = $this->book->challenge($challenge);
             switch ($action) {
+                case 'participants': $this->participants($actor, $challenge);
+                    break;
                 case 'teams': $this->teams($actor, $challenge, $input);
                     break;
                 case 'allocation': $this->allocation($actor, $challenge, $input);
@@ -91,13 +93,33 @@ final class ChallengeWriter
         }
     }
 
+    private function participants(User $actor, Challenge $challenge): void
+    {
+        $this->permit($actor, 'manage_teams');
+        if ($challenge->students()->exists() || $challenge->teams()->exists() || $challenge->assessments()->exists() || $challenge->moduleGrades()->exists() || $challenge->memberships()->exists() || $challenge->publications()->exists()) {
+            throw ValidationException::withMessages(['participants' => 'Solo se pueden incorporar participantes a un reto vacío, sin equipos, evaluaciones ni publicaciones.']);
+        }
+        $students = $challenge->classroom->students()->where('active', true)->pluck('users.id');
+        if ($students->isEmpty()) {
+            throw ValidationException::withMessages(['participants' => 'La clase no tiene estudiantes activos. Asígnalos primero desde Organización → Estudiante.']);
+        }
+        $challenge->students()->sync($students);
+    }
+
     private function teams(User $actor, Challenge $ch, array $input): void
     {
         $this->permit($actor, 'manage_teams');
         if ($ch->assessments()->exists() || $ch->moduleGrades()->exists() || $ch->memberships()->whereNotNull('allocation')->exists()) {
             throw ValidationException::withMessages(['teams' => 'El equipo ya tiene evaluaciones. Conserva su composición para mantener la trazabilidad.']);
         }
-        Validator::make($input, ['teams' => 'required|array|min:1', 'teams.*.name' => 'required|string|max:100|distinct', 'teams.*.students' => 'required|array|min:2|max:5', 'teams.*.students.*' => 'required|integer'])->validate();
+        Validator::make($input, ['teams' => 'required|array|min:1', 'teams.*.name' => 'required|string|max:100|distinct', 'teams.*.students' => 'required|array|min:2|max:5', 'teams.*.students.*' => 'required|integer'], [
+            'teams.required' => 'Añade al menos un equipo.',
+            'teams.*.name.required' => 'Escribe el nombre del equipo :position.',
+            'teams.*.name.distinct' => 'Los nombres de los equipos deben ser distintos.',
+            'teams.*.students.required' => 'Selecciona entre 2 y 5 estudiantes para el equipo :position.',
+            'teams.*.students.min' => 'Selecciona entre 2 y 5 estudiantes para el equipo :position.',
+            'teams.*.students.max' => 'Selecciona entre 2 y 5 estudiantes para el equipo :position.',
+        ])->validate();
         $ids = collect($input['teams'])->pluck('students')->flatten();
         if ($ids->unique()->count() !== $ids->count() || $ids->diff($ch->students()->pluck('users.id'))->isNotEmpty()) {
             throw ValidationException::withMessages(['teams' => 'Cada estudiante debe pertenecer al reto y aparecer en un solo equipo.']);

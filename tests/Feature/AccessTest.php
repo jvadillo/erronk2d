@@ -63,7 +63,7 @@ class AccessTest extends TestCase
     public function test_first_administrator_command_creates_account_and_rejects_a_second(): void
     {
         $this->artisan('erronk2d:admin', ['email' => 'admin@example.test', '--name' => 'Administradora'])
-            ->expectsQuestion('Contraseña (mínimo 12 caracteres)', 'UnaClaveSegura123')
+            ->expectsQuestion('Contraseña (mínimo 10 caracteres)', 'UnaClaveSegura123')
             ->expectsQuestion('Repite la contraseña', 'UnaClaveSegura123')
             ->assertSuccessful();
         $admin = User::where('email', 'admin@example.test')->firstOrFail();

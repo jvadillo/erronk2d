@@ -45,9 +45,9 @@ class DatabaseSeeder extends Seeder
             $students = [];
             $names = ['Ainhoa Agirre', 'Aitor Fernández', 'Alaia Martínez', 'Ander García', 'Ane Lertxundi', 'Asier Ibáñez', 'Danel Ortiz', 'Eider Pérez', 'Ekain Gómez', 'Elene Ruiz', 'Enara Sánchez', 'Gorka Martín', 'Haizea López', 'Iker Rodríguez', 'Irati Etxeberria', 'June Alonso', 'Lander Bilbao', 'Maialen Álvarez', 'Nora Urrutia', 'Unai Romero'];
             foreach ($names as $i => $name) {
-                $students[] = User::create(['name' => $name, 'email' => 'alumno'.($i + 1).'@erronk2d.test', 'password' => $password, 'role' => 'student']);
+                $students[] = User::create(['name' => $name, 'email' => 'alumno'.($i + 1).'@erronk2d.test', 'password' => $password, 'role' => 'student', 'classroom_id' => $class->id]);
             }
-            $class->users()->attach(array_map(fn ($u) => $u->id, [...$students, ...$teachers]));
+            $class->users()->attach(array_map(fn ($u) => $u->id, $teachers));
             $modules = [];
             foreach ([['PROG', 'Programación'], ['DWEC', 'Desarrollo web en entorno cliente'], ['DWES', 'Desarrollo web en entorno servidor'], ['DIW', 'Diseño de interfaces web']] as $i => [$code,$name]) {
                 $m = Module::create(['classroom_id' => $class->id, 'name' => $name, 'code' => $code]);
