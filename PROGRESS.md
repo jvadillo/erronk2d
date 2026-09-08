@@ -6,11 +6,13 @@ Publicar Erronk2D en https://erronk2d.jonvadillo.com en este VPS compartido, usa
 ## Completado
 - Aplicación Laravel 13.30.1/PHP 8.4, Inertia 3/Vue 3 implementada y demostración privada en 127.0.0.1:8082 (`erronk2d-preview`, SQLite ficticia).
 - 34 pruebas PHP/273 aserciones en SQLite y PostgreSQL; 3 pruebas Playwright correctas. Imágenes app/web probadas con PostgreSQL aislado; entorno `erronk2d-test` retirado.
+- Primer commit `7842bb4`; instrucciones de reanudación en AGENTS.md y este archivo.
+- SDK Resend 1.13.0 instalado; `.env.production` privada creada con APP_KEY y contraseña DB nuevas. Dominio Resend creado (sin verificar): id `8ecf5fd6-892f-4fb5-89f1-0798c6b783bf`, región eu-west-1. Usuario avisado por pregunta asíncrona para añadir DNS de `docs/resend.md`; no hay acceso al panel GoDaddy desde aquí.
 - Preparados Compose de producción, Nginx/PHP-FPM propios, sitio Caddy y copia de seguridad. No había commits; se crea ahora una base revisable.
 - DNS comprobado 2026-09-08 11:07 UTC: A del subdominio = 2.28.118.113, sin AAAA ni CAA restrictivo. DNS administrado en domaincontrol.com. No hace falta cambiar A.
 
 ## Pendiente
-1. Integrar SDK Resend con transporte nativo Laravel, verificar dominio/remitente permitido, probar recuperación sin envíos externos en tests. Clave aportada por usuario: guardar solo en `.env.production`, jamás copiarla a este archivo/Git/logs.
+1. Pruebas Resend/acceso: 7 pruebas correctas, HTTP simulado; correos en español, errores del proveedor controlados. SDK listo para desplegar. Esperar DNS de correo/verificar dominio; mientras tanto envío de prueba solo a jvadillo@egibide.org con onboarding@resend.dev. Clave únicamente en `.env.production`.
 2. Crear producción vacía con secretos propios y cuenta administradora del usuario; no utilizar datos ni contraseñas demo.
 3. Construir imágenes nuevas y sustituir exclusivamente la vista previa en 8082 por Compose `erronk2d`.
 4. Respaldar configuración gateway; validar nuevo sitio junto al existente, añadir solo `sites/erronk2d.caddy`, recargar Caddy y verificar HTTPS público y API existente.

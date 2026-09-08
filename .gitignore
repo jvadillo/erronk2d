@@ -33,3 +33,6 @@ Thumbs.db
 /.agents/
 
 /backups/
+
+/ops/production-credentials
+/ops/initial-admin-input

@@ -1,0 +1,39 @@
+{
+  "object": "domain",
+  "id": "8ecf5fd6-892f-4fb5-89f1-0798c6b783bf",
+  "name": "erronk2d.jonvadillo.com",
+  "created_at": "2026-09-08 11:13:47.780066+00",
+  "status": "not_started",
+  "capabilities": {
+    "sending": "enabled",
+    "receiving": "disabled"
+  },
+  "records": [
+    {
+      "record": "DKIM",
+      "name": "resend._domainkey.erronk2d",
+      "value": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQM6EmpF0eRv0FkbaPay0ESraqeoAnhKcWaRtx/CJX2IQfldtMNBS2hZ8sEx6opXZFDyiuGu8HGm7T6kEgQVFtxHYFlqAPIxQcEzufrYj+kaPIO9/CtgneUxlnPC9D7AKNYD8hoIkGHzszas9Of1o41Zn1+M6fckzNiu57atRaRwIDAQAB",
+      "type": "TXT",
+      "status": "not_started",
+      "ttl": "Auto"
+    },
+    {
+      "record": "SPF",
+      "name": "send.erronk2d",
+      "type": "MX",
+      "ttl": "Auto",
+      "status": "not_started",
+      "value": "feedback-smtp.eu-west-1.amazonses.com",
+      "priority": 10
+    },
+    {
+      "record": "SPF",
+      "name": "send.erronk2d",
+      "value": "v=spf1 include:amazonses.com ~all",
+      "type": "TXT",
+      "ttl": "Auto",
+      "status": "not_started"
+    }
+  ],
+  "region": "eu-west-1"
+}

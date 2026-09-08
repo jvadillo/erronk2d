@@ -8,12 +8,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class AuthController extends Controller
 {
@@ -51,7 +53,12 @@ class AuthController extends Controller
     public function forgot(Request $request): RedirectResponse
     {
         $data = $request->validate(['email' => 'required|email']);
-        Password::sendResetLink($data);
+        try {
+            Password::sendResetLink($data);
+        } catch (TransportExceptionInterface $exception) {
+            Log::warning('No se pudo entregar el correo de recuperación.', ['mailer' => config('mail.default')]);
+            throw ValidationException::withMessages(['email' => 'No se ha podido enviar el enlace. Inténtalo de nuevo más tarde o contacta con la administración.']);
+        }
 
         return back()->with('success', 'Si la cuenta existe, recibirás un enlace para restablecer la contraseña.');
     }
