@@ -43,7 +43,7 @@ services:
       dockerfile: ops/Dockerfile.production
       target: web
     ports: ["127.0.0.1:${ERRONK2D_PORT:-8082}:8080"]
-    networks: [backend]
+    networks: [backend, outbound]
     mem_limit: 64m
     cpus: 0.2
     pids_limit: 64

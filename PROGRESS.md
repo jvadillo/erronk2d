@@ -13,9 +13,9 @@ Publicar Erronk2D en https://erronk2d.jonvadillo.com en este VPS compartido, usa
 
 ## Pendiente
 1. Pruebas Resend/acceso: 7 pruebas correctas, HTTP simulado; correos en español, errores del proveedor controlados. SDK listo para desplegar. Esperar DNS de correo/verificar dominio; mientras tanto envío de prueba solo a jvadillo@egibide.org con onboarding@resend.dev. Clave únicamente en `.env.production`.
-2. Crear producción vacía con secretos propios y cuenta administradora del usuario; no utilizar datos ni contraseñas demo.
-3. Construir imágenes nuevas y sustituir exclusivamente la vista previa en 8082 por Compose `erronk2d`.
-4. Respaldar configuración gateway; validar nuevo sitio junto al existente, añadir solo `sites/erronk2d.caddy`, recargar Caddy y verificar HTTPS público y API existente.
+2. Producción creada: PostgreSQL `erronk2d-postgres-1`, migraciones aplicadas, volúmenes propios. Imágenes `erronk2d-app:f249689` y `erronk2d-web:f249689` construidas. Cuenta administradora jvadillo@egibide.org ya creada; no repetir bootstrap. Credenciales solo en `ops/production-credentials` (600/ignorado).
+3. Demo `erronk2d-preview` detenida (conservada). Producción app/web/DB arrancada. Docker no publica puertos de contenedores conectados solo a red interna: corregido web a [backend, outbound], recreado y comprobado HTTP local 200.
+4. Copia gateway ya creada: `backups/gateway-20260908T112052Z.tar.gz`. Candidato completo validado sin cambios en gateway activo. Añadido `sites/erronk2d.caddy`; Caddy validado y recargado sin reinicio; comprobar ahora HTTPS público, login y API existente y verificar HTTPS público y API existente.
 5. Verificar correo real autorizado, dejar credenciales iniciales privadas, actualizar documentos/PROGRESS y hacer commit final.
 
 ## Archivos relevantes
@@ -39,5 +39,5 @@ Publicar Erronk2D en https://erronk2d.jonvadillo.com en este VPS compartido, usa
 
 ## Último error
 ```text
-Ningún fallo de aplicación pendiente. La comprobación HTTP del ensayo inicial falló por una clave fija de pruebas mal formada; corregida en compose.test.yml y ensayo completo correcto. No afecta a las claves nuevas de producción.
+Docker 29 no materializó PortBindings de web al tener solo red internal:true (NetworkSettings.Ports era null). RESUELTO: web conectado a backend + outbound, publicación exclusivamente en 127.0.0.1:8082 verificada HTTP 200. No modificar firewall ni Docker global.
 ```

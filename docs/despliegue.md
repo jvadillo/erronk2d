@@ -10,7 +10,7 @@ Internet → Caddy compartido (HTTPS erronk2d.jonvadillo.com)
                                             → PostgreSQL Erronk2D (red privada)
 ```
 
-`compose.production.yml` define proyecto `erronk2d`: imágenes app/web, red privada `backend`, salida propia para correo desde app, volúmenes `database` y `storage`, logs rotados y límites de recursos. PHP y PostgreSQL no publican puertos. Nginx y PHP ejecutan con UID 1000 y sin capacidades añadidas. El presupuesto máximo configurado de RAM es 704 MiB entre los tres servicios; no es una medida de consumo real ni sustituye una prueba de carga.
+`compose.production.yml` define proyecto `erronk2d`: imágenes app/web, red privada `backend`, red propia outbound para correo y publicación local del servicio web, volúmenes `database` y `storage`, logs rotados y límites de recursos. PHP y PostgreSQL no publican puertos. El servicio web también pertenece a la red propia outbound: Docker de este VPS no materializa PortBindings si el contenedor solo está conectado a una red internal. La publicación sigue limitada a 127.0.0.1:8082. Nginx y PHP ejecutan con UID 1000 y sin capacidades añadidas. El presupuesto máximo configurado de RAM es 704 MiB entre los tres servicios; no es una medida de consumo real ni sustituye una prueba de carga.
 
 `TRUSTED_PROXIES=REMOTE_ADDR` confía en el Nginx interno inmediato para la cadena de cabeceras de Caddy. Es correcto únicamente mientras PHP-FPM no sea expuesto y el puerto web siga limitado a loopback. Verificar cabeceras HTTPS, cookies y dirección de cliente antes de abrir el servicio.
 
