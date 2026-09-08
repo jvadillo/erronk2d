@@ -8,15 +8,11 @@ La cadena de cálculo es: **rúbrica del equipo → reparto opcional registrado 
 
 Implementados: acceso y recuperación de contraseña; roles y permisos; cursos con Evaluaciones, clases, personas y módulos; rúbricas reutilizables con copias históricas; retos y equipos; matriz editable, reparto, defensas y examen único por módulo; autoevaluación y coevaluación; transversales compartidas; publicación y reapertura; informes ponderados de Evaluaciones y media de curso; importación CSV/XLSX y exportación CSV/impresión PDF.
 
-La demostración está escuchando **solo en `127.0.0.1:8082` del VPS**. Contiene datos ficticios. Para verla desde tu ordenador:
+Producción está disponible en **https://erronk2d.jonvadillo.com**, con PostgreSQL propio y correo por la API de Resend. El dominio de correo está verificado y el remitente definitivo configurado. Las credenciales iniciales se conservan únicamente en `ops/production-credentials`, archivo privado e ignorado por Git.
 
-```sh
-ssh -N -L 8082:127.0.0.1:8082 deploy@2.28.118.113
-```
+La antigua demostración SQLite está detenida y conservada. El puerto `127.0.0.1:8082` pertenece ahora a producción: no arrancar allí la vista previa ni ejecutar la suite de navegador contra él.
 
-Abre `http://localhost:8082`. Cuentas: `admin@erronk2d.test`, `profesor1@erronk2d.test` y `alumno1@erronk2d.test`. La contraseña está en el archivo local protegido `ops/demo-credentials`; no se incluye en Git ni en este documento. La demostración utiliza SQLite; producción utilizará PostgreSQL propio.
-
-El dominio público y SMTP están pendientes de configuración autorizada. La recuperación de contraseña local escribe al log y no envía correo real.
+Las correcciones solicitadas sobre matrículas, equipos, contraseñas, cursos, pestañas y 40/10 cuentas ficticias están en [el plan de correcciones](docs/plan-correcciones.md); todavía no están implementadas.
 
 ## Desarrollo aislado
 
@@ -35,16 +31,7 @@ bash ops/php artisan db:seed
 npm run build
 ```
 
-Para iniciar la vista previa si no existe el contenedor:
-
-```sh
-docker run -d --name erronk2d-preview --cpus=.75 --memory=384m --pids-limit=100 \
-  --user 1000:1000 --cap-drop ALL --security-opt no-new-privileges:true \
-  -p 127.0.0.1:8082:8082 -v "$PWD:/app" -w /app erronk2d-php:local \
-  php artisan serve --host=0.0.0.0 --port=8082 --no-reload
-```
-
-El puerto se comparte de forma alternativa con el futuro servicio de producción; nunca se deben arrancar ambos sobre 8082.
+Para reactivar una demostración, preparar un puerto propio libre y adaptar la configuración de navegador antes de iniciarla. No reutilizar el puerto 8082 de producción.
 
 ## Verificación
 
@@ -57,15 +44,7 @@ npm run build
 
 PostgreSQL de pruebas usa red privada, almacenamiento temporal y ningún puerto público. El `down` anterior solo corresponde al proyecto `erronk2d-test`. No usar limpiezas globales de Docker.
 
-Las pruebas de navegador usan datos ficticios locales y restauran las notas que modifican; generan eventos de auditoría de demostración. Requieren la vista previa y su contraseña local:
-
-```sh
-docker run --rm --name erronk2d-browser --network host --cpus=1 --memory=1g \
-  --pids-limit=200 --shm-size=128m --user 1000:1000 -v "$PWD:/app" -w /app \
-  mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test
-```
-
-No ejecutar esa suite contra datos reales. Las capturas se generan en `test-results/`, fuera de Git. Las pruebas PHP utilizan bases separadas mediante `phpunit.xml`.
+La suite de navegador modifica datos ficticios y genera auditoría. **No ejecutarla en la configuración actual:** apunta al puerto 8082 que ahora pertenece a producción. Su adaptación a un entorno de navegador separado está incluida en el plan. Las capturas existentes están en `test-results/`, fuera de Git. Las pruebas PHP utilizan bases separadas mediante `phpunit.xml`.
 
 ## Operación y alcance
 
