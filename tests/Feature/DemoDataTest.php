@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\AcademicYear;
+use App\Models\Module;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -48,8 +50,14 @@ class DemoDataTest extends TestCase
     {
         $this->artisan('erronk2d:demo')->assertSuccessful();
         User::where('demo_key', 'demo.student.40')->firstOrFail()->delete();
+        $teacher = User::where('demo_key', 'demo.teacher.10')->firstOrFail();
+        Module::where('demo_key', 'demo.module.10')->firstOrFail()->teachers()->detach($teacher);
+        DB::table('classroom_user')->where('user_id', $teacher->id)->delete();
+        $teacher->delete();
         $this->artisan('erronk2d:demo')->assertSuccessful();
         $this->assertSame(40, User::where('role', 'student')->whereNotNull('demo_key')->count());
         $this->assertDatabaseHas('users', ['demo_key' => 'demo.student.40', 'active' => true]);
+        $this->assertSame(10, User::where('role', 'teacher')->whereNotNull('demo_key')->count());
+        $this->assertSame(User::where('demo_key', 'demo.teacher.10')->firstOrFail()->id, Module::where('demo_key', 'demo.module.10')->firstOrFail()->teachers()->firstOrFail()->id);
     }
 }

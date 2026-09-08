@@ -45,9 +45,9 @@ class EnsureDemoData extends Command
                     $teacher = $this->person('teacher', $i, null);
                     $classroom = $classes[intdiv($i - 1, 5)];
                     $module = $this->record(Module::class, 'demo.module.'.$i, ['classroom_id' => $classroom->id, 'name' => 'Módulo de prueba '.$i, 'code' => 'PR'.str_pad((string) $i, 2, '0', STR_PAD_LEFT)]);
-                    if ($module->wasRecentlyCreated) {
+                    if ($module->wasRecentlyCreated || ! $module->teachers()->exists()) {
                         $module->teachers()->attach($teacher);
-                        $classroom->users()->syncWithoutDetaching([$teacher->id]);
+                        $module->classroom->users()->syncWithoutDetaching([$teacher->id]);
                     }
                 }
                 for ($i = 1; $i <= 40; $i++) {

@@ -156,7 +156,7 @@ final class Gradebook
             $query->where('classroom_id', $classroom->id)->orWhereIn('id', function ($participants) use ($classroom) {
                 $participants->select('challenge_student.user_id')->from('challenge_student')->join('challenges', 'challenges.id', '=', 'challenge_student.challenge_id')->where('challenges.classroom_id', $classroom->id);
             });
-        })->get() as $student) {
+        })->orderBy('name')->orderBy('id')->get() as $student) {
             foreach ($classroom->modules as $module) {
                 $periodGrades = [];
                 $periods = [];

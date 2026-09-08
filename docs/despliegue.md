@@ -96,3 +96,19 @@ Primera copia local de producción creada en `backups/production-20260908-resend
 Construir imágenes antes de la ventana de mantenimiento; ejecutar pruebas con SQLite/PostgreSQL y navegador. Etiquetar la entrega y conservar las imágenes anteriores. Hacer copia, poner Erronk2D en mantenimiento, migrar exclusivamente su base, sustituir solo app/web y verificar antes de reabrir.
 
 Si falla una primera activación, retirar solo el sitio Erronk2D y validar/recargar Caddy. Detener únicamente el Compose `erronk2d`, conservando sus volúmenes. Si falla una actualización, volver a imágenes anteriores solo cuando el esquema sea compatible; si no lo es, restaurar una copia verificada con una ventana de mantenimiento explícita. La restauración puede perder cambios posteriores a la copia y requiere autorización específica. No ejecutar `down -v`, `migrate:rollback` ni limpiezas globales como mecanismo automático de reversión.
+
+## Entregas durante la fase de pruebas del centro
+
+Una vez construidas y verificadas las imágenes `erronk2d-app:VERSION` y `erronk2d-web:VERSION`, ejecutar:
+
+```sh
+bash ops/deploy VERSION backups/FECHA-VERSION
+```
+
+El procedimiento rechaza un destino de copia existente y una aplicación que ya esté en mantenimiento. Pone solo Erronk2D en mantenimiento, copia su base/almacenamiento/configuración, migra exclusivamente su PostgreSQL, ejecuta `erronk2d:demo`, sustituye app/web y registra la versión en el archivo privado. Intenta salir de mantenimiento también si falla una operación; no restaura datos automáticamente. Revisar el resultado y HTTPS después.
+
+El comando de datos de prueba usa identificadores `demo_key` y una transacción con bloqueo: mantiene 40 estudiantes y 10 profesores activos en dos clases ficticias iniciales, sin contar cuentas manuales ni administradores. Conserva nombres, contraseñas, clases y evaluaciones editadas; repone cuentas eliminadas y reactiva las ficticias desactivadas. Sus contraseñas iniciales son aleatorias y no se muestran ni envían: el administrador puede asignar una contraseña desde Organización para probar otro rol. Las direcciones `.test` no reciben correo.
+
+El estudiante manual que existía sin clase sigue pendiente de asignación expresa. Para reparar un reto vacío: asignar estudiantes a su clase en Organización → Estudiante y usar Gestionar equipos → Incorporar estudiantes de la clase. Los participantes históricos no se sincronizan automáticamente al cambiar matrículas.
+
+No ejecutar manualmente el seeder local en producción. Retirar la carga ficticia del procedimiento y limpiar sus registros solo cuando el usuario lo solicite.

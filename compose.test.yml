@@ -75,6 +75,54 @@ services:
     security_opt: [no-new-privileges:true]
     networks: [test]
     depends_on: [app]
+  browser-app:
+    profiles: [browser]
+    image: erronk2d-php:local
+    user: "1000:1000"
+    command: [php, artisan, serve, "--host=0.0.0.0", "--port=8083", --no-reload]
+    volumes: [".:/app"]
+    environment: &browser-environment
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      APP_KEY: base64:a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
+      APP_URL: http://browser-app:8083
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_DATABASE: erronk2d_test
+      DB_USERNAME: erronk2d_test
+      DB_PASSWORD: isolated-test-only
+      SESSION_SECURE_COOKIE: "false"
+      MAIL_MAILER: array
+      ERRONK2D_DEMO_PASSWORD: BrowserTestingOnly123
+    mem_limit: 384m
+    cpus: 0.6
+    networks: [test]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, php, -r, "exit(@file_get_contents('http://127.0.0.1:8083/login') === false ? 1 : 0);"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  browser:
+    profiles: [browser]
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    user: "1000:1000"
+    working_dir: /app
+    command: [npx, playwright, test]
+    volumes: [".:/app"]
+    environment:
+      TEST_BROWSER_URL: http://browser-app:8083
+      TEST_BROWSER_PASSWORD: BrowserTestingOnly123
+    mem_limit: 1g
+    cpus: 1
+    pids_limit: 200
+    shm_size: 128m
+    networks: [test]
+    depends_on:
+      browser-app:
+        condition: service_healthy
 networks:
   test:
     internal: true

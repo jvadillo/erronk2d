@@ -14,7 +14,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        return [...parent::share($request), 'auth' => $user ? ['id' => $user->id, 'name' => $user->name, 'role' => $user->role, 'permissions' => $user->role === 'admin' ? User::PERMISSIONS : ($user->permissions ?? [])] : null,
+        return [...parent::share($request), ...(app()->environment('testing') ? ['test_environment' => true] : []), 'auth' => $user ? ['id' => $user->id, 'name' => $user->name, 'role' => $user->role, 'permissions' => $user->role === 'admin' ? User::PERMISSIONS : ($user->permissions ?? [])] : null,
             'flash' => ['success' => fn () => $request->session()->get('success')]];
     }
 }

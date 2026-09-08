@@ -7,11 +7,23 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AccessTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_browser_environment_identifies_the_testing_instance(): void
+    {
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page->where('test_environment', true));
+    }
+
+    public function test_browser_environment_marker_is_absent_in_production(): void
+    {
+        app()->instance('env', 'production');
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page->missing('test_environment'));
+    }
 
     public function test_inactive_account_cannot_login_or_use_existing_session(): void
     {
@@ -54,21 +66,21 @@ class AccessTest extends TestCase
             return true;
         });
         $this->post('/forgot-password', ['email' => 'missing@example.test'])->assertSessionHas('success', $message);
-        $data = ['email' => $user->email, 'token' => $token, 'password' => 'NuevaClaveSegura123', 'password_confirmation' => 'NuevaClaveSegura123'];
+        $data = ['email' => $user->email, 'token' => $token, 'password' => 'Clave12345', 'password_confirmation' => 'Clave12345'];
         $this->post('/reset-password', $data)->assertRedirect('/login');
-        $this->assertTrue(Hash::check('NuevaClaveSegura123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('Clave12345', $user->fresh()->password));
         $this->post('/reset-password', $data)->assertSessionHasErrors('email');
     }
 
     public function test_first_administrator_command_creates_account_and_rejects_a_second(): void
     {
         $this->artisan('erronk2d:admin', ['email' => 'admin@example.test', '--name' => 'Administradora'])
-            ->expectsQuestion('Contraseña (mínimo 10 caracteres)', 'UnaClaveSegura123')
-            ->expectsQuestion('Repite la contraseña', 'UnaClaveSegura123')
+            ->expectsQuestion('Contraseña (mínimo 10 caracteres)', 'Clave12345')
+            ->expectsQuestion('Repite la contraseña', 'Clave12345')
             ->assertSuccessful();
         $admin = User::where('email', 'admin@example.test')->firstOrFail();
         $this->assertSame('admin', $admin->role);
-        $this->assertTrue(Hash::check('UnaClaveSegura123', $admin->password));
+        $this->assertTrue(Hash::check('Clave12345', $admin->password));
         $this->artisan('erronk2d:admin', ['email' => 'another@example.test', '--name' => 'Otro'])->assertFailed();
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseHas('audit_events', ['user_id' => $admin->id, 'action' => 'setup.initial_admin']);

@@ -115,6 +115,11 @@ class DatabaseSeeder extends Seeder
                     $ch->update(['status' => 'published']);
                 }
             }
+            $empty = $ch->replicate();
+            $empty->name = 'Reto vacío para pruebas';
+            $empty->status = 'draft';
+            $empty->save();
+            $empty->modules()->sync(array_map(fn ($module) => $module->id, $modules));
         });
     }
 }

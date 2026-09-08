@@ -12,7 +12,7 @@ Producción está disponible en **https://erronk2d.jonvadillo.com**, con Postgre
 
 La antigua demostración SQLite está detenida y conservada. El puerto `127.0.0.1:8082` pertenece ahora a producción: no arrancar allí la vista previa ni ejecutar la suite de navegador contra él.
 
-Las correcciones solicitadas sobre matrículas, equipos, contraseñas, cursos, pestañas y 40/10 cuentas ficticias están en [el plan de correcciones](docs/plan-correcciones.md); todavía no están implementadas.
+Implementadas las correcciones de [el plan](docs/plan-correcciones.md): clase actual única y obligatoria en altas/importación, recuperación explícita de retos vacíos, contraseñas de 10 caracteres, renombrado sin alterar Evaluaciones y pestañas Profesor/Estudiante. `erronk2d:demo` mantiene 40 estudiantes y 10 profesores ficticios además de las cuentas manuales. Consultar `PROGRESS.md` para la versión efectivamente desplegada.
 
 ## Desarrollo aislado
 
@@ -44,7 +44,17 @@ npm run build
 
 PostgreSQL de pruebas usa red privada, almacenamiento temporal y ningún puerto público. El `down` anterior solo corresponde al proyecto `erronk2d-test`. No usar limpiezas globales de Docker.
 
-La suite de navegador modifica datos ficticios y genera auditoría. **No ejecutarla en la configuración actual:** apunta al puerto 8082 que ahora pertenece a producción. Su adaptación a un entorno de navegador separado está incluida en el plan. Las capturas existentes están en `test-results/`, fuera de Git. Las pruebas PHP utilizan bases separadas mediante `phpunit.xml`.
+La suite de navegador usa exclusivamente `http://browser-app:8083` en la red interna de pruebas, sin publicar puertos. Antes de enviar credenciales o escribir exige la marca del entorno `testing`; producción no la proporciona. No ejecutar pruebas PHP contra PostgreSQL mientras la instancia de navegador usa esa misma base temporal.
+
+```sh
+# Solo el proyecto erronk2d-test; reinicializa su base ficticia:
+docker compose -f compose.test.yml stop browser-app
+docker compose -f compose.test.yml run --rm browser-app php artisan migrate:fresh --seed --force --no-interaction
+docker compose -f compose.test.yml run --rm browser
+docker compose -f compose.test.yml --profile browser --profile runtime down
+```
+
+Capturas en `test-results/`, fuera de Git. Las pruebas PHP usan bases separadas mediante `phpunit.xml`.
 
 ## Operación y alcance
 

@@ -1,8 +1,8 @@
 # Plan de correcciones y próximos pasos
 
-Actualizado el 8 de septiembre de 2026. Estas mejoras están **planificadas, no implementadas**. Complementan `prompt.md` y las aclaraciones del usuario; no cambian los cálculos académicos.
+Actualizado el 8 de septiembre de 2026. Las seis mejoras están implementadas; este documento conserva los criterios del plan. El estado de verificación y despliegue vigente está en `../PROGRESS.md`. Complementan `prompt.md` y las aclaraciones del usuario; no cambian los cálculos académicos.
 
-## Diagnóstico confirmado
+## Diagnóstico inicial confirmado
 
 - El alta de personas y su formulario exigen actualmente 12 caracteres.
 - La consulta de producción, limitada a recuentos, encontró una clase sin matrícula y un reto sin participantes ni equipos. El selector de integrantes usa los participantes del reto: por eso aparece vacío. El alta de estudiante no lo matricula, el reto copia la matrícula al crearse y la edición de matrícula queda bloqueada si existen retos.
@@ -62,6 +62,6 @@ Actualizado el 8 de septiembre de 2026. Estas mejoras están **planificadas, no 
 - Medir carga concurrente, vigilar espacio/crecimiento de auditoría y renovación TLS. No instalar ni cambiar servicios globales como parte de estas correcciones.
 - Exportación XLSX y PDF generado en servidor permanecen como ampliaciones futuras; actualmente hay CSV e impresión PDF.
 
-## Siguiente acción concreta
+## Seguimiento
 
-Reproducir en un test aislado el flujo «estudiante sin matrícula → reto vacío → equipos sin integrantes», y preparar la migración a clase actual única junto con la reparación explícita del reto vacío. Leer primero `PROGRESS.md` y las reglas aplicables; no repetir la auditoría del VPS.
+La implementación incorpora además la corrección CSRF tras iniciar sesión y un navegador aislado en la red de pruebas. Antes de cada entrega se ejecutan las verificaciones afectadas y `ops/deploy` mantiene el conjunto ficticio. Los pendientes operativos que necesitan un destino externo o decisiones del centro siguen separados de las seis correcciones funcionales; consultar `../PROGRESS.md` para el siguiente paso actual.
