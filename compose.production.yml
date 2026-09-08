@@ -1,0 +1,84 @@
+name: erronk2d
+services:
+  app:
+    image: erronk2d-app:${ERRONK2D_RELEASE:-local}
+    build:
+      context: .
+      dockerfile: ops/Dockerfile.production
+      target: application
+    env_file: .env.production
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:?Configura APP_KEY en .env.production}
+      APP_URL: https://erronk2d.jonvadillo.com
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: erronk2d
+      DB_USERNAME: erronk2d
+      DB_PASSWORD: ${ERRONK2D_DB_PASSWORD:?Configura ERRONK2D_DB_PASSWORD}
+      SESSION_SECURE_COOKIE: "true"
+      TRUSTED_PROXIES: REMOTE_ADDR
+    volumes: [storage:/app/storage]
+    networks: [backend, outbound]
+    mem_limit: 384m
+    cpus: 0.6
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: &logging
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  web:
+    image: erronk2d-web:${ERRONK2D_RELEASE:-local}
+    build:
+      context: .
+      dockerfile: ops/Dockerfile.production
+      target: web
+    ports: ["127.0.0.1:${ERRONK2D_PORT:-8082}:8080"]
+    networks: [backend]
+    mem_limit: 64m
+    cpus: 0.2
+    pids_limit: 64
+    read_only: true
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=1770,size=32m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    depends_on: [app]
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/up]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: erronk2d
+      POSTGRES_USER: erronk2d
+      POSTGRES_PASSWORD: ${ERRONK2D_DB_PASSWORD:?Configura ERRONK2D_DB_PASSWORD}
+    volumes: [database:/var/lib/postgresql/data]
+    networks: [backend]
+    mem_limit: 256m
+    cpus: 0.3
+    pids_limit: 100
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U erronk2d -d erronk2d"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+networks:
+  backend:
+    internal: true
+  outbound: {}
+volumes:
+  database: {}
+  storage: {}

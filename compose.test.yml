@@ -1,0 +1,80 @@
+name: erronk2d-test
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: erronk2d_test
+      POSTGRES_PASSWORD: isolated-test-only
+      POSTGRES_DB: erronk2d_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 100
+    networks: [test]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U erronk2d_test -d erronk2d_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  tests:
+    image: erronk2d-php:local
+    command: [php, vendor/bin/phpunit, --colors=never]
+    volumes: [".:/app"]
+    environment:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: erronk2d_test
+      DB_USERNAME: erronk2d_test
+      DB_PASSWORD: isolated-test-only
+    mem_limit: 768m
+    cpus: 1
+    pids_limit: 100
+    networks: [test]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  app:
+    profiles: [runtime]
+    image: erronk2d-app:local
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: base64:a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
+      APP_URL: https://erronk2d.jonvadillo.com
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_DATABASE: erronk2d_test
+      DB_USERNAME: erronk2d_test
+      DB_PASSWORD: isolated-test-only
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: "true"
+      TRUSTED_PROXIES: REMOTE_ADDR
+      LOG_CHANNEL: stderr
+      MAIL_MAILER: array
+    mem_limit: 384m
+    cpus: 0.6
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [test]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  web:
+    profiles: [runtime]
+    image: erronk2d-web:local
+    read_only: true
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=1770,size=32m"]
+    mem_limit: 64m
+    cpus: 0.2
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [test]
+    depends_on: [app]
+networks:
+  test:
+    internal: true

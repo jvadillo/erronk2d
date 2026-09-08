@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+cd -- "$(dirname -- "$0")/.."
+destination="${1:?Indica un directorio NUEVO para la copia}"
+mkdir -- "$destination"
+compose=(docker compose --env-file .env.production -f compose.production.yml)
+"${compose[@]}" exec -T postgres pg_dump -U erronk2d -d erronk2d --format=custom > "$destination/database.dump"
+"${compose[@]}" exec -T app tar -czf - -C /app/storage . > "$destination/storage.tar.gz"
+cp -- .env.production "$destination/environment"
+chmod 600 "$destination"/*
+printf '%s\n' 'Copia terminada. Protege y cifra este directorio antes de transferirlo fuera del VPS.'

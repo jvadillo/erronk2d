@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd -- "$(dirname -- "$0")/.."
+exec docker run --rm --name erronk2d-php-task --cpus=1 --memory=768m --pids-limit=128 \
+  --user 1000:1000 --network=none \
+  -v "$PWD:/app" -w /app --entrypoint php erronk2d-php:local "$@"
