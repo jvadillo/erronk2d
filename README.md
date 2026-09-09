@@ -63,4 +63,4 @@ Capturas en `test-results/`, fuera de Git. Las pruebas PHP usan bases separadas 
 - [Correspondencia con la especificación y pendientes](docs/estado-proyecto.md).
 - [Decisiones funcionales](docs/decisiones.md).
 
-La biblioteca de rúbricas se puede modificar y duplicar sin alterar las copias de los retos. La composición de equipos se bloquea cuando empiezan sus evaluaciones. La edición estructural de cursos y matrículas con retos está restringida para conservar el histórico. Los informes de curso son de seguimiento y pueden contener resultados todavía no publicados; cada publicación conserva su instantánea independiente.
+La biblioteca de rúbricas se puede modificar y duplicar sin alterar las copias de los retos. La composición de equipos se bloquea cuando empiezan sus evaluaciones. Cambiar la clase actual de un estudiante conserva los participantes y las notas de retos anteriores; renombrar un curso conserva sus Evaluaciones. Los informes de curso son de seguimiento y pueden contener resultados todavía no publicados; cada publicación conserva su instantánea independiente.

@@ -1,6 +1,6 @@
 # Estado del proyecto y siguiente fase
 
-Fecha de revisión: 8 de septiembre de 2026. `prompt.md` se conserva sin modificaciones y se interpreta junto con las aclaraciones recogidas en `decisiones.md`.
+Fecha de revisión: 9 de septiembre de 2026. `prompt.md` se conserva sin modificaciones y se interpreta junto con las aclaraciones recogidas en `decisiones.md`.
 
 ## Punto de partida y trabajo retomado
 
@@ -12,7 +12,7 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 | Área | Resultado implementado | Aclaración o alcance |
 | --- | --- | --- |
-| Cursos, clases y módulos | Gestión de cursos con Evaluaciones configurables, clases/matrículas y varios responsables por módulo | Los retos conservan participantes propios. Edición estructural de cursos y clases con retos restringida |
+| Cursos, clases y módulos | Cursos con Evaluaciones, clase actual única por estudiante y varios responsables por módulo | Renombrado de cursos sin recrear periodos. Cambiar matrícula actual conserva los participantes históricos de los retos |
 | Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas | Sin registro público. Primera cuenta creada; API Resend configurada, dominio verificado |
 | Retos | Clase/Evaluación, módulos, peso, fechas, estados, opciones y rúbricas copiadas | Las rúbricas y módulos se eligen al crear; cambios posteriores de esas vinculaciones no incluidos |
 | Equipos | 2–5 integrantes, exclusividad por reto, composición independiente | Reorganización bloqueada después de empezar evaluaciones |
@@ -31,11 +31,11 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 ## Verificación
 
-Base funcional verificada: **34 pruebas PHP, 273 comprobaciones**, tanto en SQLite como en PostgreSQL; **3 pruebas de navegador** correctas. Compilación de la interfaz y configuración de imágenes verificadas.
+Versión `504db0b` verificada: **54 pruebas PHP, 420 comprobaciones**, tanto en SQLite como en PostgreSQL; **5 pruebas de navegador** correctas. Compilación de la interfaz y formato PHP verificados.
 
 Las pruebas PHP cubren cálculo exacto, ausencia frente a cero, reparto atómico, agregación de defensas en todos los módulos, permisos, consenso transversal, acceso del alumnado, publicación/reapertura, histórico de rúbricas/equipos, conflictos de edición, Evaluaciones ponderadas, acceso/recuperación, configuración, creación de administrador e importación CSV/XLSX.
 
-Las tres pruebas de navegador cubren matriz y teclado con guardados consecutivos, acceso del alumnado y móvil, y edición/cambio de formularios de organización. Los datos utilizados son ficticios. No se ha realizado una prueba de carga ni un ensayo con un centro usando datos reales.
+Las cinco pruebas de navegador cubren matriz y teclado con guardados consecutivos, acceso del alumnado y móvil, edición/cambio de formularios, alta con contraseña de 10 caracteres y clase, renombrado de cursos, pestañas separadas y recuperación de participantes para guardar equipos. El navegador usa exclusivamente una instancia interna identificada como testing. Los datos son ficticios; no se ha realizado una prueba de carga.
 
 También se verifican compilación TypeScript/Vue, formato PHP, configuración Compose y sintaxis de Nginx/PHP-FPM. La prueba integrada de las imágenes de producción ha verificado el acceso HTTP 200, la conexión a PostgreSQL, cookies Secure/HttpOnly, recursos con URLs HTTPS y bloqueo de archivos ocultos. Ha utilizado red interna y PostgreSQL temporal, sin publicar puertos. Se ha retirado ese entorno al terminar; se conserva la demostración privada detenida.
 
@@ -45,17 +45,17 @@ También se verifican compilación TypeScript/Vue, formato PHP, configuración C
 2. **Base y dominio académico:** realizados; migraciones, permisos y cálculos con precisión exacta.
 3. **Flujos docentes y alumnado:** implementados y probados en la demostración.
 4. **Publicación, informes e importación:** implementados dentro del alcance indicado.
-5. **Producción:** activa en https://erronk2d.jonvadillo.com con las imágenes `f249689`, PostgreSQL propio y la configuración de red corregida en `9625eee`. Cuenta administradora creada; no repetir bootstrap. HTTPS y la API existente responden HTTP 200.
+5. **Producción:** actualizada el 9 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `504db0b`. PostgreSQL propio, migración aplicada y mantenimiento retirado. HTTPS, recursos y cookies Secure/HttpOnly comprobados; API existente HTTP 200. No repetir bootstrap.
 6. **Correo:** SDK Resend 1.13.0 integrado, recuperación en español y manejo de fallos; 7 pruebas específicas de correo/acceso y 57 aserciones correctas. Envío anterior confirmado como entregado; dominio verificado y remitente definitivo aplicado. La entrega con ese nuevo remitente queda por verificar en la próxima recuperación solicitada.
-7. **Operación:** copia local creada en `backups/production-20260908-resend`; restauración aislada y política de copias externas pendientes.
-8. **Correcciones solicitadas:** planificadas en [plan-correcciones.md](plan-correcciones.md), pendientes de implementación. Incluyen clase única obligatoria, desbloqueo de equipos vacíos, contraseñas de 10 caracteres, renombrado de cursos, pestañas separadas y 40 estudiantes/10 profesores ficticios persistentes.
+7. **Operación:** copia previa a esta entrega en `backups/production-20260909-504db0b`. La copia PostgreSQL anterior se restauró en una base temporal y admitió la migración nueva conservando sus registros. Archivo de almacenamiento legible; restauración completa de ficheros/aplicación y política de copias externas pendientes.
+8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). Recuentos verificados: 40 estudiantes y 10 profesores ficticios activos, adicionales a las cuentas manuales; ningún estudiante ficticio sin clase. Corregido también el token CSRF obsoleto tras iniciar sesión.
 
 ## Riesgos y límites pendientes
 
 - VPS compartido, sin swap. Los límites de memoria reducen riesgo, pero todavía hace falta medir carga concurrente real. Las auditorías conservan estados completos de las notas y aumentan el tamaño de la base; observar crecimiento antes de decidir retención.
 - Cada guardado exige la revisión actual. Los cambios concurrentes de otras personas se rechazan para evitar pérdidas; hay que actualizar y volver a introducir el cambio. La interfaz conserva las ediciones locales pendientes mientras muestra el error.
-- La corrección estructural de matrículas/cursos o equipos ya evaluados está restringida. Si se necesita, debe diseñarse como una operación explícita que preserve snapshots y publicaciones.
-- Política de copias externas, restauración operativa y supervisión TLS pendientes. El seeder actual está limitado a local/testing; los datos ficticios de producción necesitan el comando específico previsto.
+- Los estudiantes antiguos sin matrícula requieren asignación expresa. Los cambios de clase conservan los retos previos; la incorporación de participantes solo se permite en retos vacíos sin evaluaciones ni publicaciones. Equipos ya evaluados conservan su composición.
+- Política de copias externas, restauración completa y supervisión TLS pendientes. El seeder original está limitado a local/testing; producción utiliza exclusivamente `erronk2d:demo` mediante `ops/deploy` para mantener sus cuentas ficticias.
 - Las instantáneas publicadas permanecen conservadas. Los informes generales de curso usan los datos actuales como seguimiento, por lo que una corrección autorizada puede cambiar el resultado provisional hasta una nueva publicación.
 - No se ha instalado un gestor de procesos o scheduler global; la ejecución permanente propuesta utiliza exclusivamente reinicio automático de los contenedores Erronk2D.
 

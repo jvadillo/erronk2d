@@ -1,6 +1,6 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción activa desde el 8 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público comprobado; la API vecina sigue respondiendo. Imágenes app/web `f249689`, ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
+**Producción actualizada el 9 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público y recursos comprobados; la API vecina sigue respondiendo. Imágenes app/web `504db0b`, ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
 
 ## Arquitectura preparada
 
@@ -89,7 +89,7 @@ Para una copia coherente antes de actualizar: poner **solo Erronk2D** en manteni
 
 Validar primero la restauración en un proyecto Compose separado, con otra base/volúmenes y sin ruta pública: `pg_restore --exit-on-error --no-owner --no-acl` sobre una base vacía, restaurar almacenamiento, ajustar propietario UID 1000, aplicar la clave original y arrancar la misma versión de imágenes. Comparar usuarios, retos, publicaciones y notas conocidas. No restaurar encima de producción para hacer una prueba.
 
-Primera copia local de producción creada en `backups/production-20260908-resend`, sin interrumpir el servicio. No equivale a una restauración ensayada: siguen pendientes la prueba aislada de restauración, el almacenamiento externo y la retención automática.
+Primera copia local en `backups/production-20260908-resend`; copia previa a la nueva entrega en `backups/production-20260909-504db0b`. La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. Se comprobó la lectura del archivo de almacenamiento; siguen pendientes el ensayo completo de restauración de ficheros/aplicación, el almacenamiento externo y la retención automática.
 
 ## Actualizaciones y reversión
 
@@ -109,6 +109,6 @@ El procedimiento rechaza un destino de copia existente y una aplicación que ya 
 
 El comando de datos de prueba usa identificadores `demo_key` y una transacción con bloqueo: mantiene 40 estudiantes y 10 profesores activos en dos clases ficticias iniciales, sin contar cuentas manuales ni administradores. Conserva nombres, contraseñas, clases y evaluaciones editadas; repone cuentas eliminadas y reactiva las ficticias desactivadas. Sus contraseñas iniciales son aleatorias y no se muestran ni envían: el administrador puede asignar una contraseña desde Organización para probar otro rol. Las direcciones `.test` no reciben correo.
 
-El estudiante manual que existía sin clase sigue pendiente de asignación expresa. Para reparar un reto vacío: asignar estudiantes a su clase en Organización → Estudiante y usar Gestionar equipos → Incorporar estudiantes de la clase. Los participantes históricos no se sincronizan automáticamente al cambiar matrículas.
+Los estudiantes antiguos sin clase requieren asignación expresa. Para reparar un reto vacío: asignar estudiantes a su clase en Organización → Estudiante y usar Gestionar equipos → Incorporar estudiantes de la clase. Los participantes históricos no se sincronizan automáticamente al cambiar matrículas.
 
 No ejecutar manualmente el seeder local en producción. Retirar la carga ficticia del procedimiento y limpiar sus registros solo cuando el usuario lo solicite.
