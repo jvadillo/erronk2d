@@ -21,6 +21,44 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
   await expect(page.getByRole('heading', { name: 'Los retos, en perspectiva.' })).toBeVisible();
 }
 
+test('creación de reto: rúbricas compatibles y validación sin perder el formulario', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page);
+  await page.getByRole('button', { name: 'Nuevo reto', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Nombre del reto').fill('Regresión de creación');
+  await dialog.getByLabel('Descripción', { exact: true }).fill('Conservar este texto al validar.');
+  await dialog.getByRole('combobox', { name: 'Evaluación', exact: true }).selectOption({ label: '1.ª Evaluación' });
+  const modules = dialog.locator('fieldset').getByRole('checkbox');
+  const teamRubric = dialog.getByRole('combobox', { name: 'Rúbrica del reto', exact: true });
+  const teamOption = teamRubric.getByRole('option', { name: /Proyecto web/ });
+  await expect(teamOption).toHaveJSProperty('disabled', true);
+  for (const module of await modules.all()) await module.check();
+  await expect(teamOption).toHaveJSProperty('disabled', false);
+  await teamRubric.selectOption({ label: 'Proyecto web · Rúbrica de equipo' });
+  await modules.last().uncheck();
+  await expect(teamRubric).toHaveValue('');
+  await expect(teamOption).toHaveJSProperty('disabled', true);
+  await modules.last().check();
+  await teamRubric.selectOption({ label: 'Proyecto web · Rúbrica de equipo' });
+  await dialog.getByRole('combobox', { name: 'Rúbrica transversal', exact: true }).selectOption({ label: 'Aprender en equipo · Transversales' });
+
+  await page.route('**/challenges', async route => {
+    const data = route.request().postDataJSON();
+    await route.continue({ postData: JSON.stringify({ ...data, module_ids: data.module_ids.slice(0, -1) }) });
+  });
+  await dialog.getByRole('button', { name: 'Crear reto', exact: true }).click();
+  await expect(dialog.getByText('La rúbrica incluye criterios de módulos que no participan.', { exact: false })).toBeVisible();
+  await expect(dialog.getByLabel('Nombre del reto')).toHaveValue('Regresión de creación');
+  await expect(dialog.getByLabel('Descripción', { exact: true })).toHaveValue('Conservar este texto al validar.');
+  await page.unroute('**/challenges');
+  await dialog.getByRole('button', { name: 'Crear reto', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Regresión de creación', exact: true })).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));

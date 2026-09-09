@@ -1,9 +1,10 @@
 # Estado de la tarea
 
 ## Objetivo
-Las seis correcciones están **implementadas, verificadas y desplegadas** en https://erronk2d.jonvadillo.com. Mantener 40 estudiantes y 10 profesores ficticios durante las pruebas del centro. Actualizado 2026-09-09. Reanudar leyendo este archivo, `git status --short` y `git log -5 --oneline`; abrir solo los archivos del siguiente paso, sin repetir auditoría/especificación/pruebas ya verificadas.
+Corregir y publicar el error 422 al crear un reto, conservando los datos del formulario y explicando las incompatibilidades de rúbricas/módulos. Producción aún en `504db0b`. Actualizado 2026-09-09. Reanudar leyendo este archivo, `git status --short` y `git log -5 --oneline`; abrir solo archivos del siguiente paso, sin repetir auditoría/especificación/pruebas ya verificadas.
 
 ## Completado
+- Corrección nueva verificada: las validaciones de curso/módulos/rúbricas devuelven errores del formulario; selector deshabilita rúbricas incompatibles y limpia selección obsoleta. 7 pruebas nuevas / 47 aserciones correctas en SQLite y PostgreSQL; nueva prueba Playwright correcta (error de servidor conserva formulario, posterior creación válida). Compilación y Pint correctos. Falta desplegar. No se conoce la selección exacta del usuario; se cubren todas las ramas que producían la pantalla 422.
 - Producción en imágenes **erronk2d-app:504db0b / erronk2d-web:504db0b**, migración aplicada y mantenimiento retirado. HTTPS login 200, recursos públicos correctos, cookies Secure/HttpOnly; API vecina 200.
 - Mínimo 10 caracteres en alta/cambio/recuperación/administrador; clase actual única y obligatoria en alta/importación; pestañas Profesor/Estudiante con clase; renombrado del curso sin recrear Evaluaciones.
 - Recuperación explícita de participantes para retos vacíos, errores de equipos en español y selección validada. Cambio de clase conserva participantes e informes históricos. Corregido CSRF tras login usando la cookie vigente.
@@ -15,12 +16,14 @@ Las seis correcciones están **implementadas, verificadas y desplegadas** en htt
 - Documentación de proyecto/despliegue actualizada. El usuario autorizó actualizar este progreso durante el trabajo; ya no aplica la antigua restricción de detener cambios después de escribirlo.
 
 ## Pendiente
+Prioridad actual: construir imágenes del siguiente commit, desplegar con copia y comprobar HTTPS. No repetir las pruebas de creación ya verificadas.
 1. Validación del usuario con la versión publicada. Los estudiantes antiguos sin clase requieren asignación expresa; no inventar matrículas. Para reparar su reto vacío: Organización → Estudiante → asignar clase; Gestionar equipos → Incorporar estudiantes de la clase.
 2. Operación: ensayar restauración completa de ficheros/aplicación; acordar destino externo cifrado, frecuencia y retención de copias. La restauración de base y la migración ya se verificaron.
 3. Medir carga concurrente y concretar supervisión de TLS/espacio. Verificar entrega con remitente definitivo en la siguiente recuperación solicitada, sin generar envíos adicionales por iniciativa propia.
 4. Exportación XLSX/PDF generado en servidor son ampliaciones futuras. Limpieza de datos ficticios solo cuando el usuario la solicite.
 
 ## Archivos relevantes y modificados
+- Incidencia actual: `app/Http/Controllers/ChallengeController.php`, `resources/js/pages/Dashboard.vue`, `tests/Feature/ChallengeCreationTest.php`, `tests/Browser/workflows.spec.ts`, `PROGRESS.md`. Existe una eliminación ajena de `docs/PROGRESS.md`: conservarla sin recrear el archivo ni incluirla en nuestros commits.
 - Modificados en esta reanudación: `PROGRESS.md`, `README.md`, `docs/despliegue.md`, `docs/estado-proyecto.md`. Commit de continuidad previo: `c2493f3`; el commit final de documentación se identifica con `git log`.
 - Operación: `ops/deploy`, `ops/backup`, `ops/Dockerfile.production`, `compose.production.yml`, `compose.test.yml`.
 - Migración: `database/migrations/2026_09_08_204238_add_current_classroom_and_demo_identifiers.php`; FK nullable para legado, asociaciones inequívocas migradas y `demo_key` únicos. Vínculos antiguos ambiguos conservados para resolución expresa.
@@ -38,10 +41,10 @@ Las seis correcciones están **implementadas, verificadas y desplegadas** en htt
 - PHP/Composer solo en Docker; `.ai/rules` no existía. Git local sin remoto. Aplicar AGENTS y verificar versiones instaladas si vuelve a cambiar código.
 
 ## Último error / errores pendientes
-No hay fallos de despliegue ni pruebas pendientes conocidos. El error de equipos y el bloqueo del nombre del curso están corregidos y publicados. La asignación de estudiantes antiguos sin clase necesita una decisión académica del usuario.
+Incidencia activa: creación de reto muestra 422 genérico. `abort(422)` en validaciones de dominio impide a Inertia mostrar errores de campo; una rúbrica actual tiene criterios de cuatro módulos y puede resultar incompatible con los elegidos. Sustituido por ValidationException y prevención en selector; pendiente de publicación.
 
 ## Siguiente acción concreta
-Recoger la validación funcional del usuario en producción y atender incidencias concretas. Para avanzar en copias externas hace falta conocer el destino autorizado; no configurar proveedores ni servicios globales sin esa decisión.
+Guardar el commit de corrección, construir sus imágenes app/web y publicar con `ops/deploy` y una copia nueva. Mantener las 40/10 cuentas ficticias y no modificar datos manuales.
 
 ## Comandos para verificarlo
 ```sh

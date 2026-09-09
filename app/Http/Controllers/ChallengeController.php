@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,15 +38,24 @@ class ChallengeController extends Controller
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()->allows('manage_challenges'), 403);
-        $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'team_rubric_id' => 'required|exists:rubrics,id', 'transversal_rubric_id' => 'required|exists:rubrics,id', 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean']);
+        $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'team_rubric_id' => ['required', Rule::exists('rubrics', 'id')->where('kind', 'team')], 'transversal_rubric_id' => ['required', Rule::exists('rubrics', 'id')->where('kind', 'transversal')], 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean'], [
+            'team_rubric_id.exists' => 'Selecciona una rúbrica de equipo válida.',
+            'transversal_rubric_id.exists' => 'Selecciona una rúbrica transversal válida.',
+        ]);
         $class = Classroom::with('modules', 'academicYear.periods')->findOrFail($data['classroom_id']);
-        abort_unless($class->academicYear->periods->contains('id', (int) $data['period_id']), 422, 'La Evaluación debe pertenecer al curso de la clase.');
-        abort_if(collect($data['module_ids'])->diff($class->modules->pluck('id'))->isNotEmpty(), 422, 'Los módulos deben pertenecer a la clase.');
+        if (! $class->academicYear->periods->contains('id', (int) $data['period_id'])) {
+            throw ValidationException::withMessages(['period_id' => 'La Evaluación debe pertenecer al curso de la clase.']);
+        }
+        if (collect($data['module_ids'])->diff($class->modules->pluck('id'))->isNotEmpty()) {
+            throw ValidationException::withMessages(['module_ids' => 'Los módulos deben pertenecer a la clase seleccionada.']);
+        }
         $team = Rubric::where('kind', 'team')->findOrFail($data['team_rubric_id']);
         $transversal = Rubric::where('kind', 'transversal')->findOrFail($data['transversal_rubric_id']);
         foreach ($team->items as $item) {
             if (! empty($item['module_id'])) {
-                abort_unless(in_array((int) $item['module_id'], array_map('intval', $data['module_ids']), true), 422, 'La rúbrica contiene ítems de un módulo que no participa.');
+                if (! in_array((int) $item['module_id'], array_map('intval', $data['module_ids']), true)) {
+                    throw ValidationException::withMessages(['team_rubric_id' => 'La rúbrica incluye criterios de módulos que no participan. Selecciona todos sus módulos o elige otra rúbrica.']);
+                }
             }
         }
         $ch = DB::transaction(function () use ($data, $class, $team, $transversal, $request) {
