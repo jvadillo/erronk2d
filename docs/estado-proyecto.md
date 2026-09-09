@@ -33,6 +33,8 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 Versión `504db0b` verificada: **54 pruebas PHP, 420 comprobaciones**, tanto en SQLite como en PostgreSQL; **5 pruebas de navegador** correctas. Compilación de la interfaz y formato PHP verificados.
 
+Corrección `4cd717d`: **7 pruebas nuevas / 47 aserciones** correctas en SQLite y PostgreSQL y **una prueba nueva de navegador**. Cubre validaciones de creación de retos, permisos, creación válida y conservación del formulario ante errores. Las rúbricas incompatibles con los módulos elegidos quedan deshabilitadas. Compilación y formato PHP correctos; no se repitieron las pruebas anteriores sin cambios relacionados.
+
 Las pruebas PHP cubren cálculo exacto, ausencia frente a cero, reparto atómico, agregación de defensas en todos los módulos, permisos, consenso transversal, acceso del alumnado, publicación/reapertura, histórico de rúbricas/equipos, conflictos de edición, Evaluaciones ponderadas, acceso/recuperación, configuración, creación de administrador e importación CSV/XLSX.
 
 Las cinco pruebas de navegador cubren matriz y teclado con guardados consecutivos, acceso del alumnado y móvil, edición/cambio de formularios, alta con contraseña de 10 caracteres y clase, renombrado de cursos, pestañas separadas y recuperación de participantes para guardar equipos. El navegador usa exclusivamente una instancia interna identificada como testing. Los datos son ficticios; no se ha realizado una prueba de carga.
@@ -45,9 +47,9 @@ También se verifican compilación TypeScript/Vue, formato PHP, configuración C
 2. **Base y dominio académico:** realizados; migraciones, permisos y cálculos con precisión exacta.
 3. **Flujos docentes y alumnado:** implementados y probados en la demostración.
 4. **Publicación, informes e importación:** implementados dentro del alcance indicado.
-5. **Producción:** actualizada el 9 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `504db0b`. PostgreSQL propio, migración aplicada y mantenimiento retirado. HTTPS, recursos y cookies Secure/HttpOnly comprobados; API existente HTTP 200. No repetir bootstrap.
+5. **Producción:** actualizada el 9 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `4cd717d`. PostgreSQL propio, sin migraciones nuevas en esta corrección y mantenimiento retirado. HTTPS y API existente HTTP 200. Recursos y cookies Secure/HttpOnly verificados en la entrega anterior. No repetir bootstrap.
 6. **Correo:** SDK Resend 1.13.0 integrado, recuperación en español y manejo de fallos; 7 pruebas específicas de correo/acceso y 57 aserciones correctas. Envío anterior confirmado como entregado; dominio verificado y remitente definitivo aplicado. La entrega con ese nuevo remitente queda por verificar en la próxima recuperación solicitada.
-7. **Operación:** copia previa a esta entrega en `backups/production-20260909-504db0b`. La copia PostgreSQL anterior se restauró en una base temporal y admitió la migración nueva conservando sus registros. Archivo de almacenamiento legible; restauración completa de ficheros/aplicación y política de copias externas pendientes.
+7. **Operación:** copia previa a esta entrega en `backups/production-20260909-4cd717d`. La copia PostgreSQL anterior se restauró en una base temporal y admitió la migración nueva conservando sus registros. Archivo de almacenamiento legible; restauración completa de ficheros/aplicación y política de copias externas pendientes.
 8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). Recuentos verificados: 40 estudiantes y 10 profesores ficticios activos, adicionales a las cuentas manuales; ningún estudiante ficticio sin clase. Corregido también el token CSRF obsoleto tras iniciar sesión.
 
 ## Riesgos y límites pendientes

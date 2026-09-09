@@ -1,6 +1,6 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción actualizada el 9 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público y recursos comprobados; la API vecina sigue respondiendo. Imágenes app/web `504db0b`, ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
+**Producción actualizada el 9 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público comprobado; la API vecina sigue respondiendo. Imágenes app/web `4cd717d`, con corrección del formulario de creación de retos; ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
 
 ## Arquitectura preparada
 
@@ -89,7 +89,7 @@ Para una copia coherente antes de actualizar: poner **solo Erronk2D** en manteni
 
 Validar primero la restauración en un proyecto Compose separado, con otra base/volúmenes y sin ruta pública: `pg_restore --exit-on-error --no-owner --no-acl` sobre una base vacía, restaurar almacenamiento, ajustar propietario UID 1000, aplicar la clave original y arrancar la misma versión de imágenes. Comparar usuarios, retos, publicaciones y notas conocidas. No restaurar encima de producción para hacer una prueba.
 
-Primera copia local en `backups/production-20260908-resend`; copia previa a la nueva entrega en `backups/production-20260909-504db0b`. La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. Se comprobó la lectura del archivo de almacenamiento; siguen pendientes el ensayo completo de restauración de ficheros/aplicación, el almacenamiento externo y la retención automática.
+Primera copia local en `backups/production-20260908-resend`; copia previa a la entrega actual en `backups/production-20260909-4cd717d` (también se conserva la de `504db0b`). La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. Se comprobó la lectura del archivo de almacenamiento; siguen pendientes el ensayo completo de restauración de ficheros/aplicación, el almacenamiento externo y la retención automática.
 
 ## Actualizaciones y reversión
 
