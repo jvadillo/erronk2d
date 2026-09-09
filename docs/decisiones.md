@@ -39,4 +39,4 @@ La auditoría encontró Caddy compartido en 80/443, FastAPI en 127.0.0.1:8000 y 
 - El usuario solicita inicio de sesión y registro mediante Google, manteniendo el acceso con contraseña.
 - Criterio aplicado mientras se espera respuesta a la consulta: los registros nuevos son solicitudes pendientes; solo el administrador puede aprobarlas y asignar rol/clase. No se conceden permisos por el dominio del correo ni por datos enviados desde el navegador.
 - Vincular una cuenta existente requiere confirmar una vez su contraseña local. No se fusionan cuentas ni se cambia su historial. Una cuenta desactivada no obtiene acceso mediante Google.
-- Sin dependencias adicionales ni modificaciones de infraestructura compartida. Activación pendiente de las credenciales OAuth privadas y prueba real del retorno de Google; instrucciones en despliegue.md.
+- Sin dependencias adicionales ni modificaciones de infraestructura compartida. Credenciales OAuth proporcionadas por el usuario y aplicadas de forma privada; integración habilitada. Falta autorizar la URI de retorno en Google Cloud y completar una prueba real con una cuenta; instrucciones en despliegue.md.

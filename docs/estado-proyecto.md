@@ -13,7 +13,7 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 | Área | Resultado implementado | Aclaración o alcance |
 | --- | --- | --- |
 | Cursos, clases y módulos | Cursos con Evaluaciones, clase actual única por estudiante y varios responsables por módulo | Renombrado de cursos sin recrear periodos. Cambiar matrícula actual conserva los participantes históricos de los retos |
-| Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas; acceso Google y solicitudes de registro | Google requiere configurar y activar el cliente OAuth. Las cuentas nuevas necesitan aprobación, rol y clase para estudiantes. API Resend configurada |
+| Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas; acceso Google y solicitudes de registro | Google habilitado; pendiente corregir URI autorizada en Google Cloud. Nuevas cuentas requieren aprobación, rol y clase para estudiantes. API Resend configurada |
 | Retos | Clase/Evaluación, módulos, peso, fechas, estados, opciones y rúbricas copiadas | Las rúbricas y módulos se eligen al crear; cambios posteriores de esas vinculaciones no incluidos |
 | Equipos | 2–5 integrantes, exclusividad por reto, composición independiente | Reorganización bloqueada después de empezar evaluaciones |
 | Rúbricas | Criterios, pesos, niveles, GENERAL/módulo para equipo; edición, ordenación y duplicado de plantillas | Cada reto conserva su copia; transversales sin módulo |
@@ -31,6 +31,8 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 ## Verificación
 
+Entrega Google `736925b`: **55 pruebas / 437 aserciones** relacionadas con Google/acceso/organización/matrícula/demo correctas en SQLite y PostgreSQL; **una prueba Playwright nueva** correcta para errores de login y aprobación de solicitudes con clase. Compilación, Pint y sintaxis del Nginx propio correctos. HTTPS y redirección OAuth verificados; Google devuelve `redirect_uri_mismatch`, pendiente de corregir en el cliente externo. Todavía no se ha completado un acceso con una cuenta Google real.
+
 Versión `504db0b` verificada: **54 pruebas PHP, 420 comprobaciones**, tanto en SQLite como en PostgreSQL; **5 pruebas de navegador** correctas. Compilación de la interfaz y formato PHP verificados.
 
 Corrección `4cd717d`: **7 pruebas nuevas / 47 aserciones** correctas en SQLite y PostgreSQL y **una prueba nueva de navegador**. Cubre validaciones de creación de retos, permisos, creación válida y conservación del formulario ante errores. Las rúbricas incompatibles con los módulos elegidos quedan deshabilitadas. Compilación y formato PHP correctos; no se repitieron las pruebas anteriores sin cambios relacionados.
@@ -47,9 +49,9 @@ También se verifican compilación TypeScript/Vue, formato PHP, configuración C
 2. **Base y dominio académico:** realizados; migraciones, permisos y cálculos con precisión exacta.
 3. **Flujos docentes y alumnado:** implementados y probados en la demostración.
 4. **Publicación, informes e importación:** implementados dentro del alcance indicado.
-5. **Producción:** actualizada el 9 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `4cd717d`. PostgreSQL propio, sin migraciones nuevas en esta corrección y mantenimiento retirado. HTTPS y API existente HTTP 200. Recursos y cookies Secure/HttpOnly verificados en la entrega anterior. No repetir bootstrap.
+5. **Producción:** actualizada el 9 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `736925b`. Migración Google aplicada y mantenimiento retirado; 40 estudiantes y 10 profesores ficticios activos, cuentas manuales conservadas. HTTPS y API existente HTTP 200. Recursos y cookies Secure/HttpOnly verificados en entregas anteriores. No repetir bootstrap.
 6. **Correo:** SDK Resend 1.13.0 integrado, recuperación en español y manejo de fallos; 7 pruebas específicas de correo/acceso y 57 aserciones correctas. Envío anterior confirmado como entregado; dominio verificado y remitente definitivo aplicado. La entrega con ese nuevo remitente queda por verificar en la próxima recuperación solicitada.
-7. **Operación:** copia previa a esta entrega en `backups/production-20260909-4cd717d`. Restauración completa ensayada en `compose.restore.yml`: PostgreSQL, 70 archivos coincidentes por SHA-256 y aplicación de la versión original `504db0b`; login, recursos, cálculos de retos e informes correctos. La copia no contenía publicaciones reales. Entorno temporal retirado y producción comprobada; política de copias externas pendiente.
+7. **Operación:** copia previa a Google en `backups/production-20260909-736925b`. Restauración completa de la copia anterior `4cd717d` ensayada en `compose.restore.yml`: PostgreSQL, 70 archivos coincidentes por SHA-256 y aplicación de la versión original `504db0b`; login, recursos, cálculos de retos e informes correctos. La copia ensayada no contenía publicaciones reales. Entornos temporales retirados y producción comprobada; política de copias externas pendiente.
 8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). Recuentos verificados: 40 estudiantes y 10 profesores ficticios activos, adicionales a las cuentas manuales; ningún estudiante ficticio sin clase. Corregido también el token CSRF obsoleto tras iniciar sesión.
 
 ## Riesgos y límites pendientes

@@ -1,12 +1,12 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción actualizada el 9 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público comprobado; la API vecina sigue respondiendo. Imágenes app/web `4cd717d`, con corrección del formulario de creación de retos; ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
+**Producción actualizada el 9 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público comprobado; la API vecina sigue respondiendo. Imágenes app/web `736925b`, con acceso Google y registro sujeto a aprobación; ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
 
 ## Arquitectura preparada
 
 ### Acceso y registro con Google
 
-La integración está implementada y se mantiene **desactivada hasta configurar un cliente OAuth propio**. No utiliza SMTP ni cambia la configuración de Resend. Mantiene el acceso con contraseña.
+La integración está publicada y **habilitada con las credenciales privadas proporcionadas por el usuario**. La comprobación real de redirección devuelve **redirect_uri_mismatch** de Google: falta añadir la URI exacta de retorno al cliente en Google Cloud. Se ha solicitado esa acción al usuario. No utiliza SMTP ni cambia la configuración de Resend. Mantiene el acceso con contraseña.
 
 1. En Google Cloud / Google Auth Platform, crear un cliente OAuth de tipo **Aplicación web** y configurar la pantalla de consentimiento de Erronk2D. Elegir la audiencia adecuada para el centro; si se mantiene en pruebas, añadir las cuentas de prueba en Google. Solo se solicitan `openid`, `email` y `profile`.
 2. Registrar exactamente esta URI de retorno: `https://erronk2d.jonvadillo.com/auth/google/callback`. El flujo es de servidor y no necesita una biblioteca JavaScript de Google ni un origen JavaScript autorizado.
@@ -107,7 +107,7 @@ Para una copia coherente antes de actualizar: poner **solo Erronk2D** en manteni
 
 Validar primero la restauración en un proyecto Compose separado, con otra base/volúmenes y sin ruta pública: `pg_restore --exit-on-error --no-owner --no-acl` sobre una base vacía, restaurar almacenamiento, ajustar propietario UID 1000, aplicar la clave original y arrancar la misma versión de imágenes. Comparar usuarios, retos, publicaciones y notas conocidas. No restaurar encima de producción para hacer una prueba.
 
-Primera copia local en `backups/production-20260908-resend`; copia previa a la entrega actual en `backups/production-20260909-4cd717d` (también se conserva la de `504db0b`). La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. La copia reciente también superó el ensayo completo de base, almacenamiento y aplicación descrito a continuación. Quedan pendientes el almacenamiento externo y la retención automática.
+Primera copia local en `backups/production-20260908-resend`; copia previa a Google en `backups/production-20260909-736925b`, con el esquema anterior y la configuración privada OAuth. Se conservan las de `4cd717d` y `504db0b`. La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. La copia `4cd717d` también superó el ensayo completo descrito a continuación. Quedan pendientes el almacenamiento externo y la retención automática.
 
 ### Ensayo de restauración completado el 9 de septiembre de 2026
 

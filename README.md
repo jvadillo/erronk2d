@@ -10,6 +10,8 @@ Implementados: acceso y recuperación de contraseña; roles y permisos; cursos c
 
 Producción está disponible en **https://erronk2d.jonvadillo.com**, con PostgreSQL propio y correo por la API de Resend. El dominio de correo está verificado y el remitente definitivo configurado. Las credenciales iniciales se conservan únicamente en `ops/production-credentials`, archivo privado e ignorado por Git.
 
+Acceso Google y solicitudes de registro implementados: las cuentas existentes confirman una vez su contraseña para vincularse; el administrador aprueba cuentas nuevas y asigna rol/clase. Configuración y estado de la activación en [docs/despliegue.md](docs/despliegue.md). Los secretos OAuth permanecen exclusivamente en el entorno privado.
+
 La antigua demostración SQLite está detenida y conservada. El puerto `127.0.0.1:8082` pertenece ahora a producción: no arrancar allí la vista previa ni ejecutar la suite de navegador contra él.
 
 Implementadas las correcciones de [el plan](docs/plan-correcciones.md): clase actual única y obligatoria en altas/importación, recuperación explícita de retos vacíos, contraseñas de 10 caracteres, renombrado sin alterar Evaluaciones y pestañas Profesor/Estudiante. `erronk2d:demo` mantiene 40 estudiantes y 10 profesores ficticios además de las cuentas manuales. Consultar `PROGRESS.md` para la versión efectivamente desplegada.
