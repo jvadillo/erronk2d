@@ -89,7 +89,34 @@ Para una copia coherente antes de actualizar: poner **solo Erronk2D** en manteni
 
 Validar primero la restauración en un proyecto Compose separado, con otra base/volúmenes y sin ruta pública: `pg_restore --exit-on-error --no-owner --no-acl` sobre una base vacía, restaurar almacenamiento, ajustar propietario UID 1000, aplicar la clave original y arrancar la misma versión de imágenes. Comparar usuarios, retos, publicaciones y notas conocidas. No restaurar encima de producción para hacer una prueba.
 
-Primera copia local en `backups/production-20260908-resend`; copia previa a la entrega actual en `backups/production-20260909-4cd717d` (también se conserva la de `504db0b`). La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. Se comprobó la lectura del archivo de almacenamiento; siguen pendientes el ensayo completo de restauración de ficheros/aplicación, el almacenamiento externo y la retención automática.
+Primera copia local en `backups/production-20260908-resend`; copia previa a la entrega actual en `backups/production-20260909-4cd717d` (también se conserva la de `504db0b`). La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. La copia reciente también superó el ensayo completo de base, almacenamiento y aplicación descrito a continuación. Quedan pendientes el almacenamiento externo y la retención automática.
+
+### Ensayo de restauración completado el 9 de septiembre de 2026
+
+`compose.restore.yml` define exclusivamente el proyecto `erronk2d-restore`: red interna sin puertos publicados, PostgreSQL y almacenamiento en tmpfs, recursos limitados, correo `array` y sin credenciales de Resend. No comparte volúmenes ni redes con producción. El ensayo no modifica la copia original.
+
+La copia `production-20260909-4cd717d` se obtuvo antes de actualizar y corresponde a imágenes **504db0b**. Se utilizó esa versión y su clave original, leídas del archivo privado `environment`; no se debe deducir la versión por el nombre del directorio. El entorno de ejecución privado `backups/restore-check-20260909-4cd717d/runtime.env` contiene únicamente `ERRONK2D_RESTORE_RELEASE` y `ERRONK2D_RESTORE_KEY`, con permisos 600 en directorio 700. No imprimirlo, versionarlo ni copiar el resto de variables de producción al ensayo.
+
+Procedimiento verificado:
+
+1. Preparar el archivo privado anterior; validar el Compose sin mostrar su configuración completa (incluye la clave). Comprobar que no hay puertos ni volúmenes compartidos y que la única red es interna.
+2. Arrancar solo `postgres`; restaurar `database.dump` con `pg_restore --exit-on-error --no-owner --no-acl -U erronk2d_restore -d erronk2d_restore`.
+3. Arrancar `app`. Validar previamente que el tar solo contiene rutas relativas, ficheros y directorios, sin enlaces ni recorridos `..`; extraerlo en `/app/storage` del contenedor temporal. Comparar SHA-256 de cada fichero con el archivo original antes de ejecutar Artisan o HTTP.
+4. Consultar `artisan migrate:status` con la versión original. La copia actual tiene todas las migraciones aplicadas; no ejecutar migraciones ni seeders por rutina. Ejecutar `artisan up` únicamente en el proyecto temporal: la copia conserva el mantenimiento previo al despliegue.
+5. Arrancar `web`; consultar internamente `http://web:8080/login` y sus recursos. Leer los cálculos de `Gradebook::challenge` y `Gradebook::report` en una transacción PostgreSQL de solo lectura. Para Tinker en la imagen, usar `exec -e XDG_CONFIG_HOME=/tmp/erronk2d-psysh` por los permisos del usuario 1000.
+6. Retirar el proyecto con `down`, sin opciones de borrado de volúmenes. Al quitar los contenedores desaparecen sus datos temporales en memoria; se conservan la copia y el manifiesto privado de comprobación.
+
+Resultado: restauración PostgreSQL sin errores; **70 archivos coincidentes por SHA-256**, cinco migraciones aplicadas, login y dos recursos HTTP 200, lectura correcta de dos retos y tres informes de clase. La copia contenía tres valoraciones, una nota de módulo y ninguna publicación; este ensayo no demuestra restauración de publicaciones reales ausentes en la copia. Producción y la API vecina seguían respondiendo HTTP 200 al terminar.
+
+Todos los comandos del ensayo deben usar este prefijo, nunca el Compose de producción:
+
+```sh
+docker compose --env-file backups/restore-check-20260909-4cd717d/runtime.env -f compose.restore.yml ps
+# Retirar únicamente el ensayo cuando haya terminado:
+docker compose --env-file backups/restore-check-20260909-4cd717d/runtime.env -f compose.restore.yml down
+```
+
+Para repetirlo con otra copia, crear un directorio privado nuevo y seleccionar las imágenes y clave de esa copia. No reutilizar una base temporal que ya contenga datos.
 
 ## Actualizaciones y reversión
 

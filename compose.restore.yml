@@ -1,0 +1,65 @@
+name: erronk2d-restore
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: erronk2d_restore
+      POSTGRES_USER: erronk2d_restore
+      POSTGRES_PASSWORD: isolated-restore-only
+    tmpfs: ["/var/lib/postgresql/data:size=256m"]
+    mem_limit: 256m
+    cpus: 0.3
+    pids_limit: 100
+    networks: [restore]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U erronk2d_restore -d erronk2d_restore"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  app:
+    image: erronk2d-app:${ERRONK2D_RESTORE_RELEASE:?Indica la version de la copia}
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${ERRONK2D_RESTORE_KEY:?Indica la clave original de la copia}
+      APP_URL: http://web:8080
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: erronk2d_restore
+      DB_USERNAME: erronk2d_restore
+      DB_PASSWORD: isolated-restore-only
+      MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: "false"
+      LOG_CHANNEL: stderr
+    tmpfs: ["/app/storage:uid=1000,gid=1000,mode=0700,size=128m"]
+    mem_limit: 384m
+    cpus: 0.6
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [restore]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  web:
+    image: erronk2d-web:${ERRONK2D_RESTORE_RELEASE:?Indica la version de la copia}
+    read_only: true
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=1770,size=32m"]
+    mem_limit: 64m
+    cpus: 0.2
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [restore]
+    depends_on: [app]
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/up]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+networks:
+  restore:
+    internal: true
