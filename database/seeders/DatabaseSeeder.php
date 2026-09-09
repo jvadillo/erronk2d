@@ -7,6 +7,7 @@ use App\Models\AcademicYear;
 use App\Models\Assessment;
 use App\Models\Challenge;
 use App\Models\Classroom;
+use App\Models\GoogleRegistration;
 use App\Models\Module;
 use App\Models\ModuleGrade;
 use App\Models\Publication;
@@ -32,6 +33,7 @@ class DatabaseSeeder extends Seeder
         }
         DB::transaction(function () use ($password) {
             $admin = User::create(['name' => 'Leire Aranburu', 'email' => 'admin@erronk2d.test', 'password' => $password, 'role' => 'admin']);
+            GoogleRegistration::create(['name' => 'Solicitud de prueba Google', 'email' => 'browser-google@example.test', 'google_id' => 'browser-google-subject']);
             $teachers = [];
             foreach (['Ane Etxeberria', 'Mikel Otxoa', 'Nerea Zubia', 'Iker Aguirre'] as $i => $name) {
                 $teachers[] = User::create(['name' => $name, 'email' => 'profesor'.($i + 1).'@erronk2d.test', 'password' => $password, 'role' => 'teacher', 'permissions' => User::PERMISSIONS]);

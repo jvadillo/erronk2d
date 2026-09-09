@@ -4,6 +4,24 @@
 
 ## Arquitectura preparada
 
+### Acceso y registro con Google
+
+La integración está implementada y se mantiene **desactivada hasta configurar un cliente OAuth propio**. No utiliza SMTP ni cambia la configuración de Resend. Mantiene el acceso con contraseña.
+
+1. En Google Cloud / Google Auth Platform, crear un cliente OAuth de tipo **Aplicación web** y configurar la pantalla de consentimiento de Erronk2D. Elegir la audiencia adecuada para el centro; si se mantiene en pruebas, añadir las cuentas de prueba en Google. Solo se solicitan `openid`, `email` y `profile`.
+2. Registrar exactamente esta URI de retorno: `https://erronk2d.jonvadillo.com/auth/google/callback`. El flujo es de servidor y no necesita una biblioteca JavaScript de Google ni un origen JavaScript autorizado.
+3. Configurar de forma privada en `.env.production`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` con la URI anterior y `GOOGLE_ENABLED=true`. Mantener permisos 600 y no mostrar ni versionar los valores. No reutilizar la clave de Resend. El Compose propio ya carga el archivo de entorno.
+4. Recrear únicamente el servicio `app` de Erronk2D para recoger las variables; comprobar primero la configuración sin imprimir secretos. No hace falta modificar Caddy, DNS, certificados o firewall. Para desactivar, poner `GOOGLE_ENABLED=false` y recrear solo `app`.
+5. Verificar con una cuenta real autorizada la ida/vuelta de Google, la vinculación inicial, el acceso posterior y una solicitud de registro. Las pruebas automatizadas simulan las respuestas de Google; no sustituyen esta comprobación con el cliente real.
+
+Las cuentas existentes se vinculan confirmando una vez su contraseña de Erronk2D; después se identifican por el identificador estable de Google. No se cambian su rol, permisos, correo ni historial. Cambiar el correo desde Organización elimina la vinculación anterior. Las cuentas desactivadas siguen bloqueadas.
+
+Las nuevas cuentas Google generan una solicitud sin acceso académico. Administración → Organización → Solicitudes permite aprobar o rechazar: al aprobar se elige Profesor o Estudiante; para estudiantes la clase es obligatoria. Los profesores se crean sin permisos de edición y el administrador puede concederlos después. No se envían correos automáticamente. Una solicitud rechazada no se reabre mediante otro intento de acceso.
+
+Se usan `state` de un solo uso, caducidad de diez minutos y PKCE S256; el perfil se obtiene desde Google con un token intercambiado exclusivamente en el servidor y exige correo verificado. No se persisten tokens OAuth. El Nginx propio omite parámetros de consulta del registro de acceso para no guardar códigos de autorización. Las credenciales OAuth y los detalles de errores de Google no se registran.
+
+Referencia de configuración: [OAuth para aplicaciones web de Google](https://developers.google.com/identity/protocols/oauth2/web-server).
+
 ```text
 Internet → Caddy compartido (HTTPS erronk2d.jonvadillo.com)
          → 127.0.0.1:8082 → Nginx Erronk2D → PHP-FPM Erronk2D

@@ -19,9 +19,16 @@ use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class AuthController extends Controller
 {
-    public function show(): Response
+    public function show(Request $request): Response
     {
-        return Inertia::render('Login');
+        $link = $request->session()->get('google_link');
+
+        return Inertia::render('Login', [
+            'googleUrl' => GoogleAuthController::enabled() ? route('google.redirect') : null,
+            'googleLink' => is_array($link) && ($link['expires_at'] ?? 0) > now()->timestamp ? $link['email'] : null,
+            'googleLinkUrl' => route('google.link'),
+            'googleCancelUrl' => route('google.cancel'),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse

@@ -6,12 +6,14 @@ use App\Domain\Grades\ChallengeWriter;
 use App\Models\AcademicYear;
 use App\Models\AuditEvent;
 use App\Models\Classroom;
+use App\Models\GoogleRegistration;
 use App\Models\Module;
 use App\Models\Rubric;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -23,7 +25,7 @@ class SetupController extends Controller
     {
         abort_if($request->user()->role === 'student', 403);
 
-        return Inertia::render('Setup', ['years' => AcademicYear::with('periods')->withExists(['periods as periods_locked' => fn ($query) => $query->whereHas('challenges')])->get(), 'classrooms' => Classroom::with('users', 'students', 'modules.teachers')->get(), 'users' => User::with('classroom')->orderBy('name')->get(), 'rubrics' => Rubric::all(), 'permissions' => User::PERMISSIONS]);
+        return Inertia::render('Setup', ['years' => AcademicYear::with('periods')->withExists(['periods as periods_locked' => fn ($query) => $query->whereHas('challenges')])->get(), 'classrooms' => Classroom::with('users', 'students', 'modules.teachers')->get(), 'users' => User::with('classroom')->orderBy('name')->get(), 'rubrics' => Rubric::all(), 'permissions' => User::PERMISSIONS, 'registrations' => $request->user()->role === 'admin' ? GoogleRegistration::where('status', 'pending')->orderBy('created_at')->get(['id', 'name', 'email', 'created_at'])->map(fn ($registration) => [...$registration->toArray(), 'review_url' => route('registrations.update', $registration)]) : []]);
     }
 
     public function store(Request $r, string $entity): RedirectResponse
@@ -77,6 +79,9 @@ class SetupController extends Controller
                     }
                     if ($entity === 'student') {
                         unset($data['permissions']);
+                    }
+                    if (Str::lower($model->email ?? '') !== Str::lower($data['email'])) {
+                        $model->forceFill(['google_id' => null, 'email_verified_at' => null]);
                     }
                     $model->fill($data)->save();
                     break;

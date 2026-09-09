@@ -25,7 +25,7 @@ Las notas introducidas admiten hasta cuatro decimales; la presentación ordinari
 
 Desarrollo autorizado en `/home/deploy/projects/erronk2d`. Las dependencias de PHP se ejecutarán dentro de contenedores propios. No se cambian paquetes globales, servicios, firewall ni aplicaciones existentes.
 
-El despliegue público, el DNS y la incorporación/recarga del Caddy compartido permanecen pendientes de autorización. Los archivos de despliegue preparados en este proyecto no implican su activación.
+El despliegue público fue autorizado posteriormente y está activo en erronk2d.jonvadillo.com. Las actualizaciones se limitan al Compose de Erronk2D, con copia previa; no autorizan cambios globales en el VPS.
 
 La auditoría encontró Caddy compartido en 80/443, FastAPI en 127.0.0.1:8000 y PostgreSQL privado de athletes-pair-match. Erronk2D usará recursos propios y un puerto local separado. No se ejecutarán limpiezas globales de Docker.
 
@@ -33,3 +33,10 @@ La auditoría encontró Caddy compartido en 80/443, FastAPI en 127.0.0.1:8000 y 
 
 - Los estudiantes mantienen su acceso para autoevaluación y coevaluación. No intervienen en el registro del reparto.
 - La evaluación transversal del profesorado es **única por estudiante, criterio y reto**, sin módulo. Cualquier profesor autorizado puede completarla. Los docentes consensúan los valores fuera de la aplicación. No se promedian notas entre profesores ni entre módulos.
+
+## Acceso con Google solicitado el 9 de septiembre de 2026
+
+- El usuario solicita inicio de sesión y registro mediante Google, manteniendo el acceso con contraseña.
+- Criterio aplicado mientras se espera respuesta a la consulta: los registros nuevos son solicitudes pendientes; solo el administrador puede aprobarlas y asignar rol/clase. No se conceden permisos por el dominio del correo ni por datos enviados desde el navegador.
+- Vincular una cuenta existente requiere confirmar una vez su contraseña local. No se fusionan cuentas ni se cambia su historial. Una cuenta desactivada no obtiene acceso mediante Google.
+- Sin dependencias adicionales ni modificaciones de infraestructura compartida. Activación pendiente de las credenciales OAuth privadas y prueba real del retorno de Google; instrucciones en despliegue.md.

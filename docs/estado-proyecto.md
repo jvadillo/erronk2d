@@ -13,7 +13,7 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 | Área | Resultado implementado | Aclaración o alcance |
 | --- | --- | --- |
 | Cursos, clases y módulos | Cursos con Evaluaciones, clase actual única por estudiante y varios responsables por módulo | Renombrado de cursos sin recrear periodos. Cambiar matrícula actual conserva los participantes históricos de los retos |
-| Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas | Sin registro público. Primera cuenta creada; API Resend configurada, dominio verificado |
+| Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas; acceso Google y solicitudes de registro | Google requiere configurar y activar el cliente OAuth. Las cuentas nuevas necesitan aprobación, rol y clase para estudiantes. API Resend configurada |
 | Retos | Clase/Evaluación, módulos, peso, fechas, estados, opciones y rúbricas copiadas | Las rúbricas y módulos se eligen al crear; cambios posteriores de esas vinculaciones no incluidos |
 | Equipos | 2–5 integrantes, exclusividad por reto, composición independiente | Reorganización bloqueada después de empezar evaluaciones |
 | Rúbricas | Criterios, pesos, niveles, GENERAL/módulo para equipo; edición, ordenación y duplicado de plantillas | Cada reto conserva su copia; transversales sin módulo |

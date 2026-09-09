@@ -1,9 +1,11 @@
 # Estado de la tarea
 
 ## Objetivo
-Continuar con carga concurrente, supervisión y política de copias externas; restauración completa ya verificada. Producción en **4cd717d**, error 422 corregido. Actualizado 2026-09-09. Reanudar leyendo este archivo, `git status --short` y `git log -5 --oneline`; no repetir auditoría, especificación ni pruebas ya verificadas sin motivo.
+Implementar acceso y registro con Google, manteniendo roles y matrícula. Producción aún en **4cd717d**. Preguntado al usuario por aprobación administrativa de nuevas solicitudes y disponibilidad de cliente OAuth. Propuesta: solicitud sin acceso hasta asignar rol/clase; vinculación de cuentas existentes mediante contraseña una vez. Sin dependencias nuevas; OAuth con cliente HTTP de Laravel. Actualizado 2026-09-09. Reanudar leyendo este archivo, git status y git log; no repetir auditoría ni pruebas previas.
 
 ## Completado
+- Google implementado (todavía no desplegado): OAuth servidor con state/PKCE, correo verificado, vinculación inicial con contraseña y acceso posterior por identificador Google. Nuevas solicitudes sin acceso hasta aprobación administrativa; estudiantes requieren clase, profesores sin permisos iniciales. No se guardan tokens; Nginx propio omite parámetros de consulta de sus logs. Sin dependencias nuevas.
+- Verificación Google: **55 pruebas / 437 aserciones** de Google/acceso/organización/matrícula/demo correctas en SQLite y PostgreSQL; **una prueba Playwright** correcta (errores de login, revisión, cambio de rol, clase obligatoria y aprobación). Compilación TypeScript/Vue y Pint correctos. No confundir con la suite completa; Google externo está simulado.
 - Crear retos: errores de curso/módulos/rúbricas ahora aparecen en el formulario en español y conservan los datos. Selector deshabilita rúbricas incompatibles y limpia selecciones que dejan de ser válidas. No se conoce la selección exacta que provocó el error del usuario; se cubren todas las ramas que devolvían la pantalla 422.
 - Corrección `4cd717d`: **7 pruebas nuevas / 47 aserciones** correctas tanto en SQLite como PostgreSQL; **una prueba nueva Playwright** verifica error conservando formulario y creación posterior válida. Compilación y Pint correctos.
 - Producción: app/web **4cd717d**, web y PostgreSQL saludables, mantenimiento retirado, HTTPS login 200 y API vecina 200. Sin migraciones nuevas; despliegue conserva cuentas manuales y mantiene **40 estudiantes / 10 profesores ficticios activos**. Copia privada previa: `backups/production-20260909-4cd717d`.
@@ -22,6 +24,7 @@ Continuar con carga concurrente, supervisión y política de copias externas; re
 5. Exportación XLSX/PDF generado en servidor son ampliaciones futuras. Limpiar cuentas ficticias solo cuando lo solicite el usuario.
 
 ## Archivos relevantes y modificados
+- Google: controladores GoogleAuth/Registration/Auth/Setup; modelos User/GoogleRegistration; migración `2026_09_09_201254_add_google_authentication.php`; factoría GoogleRegistration y seeder local; Login.vue, Setup.vue y RegistrationRequests.vue; rutas, config/services.php, .env.example, ops/nginx.conf; pruebas GoogleAuth/GoogleRegistration y Browser/workflows; documentación de despliegue/decisiones/estado y PROGRESS.
 - Corrección: `app/Http/Controllers/ChallengeController.php`, `resources/js/pages/Dashboard.vue`, `tests/Feature/ChallengeCreationTest.php`, `tests/Browser/workflows.spec.ts`; commit `4cd717d`.
 - Modificados en este bloque: nuevo `compose.restore.yml`, `PROGRESS.md`, `docs/despliegue.md`, `docs/estado-proyecto.md`. Continuidad de la corrección publicada: `1cc29ca`. Existe eliminación ajena **sin incluir en nuestros commits** de `docs/PROGRESS.md`; no recrearlo. Último commit: consultar git log.
 - Operación: `ops/{deploy,backup,Dockerfile.production}`, `compose.production.yml`, `compose.test.yml`; procedimiento de pruebas en README.
@@ -43,7 +46,7 @@ Continuar con carga concurrente, supervisión y política de copias externas; re
 Pantalla 422 corregida y publicada; falta confirmar el caso concreto del usuario. Ensayo de restauración sin errores pendientes. Aviso de permisos de Tinker resuelto con directorio temporal interno; no requiere modificar la imagen ni el VPS.
 
 ## Siguiente acción concreta
-Preparar una medición acotada de concurrencia en el entorno de pruebas con datos ficticios y límites de recursos, sin enviar carga a producción. Incorporar la respuesta sobre copias externas cuando llegue. No repetir el ensayo de restauración ya completado.
+Guardar el commit Google verificado, construir imágenes y desplegar con copia nueva, manteniendo Google desactivado hasta configurar credenciales privadas. Después comprobar HTTPS y retirar el entorno de pruebas. Activación y prueba real requieren GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET; retorno /auth/google/callback. Consulta de política de registro y credenciales aún sin respuesta; propuesta aplicada: aprobación administrativa.
 
 ## Comandos para verificarlo
 ```sh

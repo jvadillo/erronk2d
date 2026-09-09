@@ -197,3 +197,31 @@ test('equipos: recuperar participantes y guardar dos equipos desde los selectore
   await expect(dialog.getByText('2 integrantes', { exact: true })).toHaveCount(2);
   expect(errors).toEqual([]);
 });
+
+test('Google: revisión administrativa, clase obligatoria y alta aprobada', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.getByLabel('Correo electrónico').fill('admin@erronk2d.test');
+  await page.getByLabel('Contraseña', { exact: true }).fill('incorrecta');
+  await page.getByRole('button', { name: 'Entrar a Erronk2D' }).click();
+  await expect(page.getByRole('alert')).toContainText('El correo o la contraseña no son correctos.');
+  await login(page);
+  await page.goto('/setup');
+  await page.getByRole('button', { name: 'Solicitudes (1)', exact: true }).click();
+  await page.getByRole('button', { name: 'Revisar solicitud', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  const role = dialog.getByRole('combobox', { name: 'Rol', exact: true });
+  const classroom = dialog.getByRole('combobox', { name: 'Clase', exact: true });
+  await expect(classroom).toHaveAttribute('required', '');
+  await expect(classroom).toHaveValue('');
+  await role.selectOption('teacher');
+  await expect(classroom).toHaveCount(0);
+  await role.selectOption('student');
+  await classroom.selectOption({ label: '2DAW-A' });
+  await dialog.getByRole('button', { name: 'Aprobar cuenta', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByText('No hay solicitudes pendientes.')).toBeVisible();
+  await page.getByRole('button', { name: 'Estudiante', exact: true }).first().click();
+  await expect(page.getByRole('row').filter({ hasText: 'browser-google@example.test' })).toContainText('2DAW-A');
+  expect(errors).toEqual([]);
+});
