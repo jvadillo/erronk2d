@@ -127,9 +127,9 @@ class GoogleRegistrationTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $teacher = User::factory()->create(['role' => 'teacher']);
 
-        $this->actingAs($admin)->get('/setup')->assertInertia(fn (Assert $page) => $page->has('registrations', 1)
+        $this->actingAs($admin)->get('/setup/registrations')->assertInertia(fn (Assert $page) => $page->has('registrations', 1)
             ->where('registrations.0.name', '<script>untrusted</script>')->missing('registrations.0.google_id'));
-        $this->actingAs($teacher)->get('/setup')->assertInertia(fn (Assert $page) => $page->has('registrations', 0));
+        $this->actingAs($teacher)->get('/setup/courses')->assertInertia(fn (Assert $page) => $page->has('registrations', 0));
     }
 
     public function test_changing_account_email_removes_google_link_without_changing_other_accounts(): void

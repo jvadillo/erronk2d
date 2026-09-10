@@ -21,6 +21,63 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
   await expect(page.getByRole('heading', { name: 'Los retos, en perspectiva.' })).toBeVisible();
 }
 
+test('navegación: lateral plegable, páginas propias, recarga e historial', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page);
+  const sidebar = page.getByRole('complementary', { name: 'Menú lateral' });
+  await page.getByRole('button', { name: 'Contraer menú lateral', exact: true }).click();
+  await expect(sidebar).toHaveCSS('width', '80px');
+  await page.getByRole('button', { name: 'Organización', exact: true }).click();
+  await page.getByRole('link', { name: 'Profesor', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/teachers$/);
+  await expect(page.getByRole('heading', { name: 'Profesor.', level: 1, exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Profesor', exact: true })).toHaveAttribute('aria-current', 'page');
+  await page.reload();
+  await expect(sidebar).toHaveCSS('width', '80px');
+  await page.screenshot({ path: 'test-results/sidebar-collapsed.png', fullPage: true });
+  await page.getByRole('link', { name: 'Módulos', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/modules$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/setup\/teachers$/);
+  await expect(page.getByRole('heading', { name: 'Profesor.', level: 1, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Expandir menú lateral', exact: true }).click();
+  await expect(sidebar).toHaveCSS('width', '252px');
+  await page.getByRole('link', { name: 'Clases', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/classrooms$/);
+  await expect(page.getByRole('heading', { name: 'Clases y matrículas', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Cursos académicos', exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/sidebar-expanded.png', fullPage: true });
+  await page.getByRole('link', { name: 'Clases', exact: true }).focus();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Organización', exact: true })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('button', { name: 'Organización', exact: true })).toBeFocused();
+  await page.goto('/setup/students');
+  await expect(page.getByRole('heading', { name: 'Estudiante.', level: 1, exact: true })).toBeVisible();
+  await expect(sidebar).toHaveCSS('width', '252px');
+  expect(errors).toEqual([]);
+});
+
+test('navegación móvil: submenú accesible y sin desbordamiento', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page);
+  await page.getByRole('button', { name: 'Organización', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Estudiante', exact: true })).toBeVisible();
+  await page.screenshot({ path: 'test-results/sidebar-mobile.png', fullPage: true });
+  await page.getByRole('link', { name: 'Estudiante', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/students$/);
+  await expect(page.getByRole('button', { name: 'Organización', exact: true })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('heading', { name: 'Estudiante.', level: 1, exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.getByRole('button', { name: 'Organización', exact: true }).click();
+  await page.getByRole('link', { name: 'Biblioteca de rúbricas', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/rubrics$/);
+  await expect(page.getByRole('heading', { name: 'Biblioteca de rúbricas.', level: 1, exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('creación de reto: rúbricas compatibles y validación sin perder el formulario', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -99,7 +156,7 @@ test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page
   await expect(page.getByRole('heading', { name: 'Cada Evaluación cuenta.' })).toBeVisible();
   await expect(page.locator('tbody tr')).toHaveCount(80);
   await page.goto('/setup');
-  await page.getByRole('button', { name: 'Biblioteca de rúbricas', exact: true }).click();
+  await page.getByRole('link', { name: 'Biblioteca de rúbricas', exact: true }).click();
   await page.getByRole('button', { name: 'Duplicar rúbrica' }).first().click();
   await expect(page.getByRole('dialog').getByLabel('Nombre', { exact: true }).first()).toHaveValue(/\(copia\)/);
   await page.keyboard.press('Escape');
@@ -128,11 +185,11 @@ test('alumnado: autoevaluación, compañeros, resultado propio y móvil', async 
 test('organización: guardar una edición y cambiar de formulario sin arrastrar datos', async ({ page }) => {
   await login(page);
   await page.goto('/setup');
-  await page.getByRole('button', { name:'Estudiante', exact:true }).first().click();
+  await page.getByRole('link', { name: 'Estudiante', exact: true }).click();
   await page.getByRole('button', { name:'Editar Ainhoa Agirre', exact:true }).click();
   await page.getByRole('dialog').getByRole('button', { name:'Guardar', exact:true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name:'Profesor', exact:true }).first().click();
+  await page.getByRole('link', { name: 'Profesor', exact: true }).click();
   await page.getByRole('button', { name:'Profesor', exact:true }).last().click();
   await expect(page.getByRole('dialog', { name:'Crear Profesor', exact:true })).toBeVisible();
   await expect(page.getByRole('dialog').getByLabel('Nombre', { exact:true })).toHaveValue('');
@@ -153,7 +210,7 @@ test('organización: alta con diez caracteres y clase, pestañas y renombrado co
   await course.getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(course).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Curso revisado en navegador' })).toBeVisible();
-  await page.getByRole('button', { name: 'Estudiante', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Estudiante', exact: true }).click();
   await expect(page.getByRole('columnheader', { name: 'CLASE', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Estudiante', exact: true }).last().click();
   const student = page.getByRole('dialog');
@@ -165,7 +222,7 @@ test('organización: alta con diez caracteres y clase, pestañas y renombrado co
   await student.getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(student).toHaveCount(0);
   await expect(page.getByRole('row').filter({ hasText: 'browser-student@example.test' })).toContainText('2DAW-A');
-  await page.getByRole('button', { name: 'Profesor', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Profesor', exact: true }).click();
   await expect(page.getByText('browser-student@example.test')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -207,7 +264,7 @@ test('Google: revisión administrativa, clase obligatoria y alta aprobada', asyn
   await expect(page.getByRole('alert')).toContainText('El correo o la contraseña no son correctos.');
   await login(page);
   await page.goto('/setup');
-  await page.getByRole('button', { name: 'Solicitudes (1)', exact: true }).click();
+  await page.getByRole('link', { name: 'Solicitudes', exact: true }).click();
   await page.getByRole('button', { name: 'Revisar solicitud', exact: true }).click();
   const dialog = page.getByRole('dialog');
   const role = dialog.getByRole('combobox', { name: 'Rol', exact: true });
@@ -221,7 +278,7 @@ test('Google: revisión administrativa, clase obligatoria y alta aprobada', asyn
   await dialog.getByRole('button', { name: 'Aprobar cuenta', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText('No hay solicitudes pendientes.')).toBeVisible();
-  await page.getByRole('button', { name: 'Estudiante', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Estudiante', exact: true }).click();
   await expect(page.getByRole('row').filter({ hasText: 'browser-google@example.test' })).toContainText('2DAW-A');
   expect(errors).toEqual([]);
 });

@@ -1,4 +1,5 @@
 import '../css/app.css';
+import '../css/sidebar.css';
 import { createApp, h, type DefineComponent } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 const pages = import.meta.glob<{default: DefineComponent}>('./pages/**/*.vue');

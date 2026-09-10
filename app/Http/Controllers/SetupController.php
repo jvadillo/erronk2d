@@ -21,11 +21,27 @@ use Inertia\Response;
 
 class SetupController extends Controller
 {
-    public function index(Request $request): Response
+    public const SECTIONS = [
+        'courses' => 'Cursos académicos',
+        'classrooms' => 'Clases',
+        'teachers' => 'Profesor',
+        'students' => 'Estudiante',
+        'modules' => 'Módulos',
+        'rubrics' => 'Biblioteca de rúbricas',
+        'registrations' => 'Solicitudes',
+    ];
+
+    public function index(Request $request, ?string $section = null): Response|RedirectResponse
     {
         abort_if($request->user()->role === 'student', 403);
 
-        return Inertia::render('Setup', ['years' => AcademicYear::with('periods')->withExists(['periods as periods_locked' => fn ($query) => $query->whereHas('challenges')])->get(), 'classrooms' => Classroom::with('users', 'students', 'modules.teachers')->get(), 'users' => User::with('classroom')->orderBy('name')->get(), 'rubrics' => Rubric::all(), 'permissions' => User::PERMISSIONS, 'registrations' => $request->user()->role === 'admin' ? GoogleRegistration::where('status', 'pending')->orderBy('created_at')->get(['id', 'name', 'email', 'created_at'])->map(fn ($registration) => [...$registration->toArray(), 'review_url' => route('registrations.update', $registration)]) : []]);
+        if ($section === null) {
+            return redirect()->route('setup.section', ['section' => 'courses']);
+        }
+        abort_unless(isset(self::SECTIONS[$section]), 404);
+        abort_if($section === 'registrations' && $request->user()->role !== 'admin', 403);
+
+        return Inertia::render('Setup', ['section' => $section, 'title' => self::SECTIONS[$section], 'years' => AcademicYear::with('periods')->withExists(['periods as periods_locked' => fn ($query) => $query->whereHas('challenges')])->get(), 'classrooms' => Classroom::with('users', 'students', 'modules.teachers')->get(), 'users' => User::with('classroom')->orderBy('name')->get(), 'rubrics' => $section === 'rubrics' ? Rubric::all() : [], 'permissions' => User::PERMISSIONS, 'registrations' => $section === 'registrations' ? GoogleRegistration::where('status', 'pending')->orderBy('created_at')->get(['id', 'name', 'email', 'created_at'])->map(fn ($registration) => [...$registration->toArray(), 'review_url' => route('registrations.update', $registration)]) : []]);
     }
 
     public function store(Request $r, string $entity): RedirectResponse

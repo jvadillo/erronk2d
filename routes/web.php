@@ -29,7 +29,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/challenges/{challenge}', [ChallengeController::class, 'show']);
     Route::post('/challenges/{challenge}', [ChallengeController::class, 'update']);
     Route::get('/challenges/{challenge}/history', [ChallengeController::class, 'history']);
-    Route::get('/setup', [SetupController::class, 'index']);
+    Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
+    Route::get('/setup/{section}', [SetupController::class, 'index'])->name('setup.section');
     Route::post('/registrations/{registration}', [RegistrationController::class, 'update'])->name('registrations.update');
     Route::post('/setup/{entity}', [SetupController::class, 'store']);
     Route::post('/imports', [ImportController::class, 'import'])->middleware('throttle:20,1');
