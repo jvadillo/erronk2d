@@ -36,7 +36,14 @@ La auditoría encontró Caddy compartido en 80/443, FastAPI en 127.0.0.1:8000 y 
 
 ## Acceso con Google solicitado el 9 de septiembre de 2026
 
+- **Trabajo aplazado expresamente por el usuario el 10 de septiembre.** Conservar la integración y configuración privada; no continuar verificaciones OAuth ni solicitar cambios en Google Cloud hasta que indique retomarlo. El error conocido es `redirect_uri_mismatch`.
 - El usuario solicita inicio de sesión y registro mediante Google, manteniendo el acceso con contraseña.
 - Criterio aplicado mientras se espera respuesta a la consulta: los registros nuevos son solicitudes pendientes; solo el administrador puede aprobarlas y asignar rol/clase. No se conceden permisos por el dominio del correo ni por datos enviados desde el navegador.
 - Vincular una cuenta existente requiere confirmar una vez su contraseña local. No se fusionan cuentas ni se cambia su historial. Una cuenta desactivada no obtiene acceso mediante Google.
 - Sin dependencias adicionales ni modificaciones de infraestructura compartida. Credenciales OAuth proporcionadas por el usuario y aplicadas de forma privada; integración habilitada. Falta autorizar la URI de retorno en Google Cloud y completar una prueba real con una cuenta; instrucciones en despliegue.md.
+
+## Navegación solicitada el 10 de septiembre de 2026
+
+- El lateral se contrae parcialmente a iconos; el navegador conserva la preferencia. Los enlaces siguen teniendo nombres accesibles y ayudas al pasar el cursor.
+- Organización agrupa un submenú de páginas con URL, título e historial propios: Cursos académicos, Clases, Profesor, Estudiante, Módulos, Biblioteca de rúbricas y Solicitudes. Comparten formularios sin duplicarlos; conservan los permisos existentes y Solicitudes solo es accesible para administración.
+- En móvil se mantiene la barra inferior y Organización abre su submenú. La navegación por teclado permite cerrar el submenú con Escape.

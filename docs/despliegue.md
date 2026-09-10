@@ -1,12 +1,14 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción actualizada el 9 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. HTTPS público comprobado; la API vecina sigue respondiendo. Imágenes app/web `736925b`, con acceso Google y registro sujeto a aprobación; ajuste de red en `9625eee`. La antigua vista previa está detenida y conservada.
+**Producción actualizada el 10 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. Imágenes app/web `38e25ce`, con lateral plegable y páginas de Organización; sin nuevas migraciones. HTTPS y recursos compilados responden 200; las siete páginas nuevas exigen iniciar sesión. La API vecina sigue respondiendo 200. Ajuste de red en `9625eee`; la antigua vista previa está detenida y conservada.
 
 ## Arquitectura preparada
 
 ### Acceso y registro con Google
 
-La integración está publicada y **habilitada con las credenciales privadas proporcionadas por el usuario**. La comprobación real de redirección devuelve **redirect_uri_mismatch** de Google: falta añadir la URI exacta de retorno al cliente en Google Cloud. Se ha solicitado esa acción al usuario. No utiliza SMTP ni cambia la configuración de Resend. Mantiene el acceso con contraseña.
+**Trabajo aplazado expresamente por el usuario.** Conservar esta referencia para cuando solicite retomarlo; no repetir comprobaciones OAuth ni pedir cambios en Google Cloud mientras siga aplazado.
+
+La integración está publicada y **habilitada con las credenciales privadas proporcionadas por el usuario**. La última comprobación real de redirección devolvió **redirect_uri_mismatch** de Google: falta añadir la URI exacta de retorno al cliente en Google Cloud. No utiliza SMTP ni cambia la configuración de Resend. Mantiene el acceso con contraseña.
 
 1. En Google Cloud / Google Auth Platform, crear un cliente OAuth de tipo **Aplicación web** y configurar la pantalla de consentimiento de Erronk2D. Elegir la audiencia adecuada para el centro; si se mantiene en pruebas, añadir las cuentas de prueba en Google. Solo se solicitan `openid`, `email` y `profile`.
 2. Registrar exactamente esta URI de retorno: `https://erronk2d.jonvadillo.com/auth/google/callback`. El flujo es de servidor y no necesita una biblioteca JavaScript de Google ni un origen JavaScript autorizado.
@@ -107,7 +109,7 @@ Para una copia coherente antes de actualizar: poner **solo Erronk2D** en manteni
 
 Validar primero la restauración en un proyecto Compose separado, con otra base/volúmenes y sin ruta pública: `pg_restore --exit-on-error --no-owner --no-acl` sobre una base vacía, restaurar almacenamiento, ajustar propietario UID 1000, aplicar la clave original y arrancar la misma versión de imágenes. Comparar usuarios, retos, publicaciones y notas conocidas. No restaurar encima de producción para hacer una prueba.
 
-Primera copia local en `backups/production-20260908-resend`; copia previa a Google en `backups/production-20260909-736925b`, con el esquema anterior y la configuración privada OAuth. Se conservan las de `4cd717d` y `504db0b`. La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. La copia `4cd717d` también superó el ensayo completo descrito a continuación. Quedan pendientes el almacenamiento externo y la retención automática.
+Última copia previa a la navegación en `backups/production-20260910-38e25ce`, correspondiente a la versión anterior `736925b`; base, almacenamiento y entorno privado guardados antes de actualizar. Primera copia local en `backups/production-20260908-resend`; copia previa a Google en `backups/production-20260909-736925b`, con el esquema anterior y la configuración privada OAuth. Se conservan las de `4cd717d` y `504db0b`. La primera base se restauró correctamente en PostgreSQL temporal y se ensayó la migración nueva conservando sus registros. La copia `4cd717d` también superó el ensayo completo descrito a continuación. Quedan pendientes el almacenamiento externo y la retención automática.
 
 ### Ensayo de restauración completado el 9 de septiembre de 2026
 
