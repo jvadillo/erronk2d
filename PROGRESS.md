@@ -1,12 +1,12 @@
 # Estado de la tarea
 
 ## Objetivo
-**Nueva arquitectura: respuestas recibidas el 2026-09-14, pendientes aclaraciones finales antes de planificar o implementar.** Decisiones completas en docs/decisiones.md, sección Arquitectura académica. Aislamiento anual, clases con propietario y miembros, varias matrículas por estudiante, catálogos estables y rúbricas privadas compartibles.
+**Nueva arquitectura: aclaraciones cerradas y plan preparado el 2026-09-14; implementación pendiente.** Decisiones y plan en docs/decisiones.md, sección Arquitectura académica. Aislamiento anual, clases con propietario y miembros, varias matrículas por estudiante, catálogos estables y rúbricas privadas compartibles.
 
 **Navegación terminada y publicada** en https://erronk2d.jonvadillo.com, imágenes app/web **38e25ce**, actualizado 2026-09-10. Google **aplazado expresamente por el usuario**. Reanudar con este archivo, git status y git log; no repetir auditoría, prompt completo ni pruebas ya verificadas.
 
 ## Completado
-- Registradas las 16 respuestas de arquitectura del 14 de septiembre en docs/decisiones.md. Sin cambios de aplicación, datos o producción; no se han repetido pruebas.
+- Registradas las 16 respuestas y las 3 aclaraciones finales de arquitectura del 14 de septiembre; plan de 7 bloques en docs/decisiones.md. Sin cambios de aplicación, datos o producción; no se han repetido pruebas.
 - Lateral plegable de 252 a 80 px, iconos y preferencia persistente en el navegador. Organización tiene submenú y páginas propias: Cursos académicos, Clases, Profesor, Estudiante, Módulos, Biblioteca de rúbricas y Solicitudes (solo administración). URL, título e historial propios; móvil y teclado verificados.
 - Código en **38e25ce**. 18 pruebas nuevas / 216 aserciones correctas en SQLite y PostgreSQL; 29 pruebas existentes afectadas también correctas en ambos. **9 pruebas Playwright correctas**, capturas revisadas, TypeScript/Vue y Pint correctos. Entorno erronk2d-test retirado.
 - Despliegue terminado: copia privada `backups/production-20260910-38e25ce` (versión anterior 736925b); sin nuevas migraciones, mantenimiento retirado. HTTPS login y ambos recursos compilados 200; siete páginas protegidas redirigen al login; API vecina 200. Solo contenedores propios app/web actualizados.
@@ -16,11 +16,11 @@
 - Restauración completa de copia 4cd717d ensayada con versión original 504db0b: PostgreSQL, 70 archivos SHA-256, login/recursos y cálculos. No contenía publicaciones reales. Ensayo retirado; copias e imágenes anteriores conservadas.
 
 ## Pendiente
-0. Resolver matrícula parcial por módulos y consecuencias en evaluación, permisos al compartir rúbricas y destino de cursos académicos/módulos/rúbricas actuales durante la limpieza. Después preparar plan; todavía no implementar.
+0. Implementar el plan académico de docs/decisiones.md una vez concluida su presentación: modelo/contexto, permisos/organización, retos/rúbricas/notas, interfaz/regresión y reinicio/despliegue. Aclaraciones funcionales cerradas; no volver a preguntar lo ya acordado.
 1. **Google aplazado**: solo cuando el usuario lo retome, autorizar `https://erronk2d.jonvadillo.com/auth/google/callback` en Google Cloud y completar acceso real. No repetir preguntas ni llamadas OAuth ahora. Política conservadora actual: aprobación administrativa, sin elección pública de rol/clase.
 2. Elegir con el usuario destino externo cifrado, frecuencia y retención de copias; restauración ya ensayada.
 3. Medir carga concurrente en entorno ficticio aislado y concretar supervisión de TLS/espacio. Comprobar remitente definitivo en la próxima recuperación solicitada, sin envíos adicionales.
-4. XLSX/PDF generado en servidor son ampliaciones futuras. Reinicio académico solicitado, pendiente delimitar catálogos/rúbricas y preparar transición; conservar todas las cuentas.
+4. XLSX/PDF generado en servidor son ampliaciones futuras. Reinicio completo autorizado como parte de la transición: conservar cuentas de ejemplo y acceso administrador; preparar/ensayar limpieza y copia previa con la nueva versión antes de ejecutarlo.
 
 ## Archivos relevantes y modificados
 - Navegación 38e25ce: app/Http/Controllers/SetupController.php, app/Http/Middleware/HandleInertiaRequests.php, routes/web.php, resources/js/components/Layout.vue, resources/js/pages/{Setup,Challenge}.vue, resources/js/app.ts, resources/css/{app,sidebar}.css.
@@ -34,7 +34,9 @@
 ## Decisiones
 - Arquitectura acordada: administrador crea/cierra/reabre años; docentes activos acceden a cualquier abierto. Primer acceso selecciona el abierto creado más recientemente; siguientes recuperan último año del usuario. Selector visible; histórico cerrado en solo lectura. Administración sin año para tareas globales; estudiantes acceden a años con matrícula.
 - Clases anuales de un ciclo/nivel, propietario transferible por administrador; solo propietario/miembros ven sus datos. Sin permisos individuales; propietario/admin gestionan docentes y clase, miembros gestionan actividad. Responsables por módulo de la clase evalúan sus notas; generales/transversales compartidas. Varias matrículas por estudiante/año sustituyen la clase única. Sin arrastre de notas entre clases ni sincronización de retos evaluados/publicados.
-- Catálogos ciclo/módulo solo administrativos; cuentas persistentes, docentes crean estudiantes y buscan existentes por correo exacto. Rúbricas privadas compartibles y copia congelada en retos. Nombres de ciclos/módulos congelados en histórico; Evaluaciones comunes por año. Reiniciar retos/clases/matrículas y conservar cuentas; alcance restante por aclarar.
+- Catálogos ciclo/módulo solo administrativos; cuentas persistentes entre años, docentes crean estudiantes y buscan existentes por correo exacto. Rúbricas privadas compartidas solo para usar/copiar; copia congelada en retos. Nombres de ciclos/módulos congelados en histórico; Evaluaciones comunes por año.
+- Matrícula de clase abarca todos sus módulos; no gestionar matrícula parcial. Usuario permite nota vacía o «No matriculado»: propuesta de marca explícita no numérica en evaluación, distinta de pendiente/cero, nunca inferida por ausencia de notas. Verificar consecuencias en cálculo/publicación.
+- Reinicio inicial final: borrar actividad académica, años, módulos, rúbricas y cuentas docentes/estudiantiles no ficticias; conservar profesores/estudiantes de ejemplo con credenciales y acceso administrador. Sustituye la conservación inicial de todas las cuentas. No borrar configuración, servicios ni copias. Limpieza aún no ejecutada.
 - Nota equipo → reparto opcional → TODAS las defensas → UNA nota final de reto usada como 40% en TODOS los módulos. Transversales docentes sin módulo; auto/coevaluación activas; retos ponderados por Evaluación y media de Evaluaciones por curso.
 - Producción actual conserva 40/10 ficticios adicionales a manuales; ops/deploy mantiene datos demo idempotentes. El futuro plan debe revisar esa siembra para no recrear actividad académica tras el reinicio solicitado.
 - VPS compartido: solo recursos propios. Web 127.0.0.1:8082, app/web backend + outbound, DB privada; API vecina 127.0.0.1:8000. No modificar gateway, paquetes, firewall ni Docker global.
@@ -45,7 +47,7 @@
 Sin errores pendientes conocidos en la navegación entregada. Google conserva **redirect_uri_mismatch**: falta registrar el retorno en el cliente externo; Client ID/Secret no permiten modificarlo. Aplazado por petición. Acceso con contraseña operativo.
 
 ## Siguiente acción concreta
-Recoger aclaraciones finales descritas en Pendiente y docs/decisiones.md; después elaborar plan. Ya leídos modelos User/Classroom/Module/AcademicYear, SetupController/AuthController y referencias de retos/notas/importación; implementación actual aún usa módulos ligados a clase, users.classroom_id y consultas docentes sin aislamiento. Cambios ajenos conservados: eliminados CLAUDE.md y docs/PROGRESS.md; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No retomar Google ni repetir despliegue.
+Presentar el plan guardado en docs/decisiones.md; siguiente bloque técnico: modelo/contexto y sus pruebas. Ya revisados modelos/controladores académicos, migración de dominio, rutas y referencias de ops/deploy/EnsureDemoData; el despliegue actual recrea datos académicos ficticios y debe corregirse antes del reinicio. Leer reglas/skills de código/pruebas al iniciar implementación. Cambios ajenos conservados: eliminados CLAUDE.md y docs/PROGRESS.md; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No retomar Google ni repetir despliegue actual.
 
 ## Comandos para verificarlo
 ```sh
