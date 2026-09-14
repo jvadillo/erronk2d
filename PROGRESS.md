@@ -11,8 +11,8 @@ Completar y publicar la arquitectura de cursos académicos independientes aproba
 - **138 pruebas / 1.179 aserciones correctas en SQLite**. Incluyen regresión completa, importación de correo con mayúsculas, histórico, permisos y reinicio con credenciales intactas. Las mismas 138 pruebas pasan en PostgreSQL (corregida únicamente la ordenación de la comparación de hashes en la prueba de reinicio). **11 escenarios Playwright correctos** (10 iniciales + repetición del alta corregida y móvil). Capturas revisadas: selector móvil sin solapamiento. Vue/TypeScript y Pint correctos.
 
 ## Pendiente
-1. Código e interfaz verificados. Imágenes app/web construidas; falta ensayo del reinicio con imagen de producción en la base ficticia.
-2. ops/deploy adaptado: copia comprobada, comparación de cuentas/credenciales antes/después y mantenimiento conservado ante fallo posterior a migraciones. Ensayar y publicar con limpieza autorizada.
+1. Código e interfaz verificados. Imágenes app/web 878840e construidas y etiquetadas. Ensayo del reinicio correcto con imagen de producción: 1 administrador, 40 estudiantes, 10 profesores; actividad vacía, segunda ejecución inocua, login y recursos internos HTTP 200.
+2. ops/deploy adaptado: copia comprobada, comparación de cuentas/credenciales antes/después y mantenimiento conservado ante fallo posterior a migraciones. Publicar 878840e con limpieza autorizada y copia nueva backups/production-20260914-878840e.
 3. Actualizar documentación existente y continuidad, retirar solo entorno propio de pruebas al acabar.
 4. Google aplazado expresamente (redirect_uri_mismatch externo). Copias externas, carga y supervisión quedan para futuras tareas; no retomarlas ahora.
 
@@ -42,4 +42,4 @@ Completar y publicar la arquitectura de cursos académicos independientes aproba
 Sin fallos pendientes en PHPUnit SQLite. Pint --dirty no funciona porque la imagen PHP carece de Git: usar lista explícita de PHP modificados. Skills de testing e Inertia leídas en plantillas vendor/laravel/boost; documentación Inertia v3 consultada por boost:execute-tool SearchDocs. .ai/rules no existe. Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25.
 
 ## Siguiente acción concreta
-Ensayar reinicio con imágenes locales en compose.test.yml (runtime), comprobar HTTP interno, etiquetar y desplegar con copia previa. No repetir auditorías del VPS, prompt ni pruebas sin cambios. Producción intacta: prevalidación de recuentos confirma 1 administrador, 40 estudiantes demo y 10 profesores demo, más 2 estudiantes no demo que se borrarán. PostgreSQL y navegador de pruebas activos. Actualizar progreso y hacer commits antes de publicar.
+Ejecutar bash ops/deploy 878840e backups/production-20260914-878840e --reset-academics. Después verificar HTTPS/recuentos y retirar entorno erronk2d-test. No repetir auditorías del VPS, prompt ni pruebas sin cambios. Producción intacta: prevalidación de recuentos confirma 1 administrador, 40 estudiantes demo y 10 profesores demo, más 2 estudiantes no demo que se borrarán. PostgreSQL y navegador de pruebas activos. Actualizar progreso y hacer commits antes de publicar.
