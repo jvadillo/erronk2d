@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicContextController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\GoogleAuthController;
@@ -22,7 +23,8 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password/{token}', fn (string $token) => Inertia::render('Login', ['mode' => 'reset', 'token' => $token, 'email' => request('email')]))->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'reset'])->middleware('throttle:5,1');
 });
-Route::middleware(['auth', 'active'])->group(function () {
+Route::middleware(['auth', 'active', 'academic'])->group(function () {
+    Route::post('/academic-context', [AcademicContextController::class, 'update'])->name('academic-context.update');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/', [ChallengeController::class, 'index'])->name('dashboard');
     Route::post('/challenges', [ChallengeController::class, 'store']);

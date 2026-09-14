@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AcademicYear extends Model
 {
-    protected $fillable = ['name'];
+    use HasFactory;
+
+    protected $fillable = ['name', 'is_open'];
 
     protected function casts(): array
     {
-        return [];
+        return ['is_open' => 'boolean'];
     }
 
     public function periods(): HasMany

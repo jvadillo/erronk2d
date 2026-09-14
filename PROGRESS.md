@@ -1,11 +1,12 @@
 # Estado de la tarea
 
 ## Objetivo
-**Nueva arquitectura: aclaraciones cerradas y plan preparado el 2026-09-14; implementación pendiente.** Decisiones y plan en docs/decisiones.md, sección Arquitectura académica. Aislamiento anual, clases con propietario y miembros, varias matrículas por estudiante, catálogos estables y rúbricas privadas compartibles.
+**Nueva arquitectura en implementación, autorizada el 2026-09-14.** Primer bloque de esquema/contexto preparado; falta conectar el ámbito a operaciones e interfaz. Plan en docs/decisiones.md. No desplegado ni reiniciado.
 
 **Navegación terminada y publicada** en https://erronk2d.jonvadillo.com, imágenes app/web **38e25ce**, actualizado 2026-09-10. Google **aplazado expresamente por el usuario**. Reanudar con este archivo, git status y git log; no repetir auditoría, prompt completo ni pruebas ya verificadas.
 
 ## Completado
+- Base académica: migración aditiva de ciclos/matrículas, propietario de clase, módulos por clase/responsables, rúbricas compartidas y preferencia de año. AcademicContext resuelve disponibilidad, recuerda año y comprueba contexto de escritura; middleware y ruta de cambio registrados. **8 pruebas / 28 aserciones pasan en SQLite y PostgreSQL**. Esquema antiguo conservado temporalmente hasta adaptar controladores; todavía no hay aislamiento completo en la aplicación.
 - Registradas las 16 respuestas y las 3 aclaraciones finales de arquitectura del 14 de septiembre; plan de 7 bloques en docs/decisiones.md. Sin cambios de aplicación, datos o producción; no se han repetido pruebas.
 - Lateral plegable de 252 a 80 px, iconos y preferencia persistente en el navegador. Organización tiene submenú y páginas propias: Cursos académicos, Clases, Profesor, Estudiante, Módulos, Biblioteca de rúbricas y Solicitudes (solo administración). URL, título e historial propios; móvil y teclado verificados.
 - Código en **38e25ce**. 18 pruebas nuevas / 216 aserciones correctas en SQLite y PostgreSQL; 29 pruebas existentes afectadas también correctas en ambos. **9 pruebas Playwright correctas**, capturas revisadas, TypeScript/Vue y Pint correctos. Entorno erronk2d-test retirado.
@@ -23,6 +24,7 @@
 4. XLSX/PDF generado en servidor son ampliaciones futuras. Reinicio completo autorizado como parte de la transición: conservar cuentas de ejemplo y acceso administrador; preparar/ensayar limpieza y copia previa con la nueva versión antes de ejecutarlo.
 
 ## Archivos relevantes y modificados
+- Bloque académico: app/Domain/AcademicContext.php, app/Http/{Middleware/ResolveAcademicContext,Controllers/AcademicContextController}.php, modelos AcademicYear/Classroom/Cycle/Enrollment, factories correspondientes, migración 2026_09_14_143913_add_academic_context.php, tests/Feature/AcademicContextTest.php, bootstrap/app.php y routes/web.php.
 - Navegación 38e25ce: app/Http/Controllers/SetupController.php, app/Http/Middleware/HandleInertiaRequests.php, routes/web.php, resources/js/components/Layout.vue, resources/js/pages/{Setup,Challenge}.vue, resources/js/app.ts, resources/css/{app,sidebar}.css.
 - Pruebas: tests/Feature/OrganizationNavigationTest.php, GoogleRegistrationTest.php (rutas), tests/Browser/workflows.spec.ts. Capturas privadas en test-results/sidebar-{expanded,collapsed,mobile}.png.
 - Documentación actualizada: PROGRESS.md, README.md, docs/{despliegue,decisiones,estado-proyecto}.md. Eliminación ajena **docs/PROGRESS.md** conservada sin recrear ni incluir en commits.
@@ -44,10 +46,11 @@
 - PHP/Composer en Docker; Git local sin remoto; .ai/rules no existe. Restauraciones en red interna y tmpfs sin correo, con versión/clave de la copia; Tinker requiere XDG_CONFIG_HOME temporal, no permisos globales.
 
 ## Último error / errores pendientes
+Pint --dirty no funciona en imagen PHP sin Git; aplicar Pint a los archivos modificados explícitos (ya realizado en primer bloque). SearchDocs disponible vía Artisan boost:execute-tool; contenedor habitual sin red, consulta realizada correctamente en erronk2d-docs con red bridge. Versiones comprobadas: Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25. Skills leídas en vendor/laravel/boost/.ai/laravel/skill/testing-best-practices y .ai/inertia-vue/2/skill/inertia-vue-development (plantillas); prevalece documentación v3 consultada.
 Sin errores pendientes conocidos en la navegación entregada. Google conserva **redirect_uri_mismatch**: falta registrar el retorno en el cliente externo; Client ID/Secret no permiten modificarlo. Aplazado por petición. Acceso con contraseña operativo.
 
 ## Siguiente acción concreta
-Presentar el plan guardado en docs/decisiones.md; siguiente bloque técnico: modelo/contexto y sus pruebas. Ya revisados modelos/controladores académicos, migración de dominio, rutas y referencias de ops/deploy/EnsureDemoData; el despliegue actual recrea datos académicos ficticios y debe corregirse antes del reinicio. Leer reglas/skills de código/pruebas al iniciar implementación. Cambios ajenos conservados: eliminados CLAUDE.md y docs/PROGRESS.md; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No retomar Google ni repetir despliegue actual.
+Continuar implementación autorizada: conectar relaciones nuevas y permisos de clase/módulo, adaptar Setup/retos/informes/importación y pruebas existentes; después Vue, evaluación No matriculado y reinicio. PostgreSQL erronk2d-test activo (solo pruebas ficticias), sin navegador aún. No repetir 8 pruebas iniciales salvo cambios. Cambios ajenos conservados: eliminados CLAUDE.md y docs/PROGRESS.md; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No retomar Google ni desplegar bloque incompleto.
 
 ## Comandos para verificarlo
 ```sh

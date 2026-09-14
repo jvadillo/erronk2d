@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ActiveUser;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolveAcademicContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [HandleInertiaRequests::class]);
-        $middleware->alias(['active' => ActiveUser::class]);
+        $middleware->alias(['active' => ActiveUser::class, 'academic' => ResolveAcademicContext::class]);
         $middleware->trustProxies(at: array_filter(explode(',', getenv('TRUSTED_PROXIES') ?: '127.0.0.1')));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
