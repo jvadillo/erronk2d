@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\AcademicContext;
 use App\Domain\Grades\ChallengeWriter;
 use App\Domain\Grades\Gradebook;
 use App\Models\AuditEvent;
 use App\Models\Challenge;
-use App\Models\Classroom;
 use App\Models\Rubric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,38 +19,59 @@ use Inertia\Response;
 
 class ChallengeController extends Controller
 {
+    public function __construct(private AcademicContext $context) {}
+
+    private function authorizeChallenge(Request $request, Challenge $challenge): void
+    {
+        $this->context->classrooms($request->user())->findOrFail($challenge->classroom_id);
+        if ($request->user()->role === 'student') {
+            abort_unless($challenge->students()->where('users.id', $request->user()->id)->exists(), 404);
+        }
+    }
+
     public function index(Request $request, Gradebook $book): Response
     {
-        $query = Challenge::with(['classroom.academicYear', 'period', 'modules', 'teams'])->orderByDesc('id');
+        $query = Challenge::whereIn('classroom_id', $this->context->classrooms($request->user())->select('classrooms.id'))->with(['classroom.academicYear', 'period', 'modules', 'teams'])->orderByDesc('id');
         if ($request->user()->role === 'student') {
             $query->whereHas('students', fn ($q) => $q->where('users.id', $request->user()->id));
         }
 
         return Inertia::render('Dashboard', [
             'challenges' => $query->get()->map(function ($ch) {
-                return [...$ch->only(['id', 'name', 'description', 'status', 'weight']), 'classroom' => $ch->classroom->name, 'year' => $ch->classroom->academicYear->name, 'period' => $ch->period->name, 'modules' => $ch->modules->pluck('code'), 'teams_count' => $ch->teams->count()];
+                return [...$ch->only(['id', 'name', 'description', 'status', 'weight']), 'classroom' => $ch->catalog_snapshot['classroom'] ?? $ch->classroom->name, 'year' => $ch->catalog_snapshot['year'] ?? $ch->classroom->academicYear->name, 'period' => $ch->catalog_snapshot['period'] ?? $ch->period->name, 'modules' => $ch->modules->map(fn ($module) => $ch->catalog_snapshot['modules'][$module->id]['code'] ?? $module->code), 'teams_count' => $ch->teams->count()];
             }),
-            'classrooms' => $request->user()->role === 'student' ? [] : Classroom::with('academicYear.periods', 'modules')->get(),
-            'rubrics' => $request->user()->role === 'student' ? [] : Rubric::all(),
+            'classrooms' => $request->user()->role === 'student' ? [] : $this->context->classrooms($request->user())->with('academicYear.periods', 'modules')->get()->each(function ($classroom) {
+                foreach ($classroom->modules as $module) {
+                    $module->name = $module->pivot->name;
+                    $module->code = $module->pivot->code;
+                }
+            }),
+            'rubrics' => $request->user()->role === 'student' ? [] : Rubric::availableTo($request->user())->get(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()->allows('manage_challenges'), 403);
+        $this->context->requireWritable($request);
         $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'team_rubric_id' => ['required', Rule::exists('rubrics', 'id')->where('kind', 'team')], 'transversal_rubric_id' => ['required', Rule::exists('rubrics', 'id')->where('kind', 'transversal')], 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean'], [
             'team_rubric_id.exists' => 'Selecciona una rúbrica de equipo válida.',
             'transversal_rubric_id.exists' => 'Selecciona una rúbrica transversal válida.',
         ]);
-        $class = Classroom::with('modules', 'academicYear.periods')->findOrFail($data['classroom_id']);
+        $class = $this->context->classrooms($request->user())->with('modules', 'academicYear.periods')->findOrFail($data['classroom_id']);
         if (! $class->academicYear->periods->contains('id', (int) $data['period_id'])) {
             throw ValidationException::withMessages(['period_id' => 'La Evaluación debe pertenecer al curso de la clase.']);
         }
         if (collect($data['module_ids'])->diff($class->modules->pluck('id'))->isNotEmpty()) {
             throw ValidationException::withMessages(['module_ids' => 'Los módulos deben pertenecer a la clase seleccionada.']);
         }
-        $team = Rubric::where('kind', 'team')->findOrFail($data['team_rubric_id']);
-        $transversal = Rubric::where('kind', 'transversal')->findOrFail($data['transversal_rubric_id']);
+        $team = Rubric::availableTo($request->user())->where('kind', 'team')->findOrFail($data['team_rubric_id']);
+        $transversal = Rubric::availableTo($request->user())->where('kind', 'transversal')->findOrFail($data['transversal_rubric_id']);
+        foreach ([$team, $transversal] as $rubric) {
+            if ($rubric->cycle_id && ($rubric->cycle_id !== $class->cycle_id || $rubric->level !== $class->level)) {
+                throw ValidationException::withMessages(['team_rubric_id' => 'La rúbrica debe corresponder al ciclo y nivel de la clase.']);
+            }
+        }
         foreach ($team->items as $item) {
             if (! empty($item['module_id'])) {
                 if (! in_array((int) $item['module_id'], array_map('intval', $data['module_ids']), true)) {
@@ -60,6 +81,7 @@ class ChallengeController extends Controller
         }
         $ch = DB::transaction(function () use ($data, $class, $team, $transversal, $request) {
             $ch = Challenge::create([...collect($data)->only(['name', 'description', 'classroom_id', 'period_id', 'weight', 'distribution_enabled'])->all(),
+                'catalog_snapshot' => ['classroom' => $class->name, 'cycle' => $class->cycle_name, 'level' => $class->level, 'year' => $class->academicYear->name, 'period' => $class->academicYear->periods->firstWhere('id', (int) $data['period_id'])->name, 'modules' => $class->modules->whereIn('id', $data['module_ids'])->mapWithKeys(fn ($module) => [$module->id => ['name' => $module->pivot->name, 'code' => $module->pivot->code]])->all()],
                 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30],
                 'team_rubric' => ['name' => $team->name, 'items' => $team->items], 'transversal_rubric' => ['name' => $transversal->name, 'items' => $transversal->items]]);
             $ch->modules()->sync($data['module_ids']);
@@ -92,6 +114,7 @@ class ChallengeController extends Controller
 
     public function show(Request $request, Challenge $challenge, Gradebook $book): Response
     {
+        $this->authorizeChallenge($request, $challenge);
         $data = $book->challenge($challenge);
         if ($request->user()->role === 'student') {
             return Inertia::render('Student', ['book' => $this->studentBook($request, $challenge, $data)]);
@@ -102,6 +125,8 @@ class ChallengeController extends Controller
 
     public function update(Request $request, Challenge $challenge, ChallengeWriter $writer): JsonResponse
     {
+        $this->authorizeChallenge($request, $challenge);
+        $this->context->requireWritable($request);
         $book = $writer->change($request->user(), $challenge->id, $request->all());
         if ($request->user()->role === 'student') {
             $book = $this->studentBook($request, $challenge->fresh(), $book);
@@ -112,6 +137,7 @@ class ChallengeController extends Controller
 
     public function history(Request $request, Challenge $challenge): JsonResponse
     {
+        $this->authorizeChallenge($request, $challenge);
         abort_if($request->user()->role === 'student', 403);
 
         return response()->json(['publications' => $challenge->publications()->orderByDesc('version')->get(), 'events' => AuditEvent::where('challenge_id', $challenge->id)->latest()->limit(100)->get(['id', 'user_id', 'action', 'reason', 'created_at'])]);

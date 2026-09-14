@@ -48,14 +48,14 @@ class GoogleRegistrationTest extends TestCase
         $year = AcademicYear::create(['name' => 'Curso de prueba']);
         $classroom = Classroom::create(['academic_year_id' => $year->id, 'name' => 'Clase de prueba']);
 
-        $this->actingAs($admin)->from('/setup')->post('/registrations/'.$registration->id, [
+        $this->actingAs($admin)->withHeader('X-Academic-Year', $year->id)->from('/setup')->post('/registrations/'.$registration->id, [
             'decision' => 'approve', 'role' => 'student', 'classroom_id' => $classroom->id, 'permissions' => ['publish_results'],
         ])->assertRedirect('/setup')->assertSessionHasNoErrors();
 
         $student = User::where('email', $registration->email)->firstOrFail();
         $this->assertTrue($student->active);
         $this->assertSame('student', $student->role);
-        $this->assertSame($classroom->id, $student->classroom_id);
+        $this->assertDatabaseHas('enrollments', ['classroom_id' => $classroom->id, 'student_id' => $student->id, 'ended_at' => null]);
         $this->assertSame([], $student->permissions);
         $this->assertSame($registration->google_id, $student->google_id);
         $this->assertSame($student->id, $registration->fresh()->user_id);
@@ -129,7 +129,7 @@ class GoogleRegistrationTest extends TestCase
 
         $this->actingAs($admin)->get('/setup/registrations')->assertInertia(fn (Assert $page) => $page->has('registrations', 1)
             ->where('registrations.0.name', '<script>untrusted</script>')->missing('registrations.0.google_id'));
-        $this->actingAs($teacher)->get('/setup/courses')->assertInertia(fn (Assert $page) => $page->has('registrations', 0));
+        $this->actingAs($teacher)->get('/setup/classrooms')->assertInertia(fn (Assert $page) => $page->has('registrations', 0));
     }
 
     public function test_changing_account_email_removes_google_link_without_changing_other_accounts(): void

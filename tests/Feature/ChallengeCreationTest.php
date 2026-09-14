@@ -22,8 +22,9 @@ class ChallengeCreationTest extends TestCase
         $year = AcademicYear::create(['name' => 'Curso']);
         $period = $year->periods()->create(['name' => 'Primera', 'position' => 1]);
         $classroom = $year->classrooms()->create(['name' => 'Clase']);
-        $module = $classroom->modules()->create(['name' => 'Programación', 'code' => 'PROG']);
-        $module->teachers()->attach($admin);
+        $module = $this->moduleForClass($classroom, ['name' => 'Programación', 'code' => 'PROG'], $admin);
+        $admin->forceFill(['last_academic_year_id' => $year->id])->save();
+        $this->withHeader('X-Academic-Year', (string) $year->id);
         $items = [['key' => 'quality', 'name' => 'Calidad', 'weight' => '1', 'module_id' => null, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo']]]];
         $rubric = Rubric::create(['name' => 'Equipo', 'kind' => 'team', 'items' => $items]);
         $transversal = Rubric::create(['name' => 'Transversales', 'kind' => 'transversal', 'items' => $items]);
@@ -52,9 +53,9 @@ class ChallengeCreationTest extends TestCase
             $data['period_id'] = $year->periods()->create(['name' => 'Otra', 'position' => 1])->id;
         } elseif ($case === 'module') {
             $other = $classroom->academicYear->classrooms()->create(['name' => 'Otra clase']);
-            $data['module_ids'] = [$other->modules()->create(['name' => 'Otro', 'code' => 'OTRO'])->id];
+            $data['module_ids'] = [$this->moduleForClass($other, ['name' => 'Otro', 'code' => 'OTRO'])->id];
         } elseif ($case === 'rubric_module') {
-            $otherModule = $classroom->modules()->create(['name' => 'Otro módulo', 'code' => 'OTRO']);
+            $otherModule = $this->moduleForClass($classroom, ['name' => 'Otro módulo', 'code' => 'OTRO']);
             $items = $rubric->items;
             $items[0]['module_id'] = $otherModule->id;
             $rubric->update(['items' => $items]);
@@ -74,8 +75,9 @@ class ChallengeCreationTest extends TestCase
     public function test_valid_creation_copies_rubrics_and_enrolls_only_active_students(): void
     {
         ['admin' => $admin, 'classroom' => $classroom, 'module' => $module, 'rubric' => $rubric, 'data' => $data] = $this->scenario();
-        $student = User::factory()->create(['role' => 'student', 'classroom_id' => $classroom->id]);
-        User::factory()->create(['role' => 'student', 'classroom_id' => $classroom->id, 'active' => false]);
+        $student = User::factory()->create(['role' => 'student']);
+        $this->enrollInClass($student, $classroom);
+        $this->enrollInClass(User::factory()->create(['role' => 'student', 'active' => false]), $classroom);
         $items = $rubric->items;
         $items[0]['module_id'] = $module->id;
         $rubric->update(['items' => $items]);

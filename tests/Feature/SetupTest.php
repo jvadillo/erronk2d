@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AcademicYear;
 use App\Models\AuditEvent;
+use App\Models\Cycle;
 use App\Models\Rubric;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,7 +22,7 @@ class SetupTest extends TestCase
         $year = AcademicYear::firstOrFail();
         $this->assertSame(['Primera', 'Segunda'], $year->periods()->orderBy('position')->pluck('name')->all());
 
-        $this->post('/setup/classroom', ['name' => '2DAW', 'academic_year_id' => $year->id, 'user_ids' => []])->assertRedirect();
+        $this->post('/setup/classroom', ['cycle_id' => Cycle::factory()->create()->id, 'level' => 2, 'name' => '2DAW', 'academic_year_id' => $year->id, 'user_ids' => []])->assertRedirect();
 
         $this->assertDatabaseHas('classrooms', ['name' => '2DAW', 'academic_year_id' => $year->id]);
         $this->assertDatabaseHas('audit_events', ['action' => 'setup.classroom', 'user_id' => $admin->id]);
@@ -35,7 +36,8 @@ class SetupTest extends TestCase
         $teacher = User::where('email', 'docente@example.test')->firstOrFail();
         $this->assertTrue(Hash::check('UnaClaveParaPruebas123', $teacher->password));
         $this->assertTrue($teacher->allows('evaluate_transversal'));
-        $this->assertFalse($teacher->allows('publish_results'));
+        $this->assertTrue($teacher->allows('publish_results'));
+        $this->assertFalse($teacher->allows('manage_teachers'));
         $this->assertArrayNotHasKey('password', AuditEvent::firstOrFail()->after);
     }
 
@@ -47,7 +49,7 @@ class SetupTest extends TestCase
         $this->actingAs($teacher)->postJson('/setup/teacher', $data)->assertForbidden();
         $this->assertDatabaseMissing('users', ['email' => 'otro@example.test']);
         unset($data['permissions']);
-        $this->postJson('/setup/teacher', ['id' => $admin->id, ...$data])->assertNotFound();
+        $this->postJson('/setup/teacher', ['id' => $admin->id, ...$data])->assertForbidden();
         $this->assertDatabaseHas('users', ['id' => $admin->id, 'role' => 'admin', 'email' => $admin->email]);
     }
 
@@ -56,7 +58,7 @@ class SetupTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $year = AcademicYear::create(['name' => '2026-2027']);
         $class = $year->classrooms()->create(['name' => '2DAW']);
-        $module = $class->modules()->create(['name' => 'Programación', 'code' => 'PROG']);
+        $module = $this->moduleForClass($class, ['name' => 'Programación', 'code' => 'PROG']);
         $this->actingAs($admin)->post('/setup/rubric', ['name' => 'Transversales', 'kind' => 'transversal', 'items' => [['key' => 'teamwork', 'name' => 'Colaboración', 'weight' => '1', 'module_id' => $module->id, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo']]]]])->assertRedirect();
 
         $this->assertNull(Rubric::firstOrFail()->items[0]['module_id']);

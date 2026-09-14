@@ -24,7 +24,8 @@ final class ChallengeWriter
 
         return DB::transaction(function () use ($actor, $id, $input) {
             $challenge = Challenge::lockForUpdate()->findOrFail($id);
-            abort_unless($actor->active, 403);
+            abort_unless($actor->active && $actor->canAccessClassroom($challenge->classroom), 404);
+            abort_unless($challenge->classroom->academicYear->is_open, 403, 'El curso académico está cerrado.');
             abort_if($challenge->revision !== (int) $input['revision'], 409, 'Otra persona ha guardado cambios. Actualiza la matriz antes de continuar.');
             $action = $input['action'];
             if (in_array($challenge->status, ['published', 'finished'], true) && $action !== 'reopen' && $action !== 'publish') {
@@ -155,19 +156,25 @@ final class ChallengeWriter
 
     private function grades(User $actor, Challenge $ch, array $input): void
     {
-        Validator::make($input, ['field' => 'required|in:exam,defense', 'module_id' => 'required|integer', 'entries' => 'required|array|min:1|max:500', 'entries.*.student_id' => 'required|integer|distinct', 'entries.*.value' => ['present', 'nullable', 'numeric', self::DECIMAL], 'entries.*.date' => 'nullable|date_format:Y-m-d', 'entries.*.notes' => 'nullable|string|max:2000'])->validate();
+        Validator::make($input, ['field' => 'required|in:exam,defense,not_enrolled', 'module_id' => 'required|integer', 'entries' => 'required|array|min:1|max:500', 'entries.*.student_id' => 'required|integer|distinct', 'entries.*.value' => ['present', 'nullable'], 'entries.*.date' => 'nullable|date_format:Y-m-d', 'entries.*.notes' => 'nullable|string|max:2000'])->validate();
         $field = $input['field'];
         $this->permit($actor, $field === 'exam' ? 'enter_exams' : 'enter_defenses');
         $module = $ch->modules()->findOrFail($input['module_id']);
-        abort_unless($actor->teaches($module->id), 403, 'Solo los responsables del módulo pueden modificar estas notas.');
+        abort_unless($actor->teaches($module->id, $ch->classroom_id), 403, 'Solo los responsables del módulo pueden modificar estas notas.');
         if ($field === 'defense') {
             abort_unless($module->pivot->defense_enabled, 422, 'La defensa de este módulo está desactivada.');
         }
         $students = $ch->students()->pluck('users.id');
         foreach ($input['entries'] as $entry) {
             abort_unless($students->contains((int) $entry['student_id']), 422, 'El estudiante no participa en el reto.');
-            Validator::make($entry, ['value' => ['nullable', 'numeric', $field === 'exam' ? 'between:0,10' : 'between:-10,10', self::DECIMAL]])->validate();
+            Validator::make($entry, ['value' => $field === 'not_enrolled' ? ['required', 'boolean'] : ['nullable', 'numeric', $field === 'exam' ? 'between:0,10' : 'between:-10,10', self::DECIMAL]])->validate();
             $grade = ModuleGrade::firstOrNew(['challenge_id' => $ch->id, 'module_id' => $module->id, 'student_id' => $entry['student_id']]);
+            if ($field === 'not_enrolled' && $entry['value'] && ($grade->exam !== null || $grade->defense !== null)) {
+                throw ValidationException::withMessages(['entries' => 'Retira las notas de este módulo antes de marcar No matriculado.']);
+            }
+            if ($field !== 'not_enrolled' && $grade->not_enrolled) {
+                throw ValidationException::withMessages(['entries' => 'Desmarca No matriculado antes de introducir notas.']);
+            }
             $this->correction($actor, $grade->$field !== null);
             $grade->$field = $entry['value'];
             $grade->updated_by = $actor->id;
@@ -204,7 +211,7 @@ final class ChallengeWriter
             if ($kind === 'team') {
                 abort_unless($ch->teams()->whereKey($entry['subject_id'])->exists(), 422);
                 if (! empty($item['module_id'])) {
-                    abort_unless($actor->teaches((int) $item['module_id']), 403);
+                    abort_unless($actor->teaches((int) $item['module_id'], $ch->classroom_id), 403);
                 }
             } else {
                 abort_unless($ch->students()->where('users.id', $entry['subject_id'])->exists(), 422);

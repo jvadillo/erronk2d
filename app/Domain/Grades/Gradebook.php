@@ -28,7 +28,12 @@ final class Gradebook
 
     public function challenge(Challenge $challenge): array
     {
-        $challenge->load(['students', 'modules.teachers', 'teams.memberships', 'assessments', 'moduleGrades', 'classroom.academicYear', 'period']);
+        $challenge->load(['students', 'modules', 'teams.memberships', 'assessments', 'moduleGrades', 'classroom.academicYear', 'period']);
+        foreach ($challenge->modules as $module) {
+            $module->name = $challenge->catalog_snapshot['modules'][$module->id]['name'] ?? $module->name;
+            $module->code = $challenge->catalog_snapshot['modules'][$module->id]['code'] ?? $module->code;
+            $module->setRelation('teachers', $module->teachersFor($challenge->classroom_id)->get());
+        }
         $c = $this->calc;
         $issues = [];
         $teams = [];
@@ -103,13 +108,14 @@ final class Gradebook
             $modules = [];
             foreach ($challenge->modules as $module) {
                 $grade = $challenge->moduleGrades->where('student_id', $student->id)->firstWhere('module_id', $module->id);
-                if ($module->pivot->defense_enabled) {
+                if ($module->pivot->defense_enabled && ! $grade?->not_enrolled) {
                     $defenses[$module->id] = $grade?->defense;
                     if ($grade?->defense === null) {
                         $pending[] = "Defensa {$module->code}";
                     }
                 }
                 $modules[$module->id] = [
+                    'not_enrolled' => $grade?->not_enrolled ?? false,
                     'exam' => $grade?->exam, 'defense' => $grade?->defense,
                     'defense_date' => $grade?->defense_date, 'defense_notes' => $grade?->defense_notes,
                     'defense_teacher_id' => $grade?->defense_teacher_id,
@@ -117,6 +123,12 @@ final class Gradebook
             }
             $result = $c->challenge($base, $defenses, $challenge->clamp_grade);
             foreach ($challenge->modules as $module) {
+                if ($modules[$module->id]['not_enrolled']) {
+                    $modules[$module->id]['final'] = null;
+                    $modules[$module->id]['exact'] = null;
+
+                    continue;
+                }
                 $exam = $modules[$module->id]['exam'];
                 if ($exam === null && $c->number((string) $challenge->component_weights['exam'])->isGreaterThan(0)) {
                     $pending[] = "Examen {$module->code}";
@@ -138,7 +150,7 @@ final class Gradebook
 
         return [
             'challenge' => $challenge->only(['id', 'name', 'description', 'notes', 'status', 'weight', 'revision', 'classroom_id', 'period_id', 'starts_at', 'ends_at', 'distribution_enabled', 'clamp_grade', 'component_weights', 'transversal_weights', 'team_rubric', 'transversal_rubric']),
-            'classroom' => $challenge->classroom->name, 'year' => $challenge->classroom->academicYear->name, 'period' => $challenge->period->name,
+            'classroom' => $challenge->catalog_snapshot['classroom'] ?? $challenge->classroom->name, 'year' => $challenge->catalog_snapshot['year'] ?? $challenge->classroom->academicYear->name, 'period' => $challenge->catalog_snapshot['period'] ?? $challenge->period->name, 'cycle' => $challenge->catalog_snapshot['cycle'] ?? $challenge->classroom->cycle_name,
             'modules' => $challenge->modules->map(fn ($m) => ['id' => $m->id, 'code' => $m->code, 'name' => $m->name, 'defense_enabled' => (bool) $m->pivot->defense_enabled, 'teachers' => $m->teachers->map->only(['id', 'name'])->all()])->all(),
             'teams' => array_values($teams), 'rows' => $rows, 'issues' => $issues,
             'assessments' => $assessments->map->only(['kind', 'subject_id', 'scope_id', 'criterion', 'level', 'updated_by', 'updated_at'])->all(),
@@ -149,11 +161,15 @@ final class Gradebook
     public function report(Classroom $classroom): array
     {
         $classroom->load(['academicYear.periods', 'modules']);
+        foreach ($classroom->modules as $module) {
+            $module->name = $module->pivot->name;
+            $module->code = $module->pivot->code;
+        }
         $challenges = $classroom->challenges()->with('publications')->get();
         $books = $challenges->mapWithKeys(fn ($ch) => [$ch->id => $this->challenge($ch)]);
         $rows = [];
         foreach (User::where('role', 'student')->where(function ($query) use ($classroom) {
-            $query->where('classroom_id', $classroom->id)->orWhereIn('id', function ($participants) use ($classroom) {
+            $query->whereHas('enrollments', fn ($enrollments) => $enrollments->where('classroom_id', $classroom->id))->orWhereIn('id', function ($participants) use ($classroom) {
                 $participants->select('challenge_student.user_id')->from('challenge_student')->join('challenges', 'challenges.id', '=', 'challenge_student.challenge_id')->where('challenges.classroom_id', $classroom->id);
             });
         })->orderBy('name')->orderBy('id')->get() as $student) {
@@ -164,20 +180,34 @@ final class Gradebook
                     $values = [];
                     $weights = [];
                     $details = [];
+                    $excluded = 0;
                     foreach ($challenges->where('period_id', $period->id) as $ch) {
                         $book = $books[$ch->id];
                         if (! collect($book['modules'])->contains('id', $module->id)) {
                             continue;
                         }
                         $row = collect($book['rows'])->firstWhere('id', $student->id);
+                        if (! $row) {
+                            continue;
+                        }
+                        if ($row['modules'][$module->id]['not_enrolled'] ?? false) {
+                            $excluded++;
+                            $details[] = ['id' => $ch->id, 'name' => $ch->name, 'weight' => $ch->weight, 'grade' => null, 'not_enrolled' => true, 'status' => $ch->status];
+
+                            continue;
+                        }
                         $values[$ch->id] = isset($row['modules'][$module->id]['exact']) ? $this->calc->number($row['modules'][$module->id]['exact']) : null;
                         $weights[$ch->id] = $ch->weight;
                         $details[] = ['id' => $ch->id, 'name' => $ch->name, 'weight' => $ch->weight, 'grade' => $row['modules'][$module->id]['final'] ?? null, 'status' => $ch->status];
                     }
-                    $periodGrades[$period->id] = $this->calc->weighted($values, $weights);
-                    $periods[] = ['id' => $period->id, 'name' => $period->name, 'grade' => $this->calc->display($periodGrades[$period->id]), 'challenges' => $details];
+                    $notEnrolled = $excluded > 0 && $values === [];
+                    $periodGrade = $this->calc->weighted($values, $weights);
+                    if (! $notEnrolled) {
+                        $periodGrades[$period->id] = $periodGrade;
+                    }
+                    $periods[] = ['id' => $period->id, 'name' => $period->name, 'grade' => $this->calc->display($periodGrade), 'not_enrolled' => $notEnrolled, 'challenges' => $details];
                 }
-                $rows[] = ['student_id' => $student->id, 'student' => $student->name, 'module' => $module->code, 'periods' => $periods, 'annual' => $this->calc->display($this->calc->mean($periodGrades))];
+                $rows[] = ['student_id' => $student->id, 'student' => $student->name, 'module' => $module->pivot->code, 'not_enrolled' => $periodGrades === [], 'periods' => $periods, 'annual' => $this->calc->display($this->calc->mean($periodGrades))];
             }
         }
 

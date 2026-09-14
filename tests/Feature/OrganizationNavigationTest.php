@@ -16,6 +16,7 @@ class OrganizationNavigationTest extends TestCase
     {
         return [
             'courses' => ['courses', 'Cursos académicos'],
+            'cycles' => ['cycles', 'Ciclos'],
             'classrooms' => ['classrooms', 'Clases'],
             'teachers' => ['teachers', 'Profesor'],
             'students' => ['students', 'Estudiante'],
@@ -32,7 +33,7 @@ class OrganizationNavigationTest extends TestCase
 
         $this->actingAs($admin)->get('/setup/'.$section)->assertInertia(fn (Assert $page) => $page
             ->component('Setup')->where('section', $section)->where('title', $title)
-            ->has('setupNavigation', 7)
+            ->has('setupNavigation', 8)
             ->where('setupNavigation.0.url', route('setup.section', ['section' => 'courses'])));
     }
 
@@ -57,12 +58,14 @@ class OrganizationNavigationTest extends TestCase
         $teacher = User::factory()->create(['role' => 'teacher']);
         $this->actingAs($teacher);
 
-        foreach (['courses', 'classrooms', 'teachers', 'students', 'modules', 'rubrics'] as $section) {
+        foreach (['classrooms', 'students', 'rubrics'] as $section) {
             $this->get('/setup/'.$section)->assertInertia(fn (Assert $page) => $page
-                ->where('section', $section)->has('setupNavigation', 6)
-                ->where('setupNavigation.5.section', 'rubrics')->has('registrations', 0));
+                ->where('section', $section)->has('setupNavigation', 3)
+                ->where('setupNavigation.2.section', 'rubrics')->has('registrations', 0));
         }
-        $this->get('/setup/registrations')->assertForbidden();
+        foreach (['courses', 'cycles', 'modules', 'teachers', 'registrations'] as $section) {
+            $this->get('/setup/'.$section)->assertForbidden();
+        }
     }
 
     public function test_guest_sections_require_login_and_students_have_no_organization_navigation(): void

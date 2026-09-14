@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\AcademicContext;
 use App\Models\AuditEvent;
+use App\Models\Enrollment;
 use App\Models\GoogleRegistration;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -29,6 +31,11 @@ class RegistrationController extends Controller
                     throw ValidationException::withMessages(['decision' => 'Esta solicitud ya se ha revisado. Actualiza la página.']);
                 }
                 $user = null;
+                $class = null;
+                if ($data['decision'] === 'approve' && $data['role'] === 'student') {
+                    app(AcademicContext::class)->requireWritable($request);
+                    $class = app(AcademicContext::class)->classrooms($request->user())->findOrFail($data['classroom_id']);
+                }
                 if ($data['decision'] === 'approve') {
                     if (User::whereRaw('LOWER(email) = ?', [$registration->email])->orWhere('google_id', $registration->google_id)->exists()) {
                         throw ValidationException::withMessages(['decision' => 'Ya existe una cuenta con este correo o cuenta Google. Debe vincularse desde la pantalla de acceso.']);
@@ -40,13 +47,15 @@ class RegistrationController extends Controller
                         'role' => $data['role'],
                         'active' => true,
                         'permissions' => [],
-                        'classroom_id' => $data['role'] === 'student' ? $data['classroom_id'] : null,
                     ]);
                     $user->forceFill(['google_id' => $registration->google_id, 'email_verified_at' => now()])->save();
+                    if ($class) {
+                        Enrollment::create(['classroom_id' => $class->id, 'student_id' => $user->id]);
+                    }
                 }
                 $registration->update(['status' => $user ? 'approved' : 'rejected', 'reviewed_by' => $request->user()->id, 'user_id' => $user?->id]);
                 AuditEvent::create(['user_id' => $request->user()->id, 'action' => 'registration.'.$registration->status,
-                    'after' => ['registration_id' => $registration->id, 'user_id' => $user?->id, 'role' => $user?->role, 'classroom_id' => $user?->classroom_id]]);
+                    'after' => ['registration_id' => $registration->id, 'user_id' => $user?->id, 'role' => $user?->role, 'classroom_id' => $class?->id]]);
             });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['decision' => 'Ya existe una cuenta con este correo o cuenta Google. Actualiza la página.']);

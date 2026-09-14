@@ -9,7 +9,6 @@ use App\Models\AuditEvent;
 use App\Models\Challenge;
 use App\Models\Classroom;
 use App\Models\Membership;
-use App\Models\Module;
 use App\Models\ModuleGrade;
 use App\Models\Publication;
 use App\Models\Rubric;
@@ -42,11 +41,14 @@ class GradebookTest extends TestCase
         $p = $year->periods()->create(['name' => '1.ª Evaluación', 'position' => 1]);
         $year->periods()->create(['name' => '2.ª Evaluación', 'position' => 2]);
         $this->classroom = Classroom::create(['academic_year_id' => $year->id, 'name' => '2DAW-A']);
-        $this->students = User::factory()->count(3)->create(['role' => 'student', 'classroom_id' => $this->classroom->id])->all();
+        $this->students = User::factory()->count(3)->create(['role' => 'student'])->all();
+        foreach ($this->students as $student) {
+            $this->enrollInClass($student, $this->classroom);
+        }
+        $this->withHeader('X-Academic-Year', (string) $year->id);
         $this->modules = [];
         foreach (['PROG', 'DWEC'] as $code) {
-            $m = Module::create(['classroom_id' => $this->classroom->id, 'name' => $code, 'code' => $code]);
-            $m->teachers()->attach($this->admin);
+            $m = $this->moduleForClass($this->classroom, ['name' => $code, 'code' => $code], $this->admin);
             $this->modules[] = $m;
         }
         $this->rubric = ['name' => 'Rúbrica', 'items' => [['key' => 'quality', 'name' => 'Calidad', 'weight' => '1', 'module_id' => null, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo'], ['score' => '10', 'description' => 'Excelente']]]]];
@@ -81,7 +83,8 @@ class GradebookTest extends TestCase
         $this->complete();
         $before = app(Gradebook::class)->report($this->classroom)['rows'];
         $other = $this->classroom->academicYear->classrooms()->create(['name' => 'Otra clase']);
-        $this->students[0]->update(['classroom_id' => $other->id]);
+        $this->students[0]->enrollments()->where('classroom_id', $this->classroom->id)->update(['ended_at' => now()]);
+        $this->enrollInClass($this->students[0], $other);
         $this->assertSame($before, app(Gradebook::class)->report($this->classroom)['rows']);
     }
 
@@ -90,7 +93,7 @@ class GradebookTest extends TestCase
         $this->write(['action' => 'participants'])->assertUnprocessable();
         $this->challenge->teams()->delete();
         $this->challenge->students()->detach();
-        $this->write(['action' => 'participants'], $this->students[0])->assertForbidden();
+        $this->write(['action' => 'participants'], $this->students[0])->assertNotFound();
         $this->write(['action' => 'participants', 'revision' => 0])->assertUnprocessable();
         $this->write(['action' => 'participants', 'revision' => 999])->assertConflict();
         Publication::create(['challenge_id' => $this->challenge->id, 'version' => 1, 'snapshot' => [], 'published_by' => $this->admin->id]);
@@ -184,13 +187,15 @@ class GradebookTest extends TestCase
         $this->assertSame(6, ModuleGrade::count());
     }
 
-    public function test_all_teachers_can_read_but_only_module_responsibles_can_write(): void
+    public function test_class_teachers_can_read_but_only_module_responsibles_can_write(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => User::PERMISSIONS]);
-        $this->actingAs($teacher)->get('/challenges/'.$this->challenge->id)->assertOk();
+        $this->actingAs($teacher)->get('/challenges/'.$this->challenge->id)->assertNotFound();
+        $this->classroom->users()->attach($teacher);
+        $this->get('/challenges/'.$this->challenge->id)->assertOk();
         $data = ['action' => 'grades', 'field' => 'exam', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => '8']]];
         $this->write($data, $teacher)->assertForbidden();
-        $this->modules[0]->teachers()->attach($teacher);
+        $this->modules[0]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
         $this->write($data, $teacher)->assertOk();
         $this->write($data)->assertOk();
         $this->assertSame(1, ModuleGrade::count());
@@ -199,6 +204,7 @@ class GradebookTest extends TestCase
     public function test_shared_transversal_has_no_module_or_teacher_average(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => ['evaluate_transversal', 'modify_grades']]);
+        $this->classroom->users()->attach($teacher);
         $data = ['action' => 'assess', 'kind' => 'teacher', 'entries' => [['subject_id' => $this->students[0]->id, 'criterion' => 'quality', 'level' => 1]]];
         $this->write($data)->assertOk();
         $data['entries'][0]['level'] = 2;
@@ -217,7 +223,7 @@ class GradebookTest extends TestCase
         $this->write(['action' => 'assess', 'kind' => 'teacher', 'entries' => [['subject_id' => $s->id, 'criterion' => 'quality', 'level' => 1]]], $s)->assertForbidden();
         $this->write(['action' => 'assess', 'kind' => 'peer', 'entries' => [['subject_id' => $this->students[1]->id, 'criterion' => 'quality', 'level' => 1]]], $s)->assertOk();
         $outsider = User::factory()->create(['role' => 'student']);
-        $this->actingAs($outsider)->get('/challenges/'.$this->challenge->id)->assertForbidden();
+        $this->actingAs($outsider)->get('/challenges/'.$this->challenge->id)->assertNotFound();
     }
 
     public function test_revision_conflict_prevents_lost_updates_and_batch_is_atomic(): void
@@ -343,5 +349,50 @@ class GradebookTest extends TestCase
         $this->assertSame('0.5000', $grade->defense);
         $this->assertSame($this->admin->id, $grade->defense_teacher_id);
         $this->assertSame('Buena explicación', $grade->defense_notes);
+    }
+
+    public function test_not_enrolled_excludes_module_from_calculation_and_publication_without_treating_it_as_zero(): void
+    {
+        $this->complete();
+        $module = $this->modules[0];
+        $student = $this->students[0];
+        foreach (['exam', 'defense'] as $field) {
+            $this->write(['action' => 'grades', 'field' => $field, 'module_id' => $module->id, 'entries' => [['student_id' => $student->id, 'value' => null]]])->assertOk();
+        }
+        $this->write(['action' => 'grades', 'field' => 'not_enrolled', 'module_id' => $module->id, 'entries' => [['student_id' => $student->id, 'value' => true]]])->assertOk()->assertJsonPath('book.complete', true);
+        $row = collect(app(Gradebook::class)->challenge($this->challenge->fresh())['rows'])->firstWhere('id', $student->id);
+        $this->assertTrue($row['modules'][$module->id]['not_enrolled']);
+        $this->assertNull($row['modules'][$module->id]['final']);
+        $this->assertSame('7.30', $row['modules'][$this->modules[1]->id]['final']);
+        $report = collect(app(Gradebook::class)->report($this->classroom)['rows'])->firstWhere('student_id', $student->id);
+        $this->assertTrue($report['periods'][0]['not_enrolled']);
+        $this->assertFalse($report['periods'][1]['not_enrolled']);
+        $this->assertNull($report['annual']);
+        $export = $this->actingAs($this->admin)->get('/reports?classroom='.$this->classroom->id.'&format=csv')->assertOk();
+        $this->assertStringContainsString('No matriculado', $export->streamedContent());
+        $this->write(['action' => 'publish'])->assertOk();
+        $snapshot = Publication::firstOrFail()->snapshot;
+        $this->assertTrue(collect($snapshot['rows'])->firstWhere('id', $student->id)['modules'][$module->id]['not_enrolled']);
+    }
+
+    public function test_not_enrolled_requires_responsibility_and_cannot_erase_existing_grades(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $this->classroom->users()->attach($teacher);
+        $data = ['action' => 'grades', 'field' => 'not_enrolled', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => true]]];
+        $this->write($data, $teacher)->assertForbidden();
+        $exam = [...$data, 'field' => 'exam', 'entries' => [['student_id' => $this->students[0]->id, 'value' => '8']]];
+        $this->write($exam)->assertOk();
+        $this->write($data)->assertUnprocessable();
+        $this->assertDatabaseHas('module_grades', ['exam' => 8, 'not_enrolled' => false]);
+        $exam['entries'][0]['value'] = null;
+        $this->write($exam)->assertOk();
+        $this->write($data)->assertOk();
+        $exam['entries'][0]['value'] = '9';
+        $this->write($exam)->assertUnprocessable();
+        $data['entries'][0]['value'] = false;
+        $this->write($data)->assertOk();
+        $this->write($exam)->assertOk();
+        $this->assertDatabaseHas('module_grades', ['exam' => 9, 'not_enrolled' => false]);
     }
 }

@@ -60,14 +60,25 @@ class Classroom extends Model
         return $this->belongsToMany(User::class)->whereIn('role', ['teacher', 'admin']);
     }
 
-    public function students(): HasMany
+    public function students(): BelongsToMany
     {
-        return $this->hasMany(User::class)->where('role', 'student');
+        return $this->belongsToMany(User::class, 'enrollments', 'classroom_id', 'student_id')->where('role', 'student')->wherePivotNull('ended_at');
     }
 
-    public function modules(): HasMany
+    public function modules(): BelongsToMany
     {
-        return $this->hasMany(Module::class);
+        return $this->belongsToMany(Module::class)->withPivot('name', 'code');
+    }
+
+    public function syncCatalog(): void
+    {
+        $modules = Module::where('cycle_id', $this->cycle_id)->where('level', $this->level)->get();
+        $existing = $this->modules()->pluck('modules.id');
+        foreach ($modules as $module) {
+            if (! $existing->contains($module->id)) {
+                $this->modules()->attach($module->id, ['name' => $module->name, 'code' => $module->code]);
+            }
+        }
     }
 
     public function challenges(): HasMany

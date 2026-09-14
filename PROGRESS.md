@@ -1,37 +1,30 @@
 # Estado de la tarea
 
 ## Objetivo
-**Nueva arquitectura en implementación, autorizada el 2026-09-14.** Primer bloque de esquema/contexto preparado; falta conectar el ámbito a operaciones e interfaz. Plan en docs/decisiones.md. No desplegado ni reiniciado.
-
-**Navegación terminada y publicada** en https://erronk2d.jonvadillo.com, imágenes app/web **38e25ce**, actualizado 2026-09-10. Google **aplazado expresamente por el usuario**. Reanudar con este archivo, git status y git log; no repetir auditoría, prompt completo ni pruebas ya verificadas.
+Completar y publicar la arquitectura de cursos académicos independientes aprobada el 14/09/2026. Implementación y reinicio autorizados; **producción todavía en 38e25ce, sin cambios ni borrados**.
 
 ## Completado
-- Base académica: migración aditiva de ciclos/matrículas, propietario de clase, módulos por clase/responsables, rúbricas compartidas y preferencia de año. AcademicContext resuelve disponibilidad, recuerda año y comprueba contexto de escritura; middleware y ruta de cambio registrados. **8 pruebas / 28 aserciones pasan en SQLite y PostgreSQL**. Esquema antiguo conservado temporalmente hasta adaptar controladores; todavía no hay aislamiento completo en la aplicación.
-- Registradas las 16 respuestas y las 3 aclaraciones finales de arquitectura del 14 de septiembre; plan de 7 bloques en docs/decisiones.md. Sin cambios de aplicación, datos o producción; no se han repetido pruebas.
-- Lateral plegable de 252 a 80 px, iconos y preferencia persistente en el navegador. Organización tiene submenú y páginas propias: Cursos académicos, Clases, Profesor, Estudiante, Módulos, Biblioteca de rúbricas y Solicitudes (solo administración). URL, título e historial propios; móvil y teclado verificados.
-- Código en **38e25ce**. 18 pruebas nuevas / 216 aserciones correctas en SQLite y PostgreSQL; 29 pruebas existentes afectadas también correctas en ambos. **9 pruebas Playwright correctas**, capturas revisadas, TypeScript/Vue y Pint correctos. Entorno erronk2d-test retirado.
-- Despliegue terminado: copia privada `backups/production-20260910-38e25ce` (versión anterior 736925b); sin nuevas migraciones, mantenimiento retirado. HTTPS login y ambos recursos compilados 200; siete páginas protegidas redirigen al login; API vecina 200. Solo contenedores propios app/web actualizados.
-- Conservados **40 estudiantes y 10 profesores ficticios activos**, además de cuentas manuales. Correcciones anteriores publicadas: contraseña mínima 10, clase única obligatoria, renombrar curso, recuperación de participantes/equipos, errores de creación de retos en formulario y CSRF tras login.
-- Google implementado en 736925b: vinculación confirmando contraseña, registro con aprobación administrativa y clase obligatoria para estudiantes, state de un uso y PKCE, sin guardar tokens. Configuración privada conservada y habilitada; validación real pendiente y aplazada. Pruebas históricas y detalles en docs/estado-proyecto.md.
-- Resend configurado, dominio verificado y remitente definitivo aplicado; envío anterior entregado. No repetir correos para recuperar contexto.
-- Restauración completa de copia 4cd717d ensayada con versión original 504db0b: PostgreSQL, 70 archivos SHA-256, login/recursos y cálculos. No contenía publicaciones reales. Ensayo retirado; copias e imágenes anteriores conservadas.
+- Base anual/contexto persistente en commit 22653e5. Controladores, permisos de clase/módulo, matrícula múltiple, catálogos estables y rúbricas privadas/compartidas implementados en el árbol de trabajo.
+- Selector visible de curso, aislamiento transversal, bloqueo de escrituras de años cerrados y peticiones de pestañas con contexto antiguo. Formularios de ciclos, clases, responsables y matrícula por correo; nombres históricos congelados.
+- «No matriculado» explícito, separado de pendiente/cero; no borra notas existentes y se excluye de medias. Publicaciones conservan la marca.
+- Reinicio único preparado: vista previa, copia confirmada, mantenimiento en producción, validación de 50 identidades demo + administrador y transacción. La siembra de producción mantiene únicamente las 40/10 cuentas, sin recrear actividad académica.
+- **138 pruebas / 1.179 aserciones correctas en SQLite**. Incluyen regresión completa, importación de correo con mayúsculas, histórico, permisos y reinicio con credenciales intactas. Las mismas 138 pruebas pasan en PostgreSQL (corregida únicamente la ordenación de la comparación de hashes en la prueba de reinicio). Vue/TypeScript y Pint correctos; navegador aislado en preparación.
 
 ## Pendiente
-0. Implementar el plan académico de docs/decisiones.md una vez concluida su presentación: modelo/contexto, permisos/organización, retos/rúbricas/notas, interfaz/regresión y reinicio/despliegue. Aclaraciones funcionales cerradas; no volver a preguntar lo ya acordado.
-1. **Google aplazado**: solo cuando el usuario lo retome, autorizar `https://erronk2d.jonvadillo.com/auth/google/callback` en Google Cloud y completar acceso real. No repetir preguntas ni llamadas OAuth ahora. Política conservadora actual: aprobación administrativa, sin elección pública de rol/clase.
-2. Elegir con el usuario destino externo cifrado, frecuencia y retención de copias; restauración ya ensayada.
-3. Medir carga concurrente en entorno ficticio aislado y concretar supervisión de TLS/espacio. Comprobar remitente definitivo en la próxima recuperación solicitada, sin envíos adicionales.
-4. XLSX/PDF generado en servidor son ampliaciones futuras. Reinicio completo autorizado como parte de la transición: conservar cuentas de ejemplo y acceso administrador; preparar/ensayar limpieza y copia previa con la nueva versión antes de ejecutarlo.
+1. Completar PostgreSQL, navegador aislado (adaptación de pruebas y nuevos flujos anuales), Pint y commits revisables.
+2. Adaptar ops/deploy para reinicio único con copia verificada y mantenimiento conservado ante fallo. Construir imágenes, ensayar y publicar con limpieza autorizada. No publicar un bloque incompleto.
+3. Actualizar documentación existente y continuidad, retirar solo entorno propio de pruebas al acabar.
+4. Google aplazado expresamente (redirect_uri_mismatch externo). Copias externas, carga y supervisión quedan para futuras tareas; no retomarlas ahora.
 
-## Archivos relevantes y modificados
-- Bloque académico: app/Domain/AcademicContext.php, app/Http/{Middleware/ResolveAcademicContext,Controllers/AcademicContextController}.php, modelos AcademicYear/Classroom/Cycle/Enrollment, factories correspondientes, migración 2026_09_14_143913_add_academic_context.php, tests/Feature/AcademicContextTest.php, bootstrap/app.php y routes/web.php.
-- Navegación 38e25ce: app/Http/Controllers/SetupController.php, app/Http/Middleware/HandleInertiaRequests.php, routes/web.php, resources/js/components/Layout.vue, resources/js/pages/{Setup,Challenge}.vue, resources/js/app.ts, resources/css/{app,sidebar}.css.
-- Pruebas: tests/Feature/OrganizationNavigationTest.php, GoogleRegistrationTest.php (rutas), tests/Browser/workflows.spec.ts. Capturas privadas en test-results/sidebar-{expanded,collapsed,mobile}.png.
-- Documentación actualizada: PROGRESS.md, README.md, docs/{despliegue,decisiones,estado-proyecto}.md. Eliminación ajena **docs/PROGRESS.md** conservada sin recrear ni incluir en commits.
-- Google: controladores GoogleAuth/Registration/Auth, modelos User/GoogleRegistration, config/services.php, migración 2026_09_09_201254_add_google_authentication.php, Login.vue y RegistrationRequests.vue; tests/Feature/GoogleAuthTest.php.
-- Dominio: app/Domain/Grades/{ChallengeWriter,Gradebook}.php; fuentes prompt.md y docs/{decisiones,plan-correcciones}.md, leer solo puntos pertinentes.
-- Operación: ops/{deploy,backup,Dockerfile.production}, compose.production.yml, compose.test.yml, compose.restore.yml.
-- Privados/ignorados: .env.production (600), ops/production-credentials, backups/, test-results/. Nunca mostrar o versionar secretos, tokens ni datos personales.
+## Archivos relevantes
+- Contexto: app/Domain/AcademicContext.php, middleware ResolveAcademicContext, AcademicContextController, routes/web.php.
+- Backend: Setup/Challenge/Report/Import/RegistrationController; modelos Classroom/Module/User/Rubric/Enrollment/Cycle; Domain/Grades/{ChallengeWriter,Gradebook}.
+- UI: Layout.vue, Setup/Dashboard/Challenge/Reports/Student.vue, lib.ts, app.ts, sidebar.css.
+- Reinicio: app/Console/Commands/{ResetAcademicData,EnsureDemoData}.php; database/seeders/DatabaseSeeder.php; ops/{deploy,backup}.
+- Pruebas: AcademicContext/AcademicWorkflow/ResetAcademicData/Gradebook y regresión de Setup/Enrollment/Import/GoogleRegistration; tests/Browser/workflows.spec.ts.
+- Migraciones 2026_09_14_143913 y 145442; factories Classroom/Module/Challenge/Cycle/Enrollment. docs/decisiones.md contiene plan aprobado.
+- Privados: .env.production, ops/production-credentials, backups/, test-results/. Nunca mostrarlos ni versionarlos.
+- Cambios ajenos: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. Conservar sin incluir.
 
 ## Decisiones
 - Arquitectura acordada: administrador crea/cierra/reabre años; docentes activos acceden a cualquier abierto. Primer acceso selecciona el abierto creado más recientemente; siguientes recuperan último año del usuario. Selector visible; histórico cerrado en solo lectura. Administración sin año para tareas globales; estudiantes acceden a años con matrícula.
@@ -46,22 +39,7 @@
 - PHP/Composer en Docker; Git local sin remoto; .ai/rules no existe. Restauraciones en red interna y tmpfs sin correo, con versión/clave de la copia; Tinker requiere XDG_CONFIG_HOME temporal, no permisos globales.
 
 ## Último error / errores pendientes
-Pint --dirty no funciona en imagen PHP sin Git; aplicar Pint a los archivos modificados explícitos (ya realizado en primer bloque). SearchDocs disponible vía Artisan boost:execute-tool; contenedor habitual sin red, consulta realizada correctamente en erronk2d-docs con red bridge. Versiones comprobadas: Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25. Skills leídas en vendor/laravel/boost/.ai/laravel/skill/testing-best-practices y .ai/inertia-vue/2/skill/inertia-vue-development (plantillas); prevalece documentación v3 consultada.
-Sin errores pendientes conocidos en la navegación entregada. Google conserva **redirect_uri_mismatch**: falta registrar el retorno en el cliente externo; Client ID/Secret no permiten modificarlo. Aplazado por petición. Acceso con contraseña operativo.
+Sin fallos pendientes en PHPUnit SQLite. Pint --dirty no funciona porque la imagen PHP carece de Git: usar lista explícita de PHP modificados. Skills de testing e Inertia leídas en plantillas vendor/laravel/boost; documentación Inertia v3 consultada por boost:execute-tool SearchDocs. .ai/rules no existe. Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25.
 
 ## Siguiente acción concreta
-Continuar implementación autorizada: conectar relaciones nuevas y permisos de clase/módulo, adaptar Setup/retos/informes/importación y pruebas existentes; después Vue, evaluación No matriculado y reinicio. PostgreSQL erronk2d-test activo (solo pruebas ficticias), sin navegador aún. No repetir 8 pruebas iniciales salvo cambios. Cambios ajenos conservados: eliminados CLAUDE.md y docs/PROGRESS.md; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No retomar Google ni desplegar bloque incompleto.
-
-## Comandos para verificarlo
-```sh
-git status --short
-git log -5 --oneline
-docker compose --env-file .env.production -f compose.production.yml ps
-curl -fsS --max-time 15 -o /dev/null -w 'HTTPS %{http_code}\n' https://erronk2d.jonvadillo.com/login
-# Solo si cambia la navegación:
-bash ops/php vendor/bin/phpunit tests/Feature/OrganizationNavigationTest.php
-docker compose -f compose.test.yml run --rm tests php vendor/bin/phpunit tests/Feature/OrganizationNavigationTest.php
-# Retirar solo el entorno de pruebas al acabar:
-docker compose -f compose.test.yml --profile browser --profile runtime down
-```
-No imprimir cabeceras completas de /auth/google (contienen state). Entregas nuevas: imágenes versionadas, `bash ops/deploy VERSION backups/FECHA-VERSION`, copia en directorio nuevo. No repetir bootstrap, migraciones ni envíos para recuperar contexto.
+Terminar PostgreSQL en compose.test.yml, compilar UI, preparar navegador y verificar nuevas clases/cursos/cierre. No repetir auditorías del VPS, prompt ni pruebas sin cambios. Producción intacta; PostgreSQL de pruebas activo. Actualizar progreso y hacer commits antes de publicar.

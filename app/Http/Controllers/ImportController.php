@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\AcademicContext;
 use App\Models\AuditEvent;
 use App\Models\Classroom;
+use App\Models\Enrollment;
 use App\Models\Module;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -22,8 +24,16 @@ class ImportController extends Controller
         $r->validate(['kind' => 'required|in:student,teacher,module', 'file' => 'required|file|max:2048|extensions:csv,xlsx', 'commit' => 'required|boolean', 'classroom_id' => 'nullable|exists:classrooms,id']);
         $permission = ['student' => 'manage_students', 'teacher' => 'manage_teachers', 'module' => 'manage_modules'][$r->kind];
         abort_unless($r->user()->allows($permission), 403);
-        if (in_array($r->kind, ['student', 'module'], true)) {
-            $r->validate(['classroom_id' => 'required|integer|exists:classrooms,id'], ['classroom_id.required' => 'Selecciona una clase antes de importar.']);
+        $class = null;
+        if ($r->kind === 'student') {
+            app(AcademicContext::class)->requireWritable($r);
+            $r->validate(['classroom_id' => 'required|integer'], ['classroom_id.required' => 'Selecciona una clase antes de importar.']);
+            $class = app(AcademicContext::class)->classrooms($r->user())->findOrFail($r->integer('classroom_id'));
+        } else {
+            abort_unless($r->user()->role === 'admin', 403);
+        }
+        if ($r->kind === 'module') {
+            $r->validate(['cycle_id' => 'required|integer|exists:cycles,id', 'level' => 'required|integer|between:1,4']);
         }
         $path = $r->file('file')->getRealPath();
         $rows = [];
@@ -67,7 +77,7 @@ class ImportController extends Controller
         $headerRow = array_shift($rows) ?? [];
         abort_if(collect($headerRow)->contains(fn ($value) => ! is_scalar($value) && $value !== null), 422, 'Las cabeceras deben contener texto.');
         $header = array_map(fn ($v) => strtolower(trim((string) $v, "\xEF\xBB\xBF \t\n\r\0\x0B")), $headerRow);
-        $required = $r->kind === 'module' ? ['name', 'code', 'teacher_email'] : ['name', 'email'];
+        $required = $r->kind === 'module' ? ['name', 'code'] : ['name', 'email'];
         abort_if(array_diff($required, $header) || count($header) !== count(array_unique($header)), 422, 'Cabeceras requeridas: '.implode(', ', $required));
         $valid = [];
         $errors = [];
@@ -87,37 +97,43 @@ class ImportController extends Controller
                 continue;
             }
             $data = array_combine($header, array_map(fn ($v) => trim((string) $v), $row));
-            $rules = $r->kind === 'module' ? ['name' => 'required|string|max:150', 'code' => 'required|string|max:30', 'teacher_email' => 'required|email'] : ['name' => 'required|string|max:150', 'email' => 'required|email|max:255|unique:users,email'];
+            $rules = $r->kind === 'module' ? ['name' => 'required|string|max:150', 'code' => 'required|string|max:30'] : ['name' => 'required|string|max:150', 'email' => 'required|email|max:255'];
             $validator = Validator::make($data, $rules);
             $key = strtolower($data[$r->kind === 'module' ? 'code' : 'email'] ?? '');
-            $teacher = $r->kind === 'module' ? User::where('email', $data['teacher_email'] ?? '')->whereIn('role', ['teacher', 'admin'])->where('active', true)->first() : null;
-            if ($validator->fails() || isset($seen[$key]) || ($r->kind !== 'module' && User::whereRaw('lower(email) = ?', [$key])->exists()) || ($r->kind === 'module' && (! $teacher || Module::where('classroom_id', $r->classroom_id)->whereRaw('lower(code) = ?', [$key])->exists()))) {
-                $errors[] = ['row' => $i + 2, 'message' => $validator->fails() ? implode(' ', $validator->errors()->all()) : 'Duplicado o profesor responsable inexistente.'];
+            $existing = $r->kind !== 'module' ? User::whereRaw('LOWER(email) = ?', [$key])->first() : null;
+            $duplicateModule = $r->kind === 'module' && Module::where('cycle_id', $r->integer('cycle_id'))->where('level', $r->integer('level'))->whereRaw('LOWER(code) = ?', [$key])->exists();
+            $invalidAccount = $existing && ($r->kind !== 'student' || $existing->role !== 'student' || ! $existing->active);
+            if ($validator->fails() || isset($seen[$key]) || $invalidAccount || $duplicateModule) {
+                $errors[] = ['row' => $i + 2, 'message' => $validator->fails() ? implode(' ', $validator->errors()->all()) : 'Duplicado o cuenta no disponible para matricular.'];
             } else {
-                $valid[] = [...$data, 'teacher_id' => $teacher?->id];
+                $valid[] = ['name' => $data['name'], ...($r->kind === 'module' ? ['code' => $data['code']] : ['email' => $key])];
             }
             $seen[$key] = true;
         }
         abort_if(count($valid) === 0 && count($errors) === 0, 422, 'El archivo está vacío.');
         if ($r->boolean('commit') && count($errors) === 0) {
-            DB::transaction(function () use ($valid, $r) {
+            DB::transaction(function () use ($valid, $r, $class) {
                 foreach ($valid as $row) {
                     if ($r->kind === 'module') {
-                        $module = Module::create(['name' => $row['name'], 'code' => $row['code'], 'classroom_id' => $r->classroom_id]);
-                        $module->teachers()->attach($row['teacher_id']);
-                        $module->classroom->users()->syncWithoutDetaching([$row['teacher_id']]);
+                        Module::create(['name' => $row['name'], 'code' => $row['code'], 'cycle_id' => $r->integer('cycle_id'), 'level' => $r->integer('level')]);
                     } else {
-                        $user = User::create(['name' => $row['name'], 'email' => strtolower($row['email']), 'role' => $r->kind, 'password' => Str::random(64), 'permissions' => [], 'classroom_id' => $r->kind === 'student' ? $r->integer('classroom_id') : null]);
-                        if ($r->classroom_id && $r->kind === 'teacher') {
-                            $class = Classroom::findOrFail($r->classroom_id);
-                            $class->users()->attach($user->id);
+                        $user = User::whereRaw('LOWER(email) = ?', [$row['email']])->lockForUpdate()->first()
+                            ?? User::create(['email' => $row['email'], 'name' => $row['name'], 'role' => $r->kind, 'password' => Str::random(64)]);
+                        abort_unless($user->role === $r->kind && $user->active, 422, 'Cuenta no disponible.');
+                        if ($class) {
+                            Enrollment::updateOrCreate(['classroom_id' => $class->id, 'student_id' => $user->id], ['ended_at' => null]);
                         }
+                    }
+                }
+                if ($r->kind === 'module') {
+                    foreach (Classroom::where('cycle_id', $r->integer('cycle_id'))->where('level', $r->integer('level'))->whereHas('academicYear', fn ($query) => $query->where('is_open', true))->get() as $classroom) {
+                        $classroom->syncCatalog();
                     }
                 }
                 AuditEvent::create(['user_id' => $r->user()->id, 'action' => 'import.'.$r->kind, 'after' => ['count' => count($valid)]]);
             });
         }
 
-        return response()->json(['count' => count($valid), 'errors' => $errors, 'classroom' => $r->classroom_id ? Classroom::findOrFail($r->classroom_id)->only(['id', 'name']) : null, 'preview' => array_slice($valid, 0, 10), 'committed' => $r->boolean('commit') && count($errors) === 0]);
+        return response()->json(['count' => count($valid), 'errors' => $errors, 'classroom' => $class?->only(['id', 'name']), 'preview' => array_slice($valid, 0, 10), 'committed' => $r->boolean('commit') && count($errors) === 0]);
     }
 }

@@ -7,6 +7,8 @@ use App\Models\AcademicYear;
 use App\Models\Assessment;
 use App\Models\Challenge;
 use App\Models\Classroom;
+use App\Models\Cycle;
+use App\Models\Enrollment;
 use App\Models\GoogleRegistration;
 use App\Models\Module;
 use App\Models\ModuleGrade;
@@ -43,20 +45,25 @@ class DatabaseSeeder extends Seeder
             foreach (['1.ª Evaluación', '2.ª Evaluación', '3.ª Evaluación'] as $i => $name) {
                 $periods[] = $year->periods()->create(['name' => $name, 'position' => $i + 1]);
             }
-            $class = Classroom::create(['academic_year_id' => $year->id, 'name' => '2DAW-A']);
+            $cycle = Cycle::create(['name' => 'Desarrollo de Aplicaciones Web', 'code' => 'DAW']);
+            $class = Classroom::create(['academic_year_id' => $year->id, 'name' => '2DAW-A', 'cycle_id' => $cycle->id, 'cycle_name' => $cycle->name, 'level' => 2, 'owner_id' => $teachers[0]->id]);
             $students = [];
             $names = ['Ainhoa Agirre', 'Aitor Fernández', 'Alaia Martínez', 'Ander García', 'Ane Lertxundi', 'Asier Ibáñez', 'Danel Ortiz', 'Eider Pérez', 'Ekain Gómez', 'Elene Ruiz', 'Enara Sánchez', 'Gorka Martín', 'Haizea López', 'Iker Rodríguez', 'Irati Etxeberria', 'June Alonso', 'Lander Bilbao', 'Maialen Álvarez', 'Nora Urrutia', 'Unai Romero'];
             foreach ($names as $i => $name) {
-                $students[] = User::create(['name' => $name, 'email' => 'alumno'.($i + 1).'@erronk2d.test', 'password' => $password, 'role' => 'student', 'classroom_id' => $class->id]);
+                $students[] = User::create(['name' => $name, 'email' => 'alumno'.($i + 1).'@erronk2d.test', 'password' => $password, 'role' => 'student']);
+            }
+            foreach ($students as $student) {
+                Enrollment::create(['classroom_id' => $class->id, 'student_id' => $student->id]);
             }
             $class->users()->attach(array_map(fn ($u) => $u->id, $teachers));
             $modules = [];
             foreach ([['PROG', 'Programación'], ['DWEC', 'Desarrollo web en entorno cliente'], ['DWES', 'Desarrollo web en entorno servidor'], ['DIW', 'Diseño de interfaces web']] as $i => [$code,$name]) {
-                $m = Module::create(['classroom_id' => $class->id, 'name' => $name, 'code' => $code]);
-                $m->teachers()->attach($teachers[$i]);
+                $m = Module::create(['cycle_id' => $cycle->id, 'level' => 2, 'name' => $name, 'code' => $code]);
+                $class->syncCatalog();
+                $m->teachersFor($class->id)->attach($teachers[$i], ['classroom_id' => $class->id]);
                 $modules[] = $m;
             }
-            $modules[0]->teachers()->attach($teachers[1]);
+            $modules[0]->teachersFor($class->id)->attach($teachers[1], ['classroom_id' => $class->id]);
             $levels = [['score' => '4', 'description' => 'Necesita acompañamiento para avanzar.'], ['score' => '6', 'description' => 'Resuelve las tareas básicas con apoyo puntual.'], ['score' => '8', 'description' => 'Trabaja con autonomía y cumple los objetivos.'], ['score' => '10', 'description' => 'Supera los objetivos y aporta mejoras al equipo.']];
             $teamItems = [];
             foreach (['Calidad del código', 'Experiencia de usuario', 'Arquitectura del servidor', 'Diseño y accesibilidad', 'Presentación y documentación'] as $i => $name) {
@@ -66,13 +73,17 @@ class DatabaseSeeder extends Seeder
             foreach (['Autonomía', 'Trabajo en equipo', 'Implicación', 'Responsabilidad'] as $i => $name) {
                 $transItems[] = ['key' => 'trans_'.$i, 'name' => $name, 'description' => 'Reflexiona sobre la participación durante el reto.', 'weight' => '1', 'module_id' => null, 'levels' => $levels];
             }
-            $tr = Rubric::create(['name' => 'Proyecto web · Rúbrica de equipo', 'kind' => 'team', 'items' => $teamItems]);
-            $xr = Rubric::create(['name' => 'Aprender en equipo · Transversales', 'kind' => 'transversal', 'items' => $transItems]);
-            Rubric::create(['name' => 'Presentación de un prototipo', 'kind' => 'team', 'items' => [...array_map(fn ($item) => [...$item, 'module_id' => null], array_slice($teamItems, 0, 2))]]);
+            $tr = Rubric::create(['owner_id' => $teachers[0]->id, 'cycle_id' => $cycle->id, 'level' => 2, 'name' => 'Proyecto web · Rúbrica de equipo', 'kind' => 'team', 'items' => $teamItems]);
+            $xr = Rubric::create(['owner_id' => $teachers[0]->id, 'cycle_id' => $cycle->id, 'level' => 2, 'name' => 'Aprender en equipo · Transversales', 'kind' => 'transversal', 'items' => $transItems]);
+            Rubric::create(['owner_id' => $teachers[0]->id, 'cycle_id' => $cycle->id, 'level' => 2, 'name' => 'Presentación de un prototipo', 'kind' => 'team', 'items' => [...array_map(fn ($item) => [...$item, 'module_id' => null], array_slice($teamItems, 0, 2))]]);
+            foreach (Rubric::all() as $rubric) {
+                $rubric->sharedUsers()->sync(array_map(fn ($teacher) => $teacher->id, array_slice($teachers, 1)));
+            }
             $titles = ['Una web para nuestra comunidad', 'Datos que cuentan historias', 'Un comercio más cercano', 'Conectamos el barrio', 'Ideas con impacto', 'Nuestro portfolio profesional'];
             $descriptions = ['Diseñamos una plataforma accesible para conectar las iniciativas de nuestro entorno.', 'Transformamos datos abiertos en una experiencia interactiva, útil y comprensible.', 'Un escaparate digital para impulsar el pequeño comercio de nuestra ciudad.', 'Una aplicación para compartir recursos y fortalecer la comunidad.', 'Convertimos una necesidad real en un producto digital que aporta valor.', 'Mostramos lo aprendido en un portfolio que cuenta nuestra historia.'];
             foreach ($titles as $ci => $title) {
                 $ch = Challenge::create(['name' => $title, 'description' => $descriptions[$ci], 'classroom_id' => $class->id, 'period_id' => $periods[intdiv($ci, 2)]->id, 'status' => $ci === 5 ? 'draft' : ($ci === 4 ? 'active' : 'evaluating'), 'weight' => $ci % 2 === 0 ? '2' : '3', 'distribution_enabled' => $ci !== 2, 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30], 'team_rubric' => ['name' => $tr->name, 'items' => $tr->items], 'transversal_rubric' => ['name' => $xr->name, 'items' => $xr->items], 'starts_at' => now()->addDays($ci * 14)->toDateString(), 'ends_at' => now()->addDays($ci * 14 + 12)->toDateString()]);
+                $ch->update(['catalog_snapshot' => ['classroom' => $class->name, 'cycle' => $cycle->name, 'level' => 2, 'year' => $year->name, 'period' => $periods[intdiv($ci, 2)]->name, 'modules' => collect($modules)->mapWithKeys(fn ($module) => [$module->id => $module->only(['name', 'code'])])->all()]]);
                 $ch->modules()->attach(array_map(fn ($m) => $m->id, $modules));
                 $ch->students()->attach(array_map(fn ($s) => $s->id, $students));
                 if ($ci === 2) {
