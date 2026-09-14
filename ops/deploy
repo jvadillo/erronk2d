@@ -4,20 +4,39 @@ umask 077
 cd -- "$(dirname -- "$0")/.."
 release="${1:?Indica una etiqueta de imágenes ya construidas y verificadas}"
 backup_destination="${2:?Indica un directorio NUEVO para la copia previa}"
+reset_academics="${3:-}"
+[[ -z "$reset_academics" || "$reset_academics" == "--reset-academics" ]] || { echo 'Opción no válida.' >&2; exit 1; }
 [[ "$release" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$ ]] || { echo 'Etiqueta no válida.' >&2; exit 1; }
 [[ ! -e "$backup_destination" ]] || { echo 'La copia requiere un directorio nuevo.' >&2; exit 1; }
 docker image inspect "erronk2d-app:$release" "erronk2d-web:$release" >/dev/null
 export ERRONK2D_RELEASE="$release"
 compose=(docker compose --env-file .env.production -f compose.production.yml)
 "${compose[@]}" config --quiet
-reopen() {
-    "${compose[@]}" exec -T app php artisan up --no-interaction
+deployment_complete=false
+migrations_started=false
+finish() {
+    if [[ "$deployment_complete" == true || "$migrations_started" == false ]]; then
+        "${compose[@]}" exec -T app php artisan up --no-interaction
+    else
+        echo 'Despliegue incompleto: Erronk2D permanece en mantenimiento. Revisa el fallo antes de reabrir.' >&2
+    fi
 }
 "${compose[@]}" exec -T app test ! -f /app/storage/framework/down || { echo 'Erronk2D ya está en mantenimiento; conserva ese estado y revisa la operación pendiente.' >&2; exit 1; }
-trap reopen EXIT
+trap finish EXIT
 "${compose[@]}" exec -T app php artisan down --retry=60 --no-interaction
 bash ops/backup "$backup_destination"
+test -s "$backup_destination/database.dump"
+gzip -t "$backup_destination/storage.tar.gz"
+"${compose[@]}" exec -T postgres pg_restore --list < "$backup_destination/database.dump" > /dev/null
+migrations_started=true
 "${compose[@]}" run --rm -T app php artisan migrate --force --no-interaction
+if [[ "$reset_academics" == "--reset-academics" ]]; then
+    retained_query="SELECT md5(string_agg(row_to_json(retained)::text, ',' ORDER BY id)) FROM (SELECT id, name, email, password, role, google_id FROM users WHERE role = 'admin' OR demo_key ~ '^demo[.](student|teacher)[.][0-9]+$') retained;"
+    "${compose[@]}" exec -T postgres psql -U erronk2d -d erronk2d -X -At -v ON_ERROR_STOP=1 -c "$retained_query" > "$backup_destination/retained-accounts-before.digest"
+    "${compose[@]}" run --rm -T app php artisan erronk2d:reset-academics --execute --backup-confirmed --no-interaction
+    "${compose[@]}" exec -T postgres psql -U erronk2d -d erronk2d -X -At -v ON_ERROR_STOP=1 -c "$retained_query" > "$backup_destination/retained-accounts-after.digest"
+    cmp -- "$backup_destination/retained-accounts-before.digest" "$backup_destination/retained-accounts-after.digest"
+fi
 "${compose[@]}" run --rm -T app php artisan erronk2d:demo --no-interaction
 "${compose[@]}" up -d --no-deps --wait --wait-timeout 120 app web
 python3 - "$release" <<'PY'
@@ -30,4 +49,5 @@ lines.append('ERRONK2D_RELEASE=' + sys.argv[1])
 path.write_text('\n'.join(lines) + '\n')
 path.chmod(0o600)
 PY
+deployment_complete=true
 printf '%s\n' 'Versión aplicada y datos ficticios preparados. Verifica HTTPS antes de dar la entrega por terminada.'

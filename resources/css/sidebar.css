@@ -50,9 +50,21 @@
   .nav-arrow, .submenu-arrow { display: none; }
   .profile, .sidebar-collapsed .profile { padding: 0; border: 0; margin: 0; }
   .profile button { margin: 0; padding: 10px; min-height: 44px; }
-  .organization-submenu, .sidebar-collapsed .organization-submenu { position: fixed; bottom: 76px; left: 12px; right: 12px; margin: 0; padding: 10px; border: 1px solid #436353; border-radius: 12px; background: var(--green); box-shadow: 0 10px 30px #102e3340; max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .organization-submenu, .sidebar-collapsed .organization-submenu { position: fixed; bottom: 76px; left: 12px; right: 12px; margin: 0; padding: 10px; border: 1px solid #436353; border-radius: 12px; background: var(--green); box-shadow: 0 10px 30px #102e3340; max-height: calc(100dvh - 150px); overflow-y: auto; }
   .sidebar .organization-submenu a, .sidebar-collapsed .sidebar .organization-submenu a { justify-content: flex-start; padding: 12px; font-size: 12px; gap: 12px; min-height: 44px; }
   .sidebar-collapsed .organization-submenu .nav-text { display: inline; }
   .app-shell > .main { margin-left: 0; width: 100%; }
 }
 @media print { .app-shell > .main { margin: 0; width: 100%; } }
+
+.academic-selector { display: block; margin: 22px 0 0; font-size: 11px; color: #d0e0d6; }
+.academic-selector span { display: block; margin: 0 4px 6px; }
+.academic-selector select { width: 100%; min-width: 0; padding: 9px 5px; border: 1px solid #577363; color: #fff; background: #254b43; font-size: 12px; border-radius: 6px; }
+.sidebar-collapsed .academic-selector span { display: none; }
+.sidebar-collapsed .academic-selector select { font-size: 10px; padding: 8px 0; }
+@media (max-width: 650px) {
+  .academic-selector { position: fixed; top: 0; left: 0; right: 0; margin: 0; padding: 9px 16px; display: flex; flex-direction: row; gap: 12px; align-items: center; background: var(--green); }
+  .academic-selector span, .sidebar-collapsed .academic-selector span { display: block; flex-shrink: 0; margin: 0; }
+  .academic-selector select, .sidebar-collapsed .academic-selector select { font-size: 13px; padding: 7px; }
+  .app-shell > .main { padding-top: 76px; }
+}

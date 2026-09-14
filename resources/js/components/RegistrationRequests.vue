@@ -12,7 +12,7 @@ function submit() {if(selected.value)form.post(selected.value.review_url,{onSucc
 <template>
   <section>
     <h2>Solicitudes de registro con Google</h2>
-    <p class="muted">Revisa quién solicita acceso. Los estudiantes necesitan una clase; los profesores se crean sin permisos de edición hasta que los asignes.</p>
+    <p class="muted">Revisa quién solicita acceso. Los estudiantes necesitan una clase; los profesores podrán crear clases en los cursos abiertos.</p>
     <p v-if="!registrations.length" class="notice">No hay solicitudes pendientes.</p>
     <div v-else class="table-scroll"><table><thead><tr><th>NOMBRE</th><th>CORREO</th><th></th></tr></thead><tbody><tr v-for="registration in registrations" :key="registration.id"><td>{{registration.name}}</td><td>{{registration.email}}</td><td><button class="button" @click="review(registration)">Revisar solicitud</button></td></tr></tbody></table></div>
     <Modal v-if="selected" title="Revisar solicitud" @close="selected=null">

@@ -12,11 +12,13 @@ Producción está disponible en **https://erronk2d.jonvadillo.com**, con Postgre
 
 Acceso Google y solicitudes de registro implementados, con su puesta en funcionamiento **aplazada por el usuario**: las cuentas existentes confirman una vez su contraseña para vincularse; el administrador aprueba cuentas nuevas y asigna rol/clase. Configuración y estado de la activación en [docs/despliegue.md](docs/despliegue.md). Los secretos OAuth permanecen exclusivamente en el entorno privado.
 
-El menú lateral puede contraerse a una columna de iconos y recuerda la preferencia en el navegador. Organización tiene páginas independientes para Cursos académicos, Clases, Profesor, Estudiante, Módulos, Biblioteca de rúbricas y Solicitudes (solo administración). En móvil se accede mediante el submenú de la barra inferior.
+El menú lateral puede contraerse a una columna de iconos y recuerda la preferencia en el navegador. Organización tiene páginas independientes para Cursos académicos, Ciclos, Clases, Profesor, Estudiante, Módulos, Biblioteca de rúbricas y Solicitudes. Catálogos, cursos, docentes y solicitudes son exclusivos de administración. En móvil se accede mediante el submenú de la barra inferior.
 
 La antigua demostración SQLite está detenida y conservada. El puerto `127.0.0.1:8082` pertenece ahora a producción: no arrancar allí la vista previa ni ejecutar la suite de navegador contra él.
 
-Implementadas las correcciones de [el plan](docs/plan-correcciones.md): clase actual única y obligatoria en altas/importación, recuperación explícita de retos vacíos, contraseñas de 10 caracteres, renombrado sin alterar Evaluaciones y páginas Profesor/Estudiante. `erronk2d:demo` mantiene 40 estudiantes y 10 profesores ficticios además de las cuentas manuales. Consultar `PROGRESS.md` para la versión efectivamente desplegada.
+La actividad se aísla por curso académico, seleccionado al entrar y recordado en la cuenta. El selector permite cambiar durante la sesión; los años cerrados son de solo lectura. Cada docente accede únicamente a sus clases (propietario o miembro), y solo los responsables de cada módulo introducen sus evaluaciones. Los estudiantes pueden tener varias matrículas; la baja conserva el histórico. Ciclos, módulos, cuentas y rúbricas son estables: las rúbricas se comparten para usar/copiar y cada reto congela su versión. «No matriculado» se distingue de pendiente y cero.
+
+`erronk2d:demo` mantiene únicamente las 40 cuentas de estudiantes y 10 de profesores ficticios, sin crear actividad académica. El reinicio inicial autorizado elimina años, catálogos, rúbricas, actividad y cuentas no ficticias, conservando administradores y credenciales de ejemplo. Está separado de las migraciones y protegido frente a una segunda ejecución. Consultar `PROGRESS.md` para la versión efectivamente desplegada.
 
 ## Desarrollo aislado
 

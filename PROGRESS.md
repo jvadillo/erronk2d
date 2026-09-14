@@ -8,11 +8,11 @@ Completar y publicar la arquitectura de cursos académicos independientes aproba
 - Selector visible de curso, aislamiento transversal, bloqueo de escrituras de años cerrados y peticiones de pestañas con contexto antiguo. Formularios de ciclos, clases, responsables y matrícula por correo; nombres históricos congelados.
 - «No matriculado» explícito, separado de pendiente/cero; no borra notas existentes y se excluye de medias. Publicaciones conservan la marca.
 - Reinicio único preparado: vista previa, copia confirmada, mantenimiento en producción, validación de 50 identidades demo + administrador y transacción. La siembra de producción mantiene únicamente las 40/10 cuentas, sin recrear actividad académica.
-- **138 pruebas / 1.179 aserciones correctas en SQLite**. Incluyen regresión completa, importación de correo con mayúsculas, histórico, permisos y reinicio con credenciales intactas. Las mismas 138 pruebas pasan en PostgreSQL (corregida únicamente la ordenación de la comparación de hashes en la prueba de reinicio). Vue/TypeScript y Pint correctos; navegador aislado en preparación.
+- **138 pruebas / 1.179 aserciones correctas en SQLite**. Incluyen regresión completa, importación de correo con mayúsculas, histórico, permisos y reinicio con credenciales intactas. Las mismas 138 pruebas pasan en PostgreSQL (corregida únicamente la ordenación de la comparación de hashes en la prueba de reinicio). **11 escenarios Playwright correctos** (10 iniciales + repetición del alta corregida y móvil). Capturas revisadas: selector móvil sin solapamiento. Vue/TypeScript y Pint correctos.
 
 ## Pendiente
-1. Completar PostgreSQL, navegador aislado (adaptación de pruebas y nuevos flujos anuales), Pint y commits revisables.
-2. Adaptar ops/deploy para reinicio único con copia verificada y mantenimiento conservado ante fallo. Construir imágenes, ensayar y publicar con limpieza autorizada. No publicar un bloque incompleto.
+1. Código e interfaz verificados. Imágenes app/web construidas; falta ensayo del reinicio con imagen de producción en la base ficticia.
+2. ops/deploy adaptado: copia comprobada, comparación de cuentas/credenciales antes/después y mantenimiento conservado ante fallo posterior a migraciones. Ensayar y publicar con limpieza autorizada.
 3. Actualizar documentación existente y continuidad, retirar solo entorno propio de pruebas al acabar.
 4. Google aplazado expresamente (redirect_uri_mismatch externo). Copias externas, carga y supervisión quedan para futuras tareas; no retomarlas ahora.
 
@@ -42,4 +42,4 @@ Completar y publicar la arquitectura de cursos académicos independientes aproba
 Sin fallos pendientes en PHPUnit SQLite. Pint --dirty no funciona porque la imagen PHP carece de Git: usar lista explícita de PHP modificados. Skills de testing e Inertia leídas en plantillas vendor/laravel/boost; documentación Inertia v3 consultada por boost:execute-tool SearchDocs. .ai/rules no existe. Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25.
 
 ## Siguiente acción concreta
-Terminar PostgreSQL en compose.test.yml, compilar UI, preparar navegador y verificar nuevas clases/cursos/cierre. No repetir auditorías del VPS, prompt ni pruebas sin cambios. Producción intacta; PostgreSQL de pruebas activo. Actualizar progreso y hacer commits antes de publicar.
+Ensayar reinicio con imágenes locales en compose.test.yml (runtime), comprobar HTTP interno, etiquetar y desplegar con copia previa. No repetir auditorías del VPS, prompt ni pruebas sin cambios. Producción intacta: prevalidación de recuentos confirma 1 administrador, 40 estudiantes demo y 10 profesores demo, más 2 estudiantes no demo que se borrarán. PostgreSQL y navegador de pruebas activos. Actualizar progreso y hacer commits antes de publicar.

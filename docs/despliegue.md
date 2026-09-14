@@ -18,7 +18,7 @@ La integración está publicada y **habilitada con las credenciales privadas pro
 
 Las cuentas existentes se vinculan confirmando una vez su contraseña de Erronk2D; después se identifican por el identificador estable de Google. No se cambian su rol, permisos, correo ni historial. Cambiar el correo desde Organización elimina la vinculación anterior. Las cuentas desactivadas siguen bloqueadas.
 
-Las nuevas cuentas Google generan una solicitud sin acceso académico. Administración → Organización → Solicitudes permite aprobar o rechazar: al aprobar se elige Profesor o Estudiante; para estudiantes la clase es obligatoria. Los profesores se crean sin permisos de edición y el administrador puede concederlos después. No se envían correos automáticamente. Una solicitud rechazada no se reabre mediante otro intento de acceso.
+Las nuevas cuentas Google generan una solicitud sin acceso académico. Administración → Organización → Solicitudes permite aprobar o rechazar: al aprobar se elige Profesor o Estudiante; para estudiantes la clase es obligatoria. Los profesores activos pueden crear clases en cualquier curso abierto; adquieren acceso a las clases que crean o a las que les añade su propietario. No hay permisos individuales. No se envían correos automáticamente. Una solicitud rechazada no se reabre mediante otro intento de acceso.
 
 Se usan `state` de un solo uso, caducidad de diez minutos y PKCE S256; el perfil se obtiene desde Google con un token intercambiado exclusivamente en el servidor y exige correo verificado. No se persisten tokens OAuth. El Nginx propio omite parámetros de consulta del registro de acceso para no guardar códigos de autorización. Las credenciales OAuth y los detalles de errores de Google no se registran.
 
@@ -152,10 +152,19 @@ Una vez construidas y verificadas las imágenes `erronk2d-app:VERSION` y `erronk
 bash ops/deploy VERSION backups/FECHA-VERSION
 ```
 
-El procedimiento rechaza un destino de copia existente y una aplicación que ya esté en mantenimiento. Pone solo Erronk2D en mantenimiento, copia su base/almacenamiento/configuración, migra exclusivamente su PostgreSQL, ejecuta `erronk2d:demo`, sustituye app/web y registra la versión en el archivo privado. Intenta salir de mantenimiento también si falla una operación; no restaura datos automáticamente. Revisar el resultado y HTTPS después.
+El procedimiento rechaza un destino de copia existente y una aplicación que ya esté en mantenimiento. Pone solo Erronk2D en mantenimiento, copia su base/almacenamiento/configuración, migra exclusivamente su PostgreSQL, ejecuta `erronk2d:demo`, sustituye app/web y registra la versión en el archivo privado. Si falla antes de iniciar migraciones, recupera el servicio anterior. Si falla después, conserva el mantenimiento para evitar exponer una versión incompatible; no restaura datos automáticamente. Revisar el resultado y HTTPS después.
 
-El comando de datos de prueba usa identificadores `demo_key` y una transacción con bloqueo: mantiene 40 estudiantes y 10 profesores activos en dos clases ficticias iniciales, sin contar cuentas manuales ni administradores. Conserva nombres, contraseñas, clases y evaluaciones editadas; repone cuentas eliminadas y reactiva las ficticias desactivadas. Sus contraseñas iniciales son aleatorias y no se muestran ni envían: el administrador puede asignar una contraseña desde Organización para probar otro rol. Las direcciones `.test` no reciben correo.
+El comando de datos de prueba usa identificadores `demo_key` y una transacción con bloqueo: mantiene únicamente 40 estudiantes y 10 profesores activos, sin crear cursos, clases, módulos ni rúbricas, sin contar cuentas manuales ni administradores. Conserva nombres y contraseñas editadas; repone cuentas eliminadas y reactiva las ficticias desactivadas. Sus contraseñas iniciales son aleatorias y no se muestran ni envían: el administrador puede asignar una contraseña desde Organización para probar otro rol. Las direcciones `.test` no reciben correo.
 
 Los estudiantes antiguos sin clase requieren asignación expresa. Para reparar un reto vacío: asignar estudiantes a su clase en Organización → Estudiante y usar Gestionar equipos → Incorporar estudiantes de la clase. Los participantes históricos no se sincronizan automáticamente al cambiar matrículas.
 
 No ejecutar manualmente el seeder local en producción. Retirar la carga ficticia del procedimiento y limpiar sus registros solo cuando el usuario lo solicite.
+
+
+### Transición a cursos independientes
+
+La entrega académica requiere una única limpieza autorizada, separada de `migrate`. Después de validar las imágenes, ejecutar `bash ops/deploy VERSION backups/DIRECTORIO-NUEVO --reset-academics`. El script pone Erronk2D en mantenimiento, crea la copia y comprueba el índice del volcado PostgreSQL y la integridad gzip del almacenamiento antes de migrar y limpiar. Conservar también la versión y configuración anteriores para una restauración coherente.
+
+`erronk2d:reset-academics` sin opciones solo muestra recuentos. La ejecución requiere `--execute --backup-confirmed`, mantenimiento en producción, un administrador activo y las 50 identidades de ejemplo esperadas. Conserva sus credenciales; elimina toda actividad y catálogos académicos, matrículas, rúbricas, cuentas docentes/estudiantiles restantes y sesiones antiguas. Una marca de auditoría impide repetir el borrado en despliegues posteriores. No elimina configuración, archivos de servicio ni copias. Los siguientes despliegues omiten `--reset-academics`.
+
+Tras el reinicio, administración crea el primer curso académico, los ciclos y los módulos. Cada profesor crea sus clases, añade compañeros y asigna responsables; matricula estudiantes por correo exacto o crea cuentas nuevas. El alumnado conserva acceso al histórico de sus matrículas y los años cerrados bloquean toda edición académica.

@@ -1,6 +1,6 @@
 # Estado del proyecto y siguiente fase
 
-Fecha de revisión: 10 de septiembre de 2026. `prompt.md` se conserva sin modificaciones y se interpreta junto con las aclaraciones recogidas en `decisiones.md`.
+Fecha de revisión: 14 de septiembre de 2026. `prompt.md` se conserva sin modificaciones y se interpreta junto con las aclaraciones recogidas en `decisiones.md`.
 
 ## Punto de partida y trabajo retomado
 
@@ -12,18 +12,18 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 | Área | Resultado implementado | Aclaración o alcance |
 | --- | --- | --- |
-| Cursos, clases y módulos | Cursos con Evaluaciones, clase actual única por estudiante y varios responsables por módulo | Renombrado de cursos sin recrear periodos. Cambiar matrícula actual conserva los participantes históricos de los retos |
+| Cursos, clases y módulos | Cursos académicos independientes, catálogo estable de ciclos/módulos y varias matrículas por estudiante | Propietario/miembros por clase, responsables por módulo y nombres congelados. Baja de matrícula conserva histórico; no se trasladan notas |
 | Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas; acceso Google y solicitudes de registro | Google aplazado por el usuario; pendiente corregir URI autorizada en Google Cloud. Nuevas cuentas requieren aprobación, rol y clase para estudiantes. API Resend configurada |
-| Navegación | Lateral plegable a iconos con preferencia persistente; Organización dividida en siete páginas con submenú | Cursos y Clases separados; URL, título e historial propios. Solicitudes solo para administración; submenú móvil y teclado |
+| Navegación | Lateral plegable a iconos con preferencia persistente; Organización dividida en ocho páginas con submenú y acceso según rol | Selector de curso visible y persistente en la cuenta; URL, título e historial propios. Solicitudes solo para administración; submenú móvil y teclado |
 | Retos | Clase/Evaluación, módulos, peso, fechas, estados, opciones y rúbricas copiadas | Las rúbricas y módulos se eligen al crear; cambios posteriores de esas vinculaciones no incluidos |
 | Equipos | 2–5 integrantes, exclusividad por reto, composición independiente | Reorganización bloqueada después de empezar evaluaciones |
-| Rúbricas | Criterios, pesos, niveles, GENERAL/módulo para equipo; edición, ordenación y duplicado de plantillas | Cada reto conserva su copia; transversales sin módulo |
+| Rúbricas | Criterios, pesos, niveles, GENERAL/módulo para equipo; biblioteca privada y compartida para usar/copiar | Cada reto conserva su copia; transversales sin módulo |
 | Nota de equipo y reparto | Cálculo ponderado, presupuesto exacto, validación atómica del reparto | Reparto opcional introducido por el profesor; alumnado no reparte en la app |
 | Defensas | Una por estudiante/módulo/reto, opcional, fecha, responsable, notas | Todas se suman/restan sobre la misma nota individual; no existen notas de reto por módulo |
 | Exámenes | Una nota por estudiante/módulo/reto, edición individual o masiva | Sustituye las múltiples actividades/exámenes del texto inicial, por decisión del usuario |
 | Transversales | Autoevaluación, compañeros y consenso del profesorado | Profesorado: un registro por estudiante/criterio/reto, sin promedio entre módulos o docentes |
 | Matriz | Desglose, filtros, orden, columnas fijas/ocultables, teclado y lotes | Las defensas incluyen diálogo de detalle; las notas de examen se editan en línea |
-| Resumen y pendientes | Estudiantes, equipos, módulos, profesores, progreso y errores | Datos ausentes permanecen pendientes; cero es una calificación real |
+| Resumen y pendientes | Estudiantes, equipos, módulos, profesores, progreso y errores | Datos ausentes permanecen pendientes; cero es una calificación real; «No matriculado» explícito se excluye de las medias |
 | Publicación e histórico | Instantáneas inmutables, motivo para reabrir, revisión contra sobreescrituras y auditoría | El alumnado ve su resultado publicado. Tras reapertura debe publicarse la corrección |
 | Evaluaciones y curso | Retos ponderados dentro de cada Evaluación, media aritmética de Evaluaciones | Cálculos por módulo; no se omiten periodos incompletos |
 | Informes | Reto/estudiante/equipo mediante matriz y filtros; módulo, Evaluación y curso con detalle | Vista de seguimiento incluye notas en elaboración; histórico publicado se consulta por reto |
@@ -31,6 +31,8 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 | Despliegue | Imágenes propias, Compose aislado, Caddy específico y copia local | HTTPS público activo; API vecina comprobada |
 
 ## Verificación
+
+Arquitectura anual `8d78888`: **138 pruebas / 1.179 aserciones** correctas en SQLite y PostgreSQL. Cubre ámbito anual y clase, responsables, matrícula múltiple, copias de rúbricas, nombres históricos, notas no matriculadas y reinicio único sin cambiar credenciales. Los 11 escenarios de navegador pasan, incluidos contexto entre pestañas, persistencia y curso cerrado. Publicación pendiente; consultar PROGRESS.md para el estado actualizado.
 
 Entrega de navegación `38e25ce`: **18 pruebas nuevas / 216 aserciones** correctas en SQLite y PostgreSQL tras corregir la respuesta 405 por 404 para secciones desconocidas; las **29 pruebas existentes afectadas** también resultaron correctas en ambos motores. **Las nueve pruebas Playwright pasan**, incluidas persistencia del lateral, recarga, historial, teclado, móvil y formularios. Capturas revisadas; compilación TypeScript/Vue, imágenes y Pint correctos. Producción: HTTPS y ambos recursos compilados 200, siete páginas protegidas con redirección a login y API vecina 200. Entorno de pruebas retirado; no se repitió OAuth externo.
 
@@ -42,7 +44,7 @@ Corrección `4cd717d`: **7 pruebas nuevas / 47 aserciones** correctas en SQLite 
 
 Las pruebas PHP cubren cálculo exacto, ausencia frente a cero, reparto atómico, agregación de defensas en todos los módulos, permisos, consenso transversal, acceso del alumnado, publicación/reapertura, histórico de rúbricas/equipos, conflictos de edición, Evaluaciones ponderadas, acceso/recuperación, configuración, creación de administrador e importación CSV/XLSX.
 
-Las nueve pruebas actuales de navegador cubren lateral/submenú y navegación móvil, creación de retos y validación, matriz y teclado con guardados consecutivos, acceso del alumnado, edición/cambio de formularios, alta con contraseña de 10 caracteres y clase, renombrado de cursos, recuperación de participantes para guardar equipos y revisión administrativa de solicitudes ficticias. El navegador usa exclusivamente una instancia interna identificada como testing. Los datos son ficticios; no se ha realizado una prueba de carga.
+Las pruebas de navegador cubren lateral/submenú y navegación móvil, creación de retos y validación, matriz y teclado con guardados consecutivos, acceso del alumnado, edición/cambio de formularios, alta con contraseña de 10 caracteres y clase, renombrado de cursos, recuperación de participantes para guardar equipos y revisión administrativa de solicitudes ficticias. El navegador usa exclusivamente una instancia interna identificada como testing. Los datos son ficticios; no se ha realizado una prueba de carga.
 
 También se verifican compilación TypeScript/Vue, formato PHP, configuración Compose y sintaxis de Nginx/PHP-FPM. La prueba integrada de las imágenes de producción ha verificado el acceso HTTP 200, la conexión a PostgreSQL, cookies Secure/HttpOnly, recursos con URLs HTTPS y bloqueo de archivos ocultos. Ha utilizado red interna y PostgreSQL temporal, sin publicar puertos. Se ha retirado ese entorno al terminar; se conserva la demostración privada detenida.
 
@@ -55,7 +57,7 @@ También se verifican compilación TypeScript/Vue, formato PHP, configuración C
 5. **Producción:** actualizada el 10 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `38e25ce`. Navegación publicada, sin nuevas migraciones y mantenimiento retirado; 40 estudiantes y 10 profesores ficticios activos, cuentas manuales conservadas. HTTPS, recursos compilados y API existente HTTP 200; nuevas páginas protegidas. Cookies Secure/HttpOnly verificadas en entregas anteriores. No repetir bootstrap.
 6. **Correo:** SDK Resend 1.13.0 integrado, recuperación en español y manejo de fallos; 7 pruebas específicas de correo/acceso y 57 aserciones correctas. Envío anterior confirmado como entregado; dominio verificado y remitente definitivo aplicado. La entrega con ese nuevo remitente queda por verificar en la próxima recuperación solicitada.
 7. **Operación:** última copia previa a navegación en `backups/production-20260910-38e25ce` (versión anterior `736925b`). Restauración completa de la copia anterior `4cd717d` ensayada en `compose.restore.yml`: PostgreSQL, 70 archivos coincidentes por SHA-256 y aplicación de la versión original `504db0b`; login, recursos, cálculos de retos e informes correctos. La copia ensayada no contenía publicaciones reales. Entornos temporales retirados y producción comprobada; política de copias externas pendiente.
-8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). Recuentos verificados: 40 estudiantes y 10 profesores ficticios activos, adicionales a las cuentas manuales; ningún estudiante ficticio sin clase. Corregido también el token CSRF obsoleto tras iniciar sesión.
+8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). El nuevo modelo sustituye la clase única por matrículas múltiples. Reinicio académico inicial autorizado conservando 40 estudiantes/10 profesores ficticios y acceso administrador; estado efectivo en PROGRESS.md. Corregido también el token CSRF obsoleto tras iniciar sesión.
 
 ## Riesgos y límites pendientes
 
