@@ -1,6 +1,15 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 878840e; verificación cerrada el 15 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. Arquitectura anual y dos migraciones publicadas; reinicio inicial ejecutado con copia `backups/production-20260914-878840e` de la versión anterior **38e25ce**. Conservados 1 administrador, 40 estudiantes y 10 profesores activos, con datos y credenciales comprobados antes/después; actividad y catálogos académicos vacíos. HTTPS login/recursos 200, clases/ciclos/informes protegidos y API vecina 200. Mantenimiento retirado y entorno de pruebas eliminado. No repetir la limpieza. La antigua vista previa sigue detenida y conservada.
+**Producción en 5a66325; verificación cerrada el 15 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. Publicadas la gestión de Grupos, las evaluaciones propias y las acciones rápidas de matrícula y módulos. Despliegue mediante `ops/deploy`, con copia privada `backups/production-20260915-5a66325` de la versión anterior **878840e**; índice del volcado PostgreSQL, integridad gzip y permisos 700/600 comprobados. Migración aplicada sin repetir el reinicio académico. Mantenimiento retirado y entorno aislado de pruebas eliminado.
+
+Las imágenes se construyeron desde `git archive 5a66325`, excluyendo el comando de catálogo ajeno sin seguimiento. Identificadores publicados:
+
+- `erronk2d-app:5a66325`: `sha256:c9c1c1a5d248331ef63c502ba076a6119028499da68e1b99a4f852da993b70df`.
+- `erronk2d-web:5a66325`: `sha256:99e69fd025264daaade14805a82560314c3fb5c0b30b3b6664dd92a9a9c7fa32`.
+
+Comprobación del empaquetado en entorno aislado: TypeScript/Vite, esquema, salud/login, rutas protegidas y 17 recursos HTTP correctos. En producción coinciden los recuentos y las huellas de cuentas, cursos, grupos, matrículas, módulos, retos, valoraciones, notas y publicaciones; se excluyeron timestamps de actualización, tokens de sesión, la referencia de evaluación migrada y el campo nuevo de retirada de módulos. Todos los retos tienen una evaluación de su grupo y todos los grupos conservan evaluaciones. Acceso administrativo y páginas de Grupos/cursos/informes HTTP 200 con contenido verificado, recursos HTTPS y cookies Secure/HttpOnly correctos; sesión de comprobación cerrada. App/web ejecutan la versión publicada; web y PostgreSQL saludables. API vecina en `/api/health` HTTP 200.
+
+El reinicio inicial se ejecutó únicamente en **878840e**, con copia `backups/production-20260914-878840e` de **38e25ce**. **No repetir la limpieza:** producción ya contiene actividad académica. La migración de evaluaciones a grupos no admite rollback automático; una reversión exige restaurar la copia previa con autorización específica. La antigua vista previa sigue detenida y conservada.
 
 ## Arquitectura preparada
 

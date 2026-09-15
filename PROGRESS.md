@@ -1,11 +1,12 @@
 # Estado de la tarea
 
 ## Objetivo
-Publicar la gestión de Grupos, evaluaciones propias y matrícula/módulos rápidos, y comprobar producción. Despliegue autorizado; producción sigue en 878840e hasta ejecutar `ops/deploy`.
+Gestión de Grupos, evaluaciones propias y matrícula/módulos rápidos publicada en `5a66325`; comprobación de producción terminada el 15/09/2026.
 
 ## Completado
-- Reanudación 15/09: estado y últimos commits revisados; `git diff --check 878840e..5a66325` correcto. Sin cambios nuevos en Grupos que justifiquen repetir las pruebas registradas.
 - Imágenes `5a66325` construidas desde `git archive`, sin el catálogo ajeno. TypeScript/Vite correctos; arranque aislado, esquema de Grupos, login/salud, rutas protegidas y 17 recursos HTTP correctos. Recuentos y huellas previos obtenidos mediante consultas de solo lectura para contrastar tras migrar.
+- Despliegue autorizado mediante `ops/deploy`, sin reinicio académico. Copia privada `backups/production-20260915-5a66325` de versión `878840e`, índice PostgreSQL/gzip validados y permisos 700/600. Migración aplicada; app/web en `5a66325`, mantenimiento retirado.
+- Producción: recuentos y huellas de cuentas, grupos, matrículas, módulos, retos y notas coinciden (excluidos campos técnicos modificados). Ningún reto con evaluación ajena ni grupo sin evaluaciones. Acceso administrativo, Grupos/cursos/informes autenticados, recursos HTTPS y cookies Secure/HttpOnly correctos. Sesión de comprobación cerrada; API vecina `/api/health` HTTP 200 y entorno aislado retirado.
 - Terminología Grupo en navegación, formularios, mensajes, retos e informes. Se conservan identificadores internos y rutas `classroom` por compatibilidad.
 - Evaluaciones propias de cada grupo (1–12; 3 por defecto). Migración copia las antiguas evaluaciones anuales a sus grupos, reasigna retos y conserva publicaciones. Cursos ya no configuran evaluaciones; creación de retos e informes usan las del grupo.
 - Gestión rápida desde tarjetas de grupo: matrícula por correo exacto, baja conservando histórico, añadir/retirar módulos y configurar evaluaciones.
@@ -16,7 +17,7 @@ Publicar la gestión de Grupos, evaluaciones propias y matrícula/módulos rápi
 - Entrega académica anterior publicada y reinicio único ya terminado: no repetir limpieza ni comprobaciones previas. Copia privada previa `backups/production-20260914-878840e` de versión 38e25ce; producción conserva administrador y cuentas demo 40/10.
 
 ## Pendiente
-- Ejecutar `bash ops/deploy 5a66325 backups/production-20260915-5a66325`, comprobar HTTPS, migración e integridad y retirar el ensayo aislado. No repetir el reinicio académico.
+- Sin tareas pendientes de Grupos ni de su despliegue. No repetir el reinicio académico ni las comprobaciones terminadas salvo nuevos cambios o errores.
 - Catálogo oficial aplazado: mantener `app/Console/Commands/ImportOfficialCatalog.php` y `tests/Feature/ImportOfficialCatalogTest.php` ajenos sin incluir en commits. Extracción /tmp/erronk2d-* con 233 fichas estatales y 224 correspondencias IVAC; currículo vasco prioritario, ministerial autorizado como alternativa. No limpiar ni cargar producción.
 - Google aplazado (`redirect_uri_mismatch` externo), copias externas/carga/supervisión fuera de alcance.
 
@@ -26,6 +27,7 @@ Publicar la gestión de Grupos, evaluaciones propias y matrícula/módulos rápi
 - Migración `2026_09_15_111938_move_periods_to_classrooms.php`; factory Challenge, DatabaseSeeder y orden de borrado de ResetAcademicData.
 - Pruebas `GroupManagementTest`, `GroupMigrationTest`, Setup/Enrollment/ChallengeCreation/Gradebook/OrganizationNavigation; `tests/Browser/workflows.spec.ts`.
 - Fuente funcional: `prompt.md`, aclaraciones del usuario y `docs/decisiones.md` (plan académico anterior). PHP/Composer mediante `ops/php`; navegador solo compose.test.yml, destino http://browser-app:8083.
+- `docs/despliegue.md`: versión e identificadores de imágenes publicados, copia previa y comprobaciones. Construir futuras imágenes desde el commit para excluir archivos ajenos sin seguimiento.
 - Cambios ajenos: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md y archivos de catálogo sin seguimiento. No incluirlos.
 - Privados: .env.production, ops/production-credentials, backups/, test-results/. Nunca mostrarlos ni versionarlos.
 
@@ -37,6 +39,6 @@ Publicar la gestión de Grupos, evaluaciones propias y matrícula/módulos rápi
 - VPS compartido: solo recursos propios, app web en 127.0.0.1:8082; no tocar gateway/API vecina/Docker global. Producción solo mediante despliegue con copia; pruebas de escritura exclusivamente aisladas.
 
 ## Último error
-- Sin fallos pendientes conocidos. Orden de evaluaciones corregido en `11a2ee1`; regresión y navegador terminados.
+- Sin fallos pendientes conocidos. Orden de evaluaciones corregido en `11a2ee1`; regresión, navegador y comprobación de producción terminados.
 - Pint --dirty falla por ausencia de Git en imagen PHP; formato aplicado con lista explícita de archivos. Documentación Inertia v3 consultada por Boost con red autorizada; guías testing/Inertia leídas en vendor/laravel/boost. .ai/rules no existe.
 - Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25. No repetir auditoría VPS, bootstrap, limpieza, correos ni OAuth.
