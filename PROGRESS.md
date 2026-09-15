@@ -1,9 +1,11 @@
 # Estado de la tarea
 
 ## Objetivo
-Renombrar Clase a Grupo, trasladar las evaluaciones del curso académico al grupo y ofrecer gestión rápida de matrículas y módulos desde Grupos. Implementación y comprobación local terminadas; producción sigue en 878840e.
+Publicar la gestión de Grupos, evaluaciones propias y matrícula/módulos rápidos, y comprobar producción. Despliegue autorizado; producción sigue en 878840e hasta ejecutar `ops/deploy`.
 
 ## Completado
+- Reanudación 15/09: estado y últimos commits revisados; `git diff --check 878840e..5a66325` correcto. Sin cambios nuevos en Grupos que justifiquen repetir las pruebas registradas.
+- Imágenes `5a66325` construidas desde `git archive`, sin el catálogo ajeno. TypeScript/Vite correctos; arranque aislado, esquema de Grupos, login/salud, rutas protegidas y 17 recursos HTTP correctos. Recuentos y huellas previos obtenidos mediante consultas de solo lectura para contrastar tras migrar.
 - Terminología Grupo en navegación, formularios, mensajes, retos e informes. Se conservan identificadores internos y rutas `classroom` por compatibilidad.
 - Evaluaciones propias de cada grupo (1–12; 3 por defecto). Migración copia las antiguas evaluaciones anuales a sus grupos, reasigna retos y conserva publicaciones. Cursos ya no configuran evaluaciones; creación de retos e informes usan las del grupo.
 - Gestión rápida desde tarjetas de grupo: matrícula por correo exacto, baja conservando histórico, añadir/retirar módulos y configurar evaluaciones.
@@ -14,7 +16,7 @@ Renombrar Clase a Grupo, trasladar las evaluaciones del curso académico al grup
 - Entrega académica anterior publicada y reinicio único ya terminado: no repetir limpieza ni comprobaciones previas. Copia privada previa `backups/production-20260914-878840e` de versión 38e25ce; producción conserva administrador y cuentas demo 40/10.
 
 ## Pendiente
-- Sin tareas locales pendientes de Grupos. Despliegue no solicitado; si se autoriza, seguir `ops/deploy` con copia previa y sin repetir el reinicio académico.
+- Ejecutar `bash ops/deploy 5a66325 backups/production-20260915-5a66325`, comprobar HTTPS, migración e integridad y retirar el ensayo aislado. No repetir el reinicio académico.
 - Catálogo oficial aplazado: mantener `app/Console/Commands/ImportOfficialCatalog.php` y `tests/Feature/ImportOfficialCatalogTest.php` ajenos sin incluir en commits. Extracción /tmp/erronk2d-* con 233 fichas estatales y 224 correspondencias IVAC; currículo vasco prioritario, ministerial autorizado como alternativa. No limpiar ni cargar producción.
 - Google aplazado (`redirect_uri_mismatch` externo), copias externas/carga/supervisión fuera de alcance.
 
