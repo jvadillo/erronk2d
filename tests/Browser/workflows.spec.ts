@@ -43,12 +43,12 @@ test('navegación: lateral plegable, páginas propias, recarga e historial', asy
   await expect(page.getByRole('heading', { name: 'Profesor.', level: 1, exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Expandir menú lateral', exact: true }).click();
   await expect(sidebar).toHaveCSS('width', '252px');
-  await page.getByRole('link', { name: 'Clases', exact: true }).click();
+  await page.getByRole('link', { name: 'Grupos', exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/classrooms$/);
-  await expect(page.getByRole('heading', { name: 'Clases y matrículas', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Grupos y matrículas', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Cursos académicos', exact: true })).toHaveCount(0);
   await page.screenshot({ path: 'test-results/sidebar-expanded.png', fullPage: true });
-  await page.getByRole('link', { name: 'Clases', exact: true }).focus();
+  await page.getByRole('link', { name: 'Grupos', exact: true }).focus();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Organización', exact: true })).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByRole('button', { name: 'Organización', exact: true })).toBeFocused();
@@ -200,27 +200,27 @@ test('organización: guardar una edición y cambiar de formulario sin arrastrar 
 });
 
 
-test('organización: alta con diez caracteres y clase, pestañas y renombrado con Evaluaciones bloqueadas', async ({ page }) => {
+test('organización: alta con diez caracteres y grupo, pestañas y renombrado del curso', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await login(page);
   await page.goto('/setup');
   await page.getByRole('button', { name: 'Editar curso', exact: true }).first().click();
   const course = page.getByRole('dialog');
-  await expect(course.locator('textarea')).toHaveAttribute('readonly', '');
+  await expect(course.getByLabel('Número de evaluaciones')).toHaveCount(0);
   await course.getByLabel('Nombre', { exact: true }).fill('Curso revisado en navegador');
   await course.getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(course).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Curso revisado en navegador' })).toBeVisible();
   await page.getByRole('link', { name: 'Estudiante', exact: true }).click();
-  await expect(page.getByRole('columnheader', { name: 'CLASE', exact: true })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'GRUPO', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Estudiante', exact: true }).last().click();
   const student = page.getByRole('dialog');
   await student.getByLabel('Nombre', { exact: true }).fill('Estudiante del navegador');
   await student.getByLabel('Correo', { exact: true }).fill('browser-student@example.test');
   await student.getByLabel('Contraseña inicial', { exact: false }).fill('Clave12345');
-  await expect(student.getByLabel('Añadir matrícula en una clase', { exact: false })).toHaveValue('');
-  await student.getByLabel('Añadir matrícula en una clase', { exact: false }).selectOption({ label: '2DAW-A' });
+  await expect(student.getByLabel('Añadir matrícula en un grupo', { exact: false })).toHaveValue('');
+  await student.getByLabel('Añadir matrícula en un grupo', { exact: false }).selectOption({ label: '2DAW-A' });
   await student.getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(student).toHaveCount(0);
   await expect(page.getByRole('row').filter({ hasText: 'browser-student@example.test' })).toContainText('2DAW-A');
@@ -239,7 +239,7 @@ test('equipos: recuperar participantes y guardar dos equipos desde los selectore
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Este reto no tiene estudiantes.', { exact: false })).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
-  await dialog.getByRole('button', { name: 'Incorporar estudiantes de la clase', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Incorporar estudiantes del grupo', exact: true }).click();
   const teams = dialog.locator('.team-editor > section');
   await expect(teams.first().getByRole('checkbox').first()).toBeVisible();
   await teams.first().getByRole('checkbox').nth(0).check();
@@ -257,7 +257,7 @@ test('equipos: recuperar participantes y guardar dos equipos desde los selectore
   expect(errors).toEqual([]);
 });
 
-test('Google: revisión administrativa, clase obligatoria y alta aprobada', async ({ page }) => {
+test('Google: revisión administrativa, grupo obligatorio y alta aprobada', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.getByLabel('Correo electrónico').fill('admin@erronk2d.test');
@@ -270,7 +270,7 @@ test('Google: revisión administrativa, clase obligatoria y alta aprobada', asyn
   await page.getByRole('button', { name: 'Revisar solicitud', exact: true }).click();
   const dialog = page.getByRole('dialog');
   const role = dialog.getByRole('combobox', { name: 'Rol', exact: true });
-  const classroom = dialog.getByRole('combobox', { name: 'Clase', exact: true });
+  const classroom = dialog.getByRole('combobox', { name: 'Grupo', exact: true });
   await expect(classroom).toHaveAttribute('required', '');
   await expect(classroom).toHaveValue('');
   await role.selectOption('teacher');
@@ -285,7 +285,61 @@ test('Google: revisión administrativa, clase obligatoria y alta aprobada', asyn
   expect(errors).toEqual([]);
 });
 
-test('curso académico: primer acceso, clase propia, cambio entre pestañas y preferencia persistente', async ({ page }) => {
+test('grupos: miembro gestiona matrículas, módulos y evaluaciones desde la tarjeta', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page, 'profesor2@erronk2d.test');
+  await page.goto('/setup/classrooms');
+  const group = page.locator('.group-card').filter({ has: page.getByRole('heading', { name: '2DAW-A', exact: true }) });
+  await expect(group.getByRole('button', { name: 'Editar grupo', exact: true })).toHaveCount(0);
+  await group.locator('summary').filter({ hasText: 'Estudiantes' }).click();
+  const student = group.locator('.breakdown-row').filter({ has: page.getByText('alumno1@erronk2d.test', { exact: true }) });
+  await student.getByRole('button', { name: 'Desmatricular a Ainhoa Agirre', exact: true }).click();
+  await expect(student).toHaveCount(0);
+  await group.getByLabel('Correo del estudiante').fill('alumno1@erronk2d.test');
+  await group.getByRole('button', { name: 'Matricular', exact: true }).click();
+  await expect(student).toBeVisible();
+  await group.getByRole('button', { name: 'Quitar PROG', exact: true }).click();
+  await expect(group.getByRole('button', { name: 'Quitar PROG', exact: true })).toHaveCount(0);
+  await expect(group.getByText('Retirados: PROG.', { exact: true })).toBeVisible();
+  await page.goto('/reports');
+  await expect(page.getByRole('columnheader', { name: '1.ª Evaluación', exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Módulo', exact: true }).selectOption('PROG');
+  await expect(page.getByRole('combobox', { name: 'Módulo', exact: true })).toHaveValue('PROG');
+  await expect(page.locator('tbody tr').first()).toContainText('PROG');
+  await page.goto('/setup/classrooms');
+  await expect(group.getByRole('button', { name: 'Quitar PROG', exact: true })).toHaveCount(0);
+  await group.getByRole('combobox', { name: 'Añadir módulo', exact: true }).selectOption({ label: 'PROG · Programación' });
+  await group.getByRole('button', { name: 'Añadir', exact: true }).click();
+  await expect(group.getByRole('button', { name: 'Quitar PROG', exact: true })).toBeVisible();
+  await group.getByRole('button', { name: 'Configurar evaluaciones', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByLabel('Evaluación 1', { exact: true })).toHaveAttribute('readonly', '');
+  await expect(dialog.getByRole('button', { name: 'Quitar evaluación 1', exact: true })).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Añadir evaluación', exact: true }).click();
+  await dialog.getByLabel('Evaluación 4', { exact: true }).fill('Evaluación adicional');
+  await dialog.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(group.getByText('Evaluación adicional', { exact: true })).toBeVisible();
+  await page.screenshot({ path: 'test-results/groups-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Organización', exact: true }).click();
+  await group.getByRole('button', { name: 'Configurar evaluaciones', exact: true }).click();
+  await expect(dialog.getByLabel('Evaluación 1', { exact: true })).toHaveValue('1.ª Evaluación');
+  await expect(dialog.getByLabel('Evaluación 4', { exact: true })).toHaveValue('Evaluación adicional');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/group-periods-mobile.png', fullPage: true });
+  await dialog.getByRole('button', { name: 'Quitar evaluación 4', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(group.getByText('Evaluación adicional', { exact: true })).toHaveCount(0);
+  await group.locator('summary').filter({ hasText: 'Estudiantes' }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/groups-mobile.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test('curso académico: primer acceso, grupo propio, cambio entre pestañas y preferencia persistente', async ({ page }) => {
   test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -301,7 +355,7 @@ test('curso académico: primer acceso, clase propia, cambio entre pestañas y pr
   await expect(page.getByLabel('Curso académico activo').locator('option:checked')).toHaveText('2027-28 · navegador');
   await expect(page.locator('.challenge-card')).toHaveCount(0);
   await page.goto('/setup/classrooms');
-  await page.getByRole('button', { name: 'Clase', exact: true }).click();
+  await page.getByRole('button', { name: 'Grupo', exact: true }).click();
   await page.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('142GA');
   await page.getByRole('dialog').getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(page.getByRole('heading', { name: '142GA', exact: true })).toBeVisible();
@@ -312,7 +366,7 @@ test('curso académico: primer acceso, clase propia, cambio entre pestañas y pr
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const staleTab = await page.context().newPage();
   await staleTab.goto('/setup/classrooms');
-  await staleTab.getByRole('button', { name: 'Clase', exact: true }).click();
+  await staleTab.getByRole('button', { name: 'Grupo', exact: true }).click();
   await staleTab.getByRole('dialog').getByLabel('Nombre', { exact: true }).fill('Contexto caducado');
   await page.getByLabel('Curso académico activo').selectOption(previousYear);
   await expect(page.locator('.challenge-card')).not.toHaveCount(0);
@@ -351,5 +405,5 @@ test('curso cerrado: histórico del estudiante y bloqueo de edición del profeso
   await expect(page.getByRole('button', { name: 'Nuevo reto', exact: true })).toHaveCount(0);
   await page.goto('/setup/classrooms');
   await expect(page.getByRole('heading', { name: '2DAW-A', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Editar clase', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Editar grupo', exact: true })).toHaveCount(0);
 });
