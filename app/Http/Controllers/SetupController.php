@@ -224,6 +224,7 @@ class SetupController extends Controller
         }
         $class->periods()->whereNotIn('id', $ids)->delete();
         $class->periods()->increment('position', 100);
+        $existing = $class->periods()->get();
         foreach ($data['periods'] as $index => $item) {
             $period = empty($item['id']) ? $class->periods()->make() : $existing->firstWhere('id', (int) $item['id']);
             $period->fill(['name' => $item['name'], 'position' => $index + 1])->save();

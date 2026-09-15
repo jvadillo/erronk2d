@@ -45,6 +45,28 @@ class GroupManagementTest extends TestCase
         $this->assertModelExists($otherPeriod);
     }
 
+    public function test_appending_and_removing_an_empty_evaluation_keeps_existing_positions(): void
+    {
+        $group = Classroom::factory()->create();
+        $challenge = Challenge::factory()->create(['classroom_id' => $group->id]);
+        $second = $group->periods()->create(['name' => 'Segunda', 'position' => 2]);
+        $this->select($group->owner, $group);
+        $periods = [['id' => $challenge->period_id, 'name' => 'Primera'], ['id' => $second->id, 'name' => 'Segunda']];
+
+        $this->post('/setup/group-periods', ['classroom_id' => $group->id, 'periods' => [...$periods, ['name' => 'Adicional']]])->assertSessionHasNoErrors();
+
+        $this->assertSame(['Primera', 'Segunda', 'Adicional'], $group->periods()->pluck('name')->all());
+        $this->assertSame([1, 2, 3], $group->periods()->pluck('position')->all());
+        $additional = $group->periods()->where('name', 'Adicional')->firstOrFail();
+
+        $this->post('/setup/group-periods', ['classroom_id' => $group->id, 'periods' => $periods])->assertSessionHasNoErrors();
+
+        $this->assertSame(['Primera', 'Segunda'], $group->periods()->pluck('name')->all());
+        $this->assertSame([1, 2], $group->periods()->pluck('position')->all());
+        $this->assertSame($challenge->period_id, $challenge->fresh()->period_id);
+        $this->assertModelMissing($additional);
+    }
+
     #[TestWith(['remove'])]
     #[TestWith(['rename'])]
     #[TestWith(['foreign'])]

@@ -7,6 +7,7 @@ Renombrar Clase a Grupo, trasladar las evaluaciones del curso académico al grup
 - Terminología Grupo en navegación, formularios, mensajes, retos e informes. Se conservan identificadores internos y rutas `classroom` por compatibilidad.
 - Evaluaciones propias de cada grupo (1–12; 3 por defecto). Migración copia las antiguas evaluaciones anuales a sus grupos, reasigna retos y conserva publicaciones. Cursos ya no configuran evaluaciones; creación de retos e informes usan las del grupo.
 - Gestión rápida desde tarjetas de grupo: matrícula por correo exacto, baja conservando histórico, añadir/retirar módulos y configurar evaluaciones.
+- Corregido orden de evaluaciones al guardar: se recargan posiciones tras el desplazamiento temporal para que Eloquent guarde también las que mantienen su orden. Regresión reproduce el fallo previo; 16 pruebas / 141 aserciones correctas en SQLite y PostgreSQL. Pint correcto en ambos archivos PHP modificados.
 - Retirar un módulo mantiene su vínculo histórico, responsables, retos y notas; excluido de nuevos retos, restaurable sin duplicados. Nuevos módulos de catálogo/importación se añaden manualmente a grupos existentes.
 - Regresión SQLite: 155 pruebas correctas y una expectativa de texto Clase→Grupo corregida; sus 10 pruebas repetidas pasan. PostgreSQL: 156 pruebas / 1.347 aserciones correctas. Pruebas focalizadas correctas: migración desde esquema anterior, aislamiento, permisos, edición de evaluaciones, retirada/restauración y conservación/corrección de notas publicadas. TypeScript/Vite correctos; Pint aplicado a PHP modificados.
 - Entrega académica anterior publicada y reinicio único ya terminado: no repetir limpieza ni comprobaciones previas. Copia privada previa `backups/production-20260914-878840e` de versión 38e25ce; producción conserva administrador y cuentas demo 40/10.
@@ -33,6 +34,6 @@ Renombrar Clase a Grupo, trasladar las evaluaciones del curso académico al grup
 - VPS compartido: solo recursos propios, app web en 127.0.0.1:8082; no tocar gateway/API vecina/Docker global. Producción solo mediante despliegue con copia; pruebas de escritura exclusivamente aisladas.
 
 ## Último error
-- Sin fallos funcionales pendientes conocidos. Regresión y navegador en curso.
+- Navegador detectó evaluaciones nuevas antes de las anteriores; corrección y regresión PHP terminadas. Pendiente completar navegador con datos aislados recién preparados.
 - Pint --dirty falla por ausencia de Git en imagen PHP; formato aplicado con lista explícita de archivos. Documentación Inertia v3 consultada por Boost con red autorizada; guías testing/Inertia leídas en vendor/laravel/boost. .ai/rules no existe.
 - Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25. No repetir auditoría VPS, bootstrap, limpieza, correos ni OAuth.
