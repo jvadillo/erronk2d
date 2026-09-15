@@ -8,16 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Period extends Model
 {
-    protected $fillable = ['academic_year_id', 'name', 'position'];
+    protected $fillable = ['classroom_id', 'name', 'position'];
 
     protected function casts(): array
     {
         return [];
     }
 
-    public function academicYear(): BelongsTo
+    public function classroom(): BelongsTo
     {
-        return $this->belongsTo(AcademicYear::class);
+        return $this->belongsTo(Classroom::class);
     }
 
     public function challenges(): HasMany

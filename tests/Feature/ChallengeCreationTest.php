@@ -20,8 +20,8 @@ class ChallengeCreationTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $year = AcademicYear::create(['name' => 'Curso']);
-        $period = $year->periods()->create(['name' => 'Primera', 'position' => 1]);
-        $classroom = $year->classrooms()->create(['name' => 'Clase']);
+        $classroom = $year->classrooms()->create(['name' => 'Grupo']);
+        $period = $classroom->periods()->create(['name' => 'Primera', 'position' => 1]);
         $module = $this->moduleForClass($classroom, ['name' => 'Programación', 'code' => 'PROG'], $admin);
         $admin->forceFill(['last_academic_year_id' => $year->id])->save();
         $this->withHeader('X-Academic-Year', (string) $year->id);
@@ -36,8 +36,9 @@ class ChallengeCreationTest extends TestCase
     public static function invalidCombinations(): array
     {
         return [
-            'evaluation from another year' => ['period', 'period_id', 'La Evaluación debe pertenecer al curso de la clase.'],
-            'module from another class' => ['module', 'module_ids', 'Los módulos deben pertenecer a la clase seleccionada.'],
+            'evaluation from another group in the same year' => ['period', 'period_id', 'La Evaluación debe pertenecer al grupo seleccionado.'],
+            'module from another class' => ['module', 'module_ids', 'Los módulos deben pertenecer al grupo seleccionado.'],
+            'retired module' => ['retired', 'module_ids', 'Los módulos deben pertenecer al grupo seleccionado.'],
             'team rubric with unselected module' => ['rubric_module', 'team_rubric_id', 'La rúbrica incluye criterios de módulos que no participan. Selecciona todos sus módulos o elige otra rúbrica.'],
             'wrong team rubric kind' => ['team_kind', 'team_rubric_id', 'Selecciona una rúbrica de equipo válida.'],
             'wrong transversal rubric kind' => ['transversal_kind', 'transversal_rubric_id', 'Selecciona una rúbrica transversal válida.'],
@@ -49,11 +50,12 @@ class ChallengeCreationTest extends TestCase
     {
         ['admin' => $admin, 'classroom' => $classroom, 'rubric' => $rubric, 'data' => $data] = $this->scenario();
         if ($case === 'period') {
-            $year = AcademicYear::create(['name' => 'Otro curso']);
-            $data['period_id'] = $year->periods()->create(['name' => 'Otra', 'position' => 1])->id;
+            $data['period_id'] = Classroom::factory()->create(['academic_year_id' => $classroom->academic_year_id])->periods()->create(['name' => 'Otra', 'position' => 1])->id;
         } elseif ($case === 'module') {
             $other = $classroom->academicYear->classrooms()->create(['name' => 'Otra clase']);
             $data['module_ids'] = [$this->moduleForClass($other, ['name' => 'Otro', 'code' => 'OTRO'])->id];
+        } elseif ($case === 'retired') {
+            $classroom->catalogModules()->updateExistingPivot($data['module_ids'][0], ['ended_at' => now()]);
         } elseif ($case === 'rubric_module') {
             $otherModule = $this->moduleForClass($classroom, ['name' => 'Otro módulo', 'code' => 'OTRO']);
             $items = $rubric->items;

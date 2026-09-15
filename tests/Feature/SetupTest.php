@@ -15,15 +15,15 @@ class SetupTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_creates_year_with_two_evaluations_and_class(): void
+    public function test_admin_creates_year_and_group_with_two_evaluations(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->actingAs($admin)->post('/setup/year', ['name' => '2027-2028', 'periods' => ['Primera', 'Segunda']])->assertRedirect();
+        $this->actingAs($admin)->post('/setup/year', ['name' => '2027-2028'])->assertRedirect();
         $year = AcademicYear::firstOrFail();
-        $this->assertSame(['Primera', 'Segunda'], $year->periods()->orderBy('position')->pluck('name')->all());
 
-        $this->post('/setup/classroom', ['cycle_id' => Cycle::factory()->create()->id, 'level' => 2, 'name' => '2DAW', 'academic_year_id' => $year->id, 'user_ids' => []])->assertRedirect();
+        $this->post('/setup/classroom', ['cycle_id' => Cycle::factory()->create()->id, 'level' => 2, 'name' => '2DAW', 'period_count' => 2, 'academic_year_id' => $year->id, 'user_ids' => []])->assertRedirect();
 
+        $this->assertSame(['1.ª Evaluación', '2.ª Evaluación'], $year->classrooms()->firstOrFail()->periods()->pluck('name')->all());
         $this->assertDatabaseHas('classrooms', ['name' => '2DAW', 'academic_year_id' => $year->id]);
         $this->assertDatabaseHas('audit_events', ['action' => 'setup.classroom', 'user_id' => $admin->id]);
     }

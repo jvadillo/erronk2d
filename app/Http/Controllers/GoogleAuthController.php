@@ -121,7 +121,7 @@ class GoogleAuthController extends Controller
                 if (! $registration) {
                     GoogleRegistration::create($profile);
 
-                    return redirect()->route('login')->with('success', 'Solicitud de registro recibida. La administración debe asignarte un rol y, si eres estudiante, una clase antes de que puedas entrar.');
+                    return redirect()->route('login')->with('success', 'Solicitud de registro recibida. La administración debe asignarte un rol y, si eres estudiante, un grupo antes de que puedas entrar.');
                 }
                 if ($registration->status !== 'pending' || $registration->google_id !== $profile['google_id']) {
                     return $this->error('Contacta con la administración para revisar tu solicitud de acceso.');

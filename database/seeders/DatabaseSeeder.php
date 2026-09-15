@@ -41,12 +41,12 @@ class DatabaseSeeder extends Seeder
                 $teachers[] = User::create(['name' => $name, 'email' => 'profesor'.($i + 1).'@erronk2d.test', 'password' => $password, 'role' => 'teacher', 'permissions' => User::PERMISSIONS]);
             }
             $year = AcademicYear::create(['name' => '2026-2027']);
-            $periods = [];
-            foreach (['1.ª Evaluación', '2.ª Evaluación', '3.ª Evaluación'] as $i => $name) {
-                $periods[] = $year->periods()->create(['name' => $name, 'position' => $i + 1]);
-            }
             $cycle = Cycle::create(['name' => 'Desarrollo de Aplicaciones Web', 'code' => 'DAW']);
             $class = Classroom::create(['academic_year_id' => $year->id, 'name' => '2DAW-A', 'cycle_id' => $cycle->id, 'cycle_name' => $cycle->name, 'level' => 2, 'owner_id' => $teachers[0]->id]);
+            $periods = [];
+            foreach (['1.ª Evaluación', '2.ª Evaluación', '3.ª Evaluación'] as $i => $name) {
+                $periods[] = $class->periods()->create(['name' => $name, 'position' => $i + 1]);
+            }
             $students = [];
             $names = ['Ainhoa Agirre', 'Aitor Fernández', 'Alaia Martínez', 'Ander García', 'Ane Lertxundi', 'Asier Ibáñez', 'Danel Ortiz', 'Eider Pérez', 'Ekain Gómez', 'Elene Ruiz', 'Enara Sánchez', 'Gorka Martín', 'Haizea López', 'Iker Rodríguez', 'Irati Etxeberria', 'June Alonso', 'Lander Bilbao', 'Maialen Álvarez', 'Nora Urrutia', 'Unai Romero'];
             foreach ($names as $i => $name) {

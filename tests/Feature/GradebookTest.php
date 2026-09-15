@@ -38,9 +38,9 @@ class GradebookTest extends TestCase
         parent::setUp();
         $this->admin = User::factory()->create(['role' => 'admin']);
         $year = AcademicYear::create(['name' => '2026-2027']);
-        $p = $year->periods()->create(['name' => '1.ª Evaluación', 'position' => 1]);
-        $year->periods()->create(['name' => '2.ª Evaluación', 'position' => 2]);
         $this->classroom = Classroom::create(['academic_year_id' => $year->id, 'name' => '2DAW-A']);
+        $p = $this->classroom->periods()->create(['name' => '1.ª Evaluación', 'position' => 1]);
+        $this->classroom->periods()->create(['name' => '2.ª Evaluación', 'position' => 2]);
         $this->students = User::factory()->count(3)->create(['role' => 'student'])->all();
         foreach ($this->students as $student) {
             $this->enrollInClass($student, $this->classroom);
@@ -86,6 +86,24 @@ class GradebookTest extends TestCase
         $this->students[0]->enrollments()->where('classroom_id', $this->classroom->id)->update(['ended_at' => now()]);
         $this->enrollInClass($this->students[0], $other);
         $this->assertSame($before, app(Gradebook::class)->report($this->classroom)['rows']);
+    }
+
+    public function test_retired_module_keeps_published_grades_and_can_still_be_corrected(): void
+    {
+        $this->complete();
+        $this->write(['action' => 'publish'])->assertOk();
+        $before = app(Gradebook::class)->report($this->classroom)['rows'];
+        $snapshot = Publication::firstOrFail()->snapshot;
+        $grades = ModuleGrade::orderBy('id')->get()->toArray();
+
+        $this->actingAs($this->admin)->post('/setup/group-module', ['classroom_id' => $this->classroom->id, 'module_id' => $this->modules[0]->id, 'active' => false])->assertSessionHasNoErrors();
+
+        $this->assertSame($before, app(Gradebook::class)->report($this->classroom->fresh())['rows']);
+        $this->assertSame($snapshot, Publication::firstOrFail()->snapshot);
+        $this->assertSame($grades, ModuleGrade::orderBy('id')->get()->toArray());
+        $this->write(['action' => 'reopen', 'reason' => 'Corrección histórica'])->assertOk();
+        $this->write(['action' => 'grades', 'field' => 'exam', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => '9']]])->assertOk();
+        $this->assertSame($snapshot, Publication::firstOrFail()->snapshot);
     }
 
     public function test_participant_repair_rejects_populated_historical_unauthorized_and_stale_requests(): void

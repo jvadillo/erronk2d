@@ -88,7 +88,7 @@ class GoogleRegistrationTest extends TestCase
         $this->actingAs($admin);
 
         $this->post('/registrations/'.$registration->id, ['decision' => 'approve', 'role' => 'student'])
-            ->assertSessionHasErrors(['classroom_id' => 'Selecciona una clase para el estudiante.']);
+            ->assertSessionHasErrors(['classroom_id' => 'Selecciona un grupo para el estudiante.']);
         $this->post('/registrations/'.$registration->id, ['decision' => 'approve', 'role' => 'admin'])
             ->assertSessionHasErrors('role');
 

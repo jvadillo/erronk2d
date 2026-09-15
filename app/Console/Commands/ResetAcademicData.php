@@ -56,7 +56,7 @@ class ResetAcademicData extends Command
                     throw new RuntimeException('Falta el acceso administrativo o alguna de las 50 identidades de ejemplo.');
                 }
                 User::query()->update(['classroom_id' => null, 'last_academic_year_id' => null, 'remember_token' => null]);
-                foreach (['audit_events', 'publications', 'assessments', 'module_grades', 'memberships', 'teams', 'challenge_student', 'challenge_module', 'challenges', 'classroom_module_user', 'classroom_module', 'enrollments', 'classroom_user', 'module_user', 'rubric_user', 'rubrics', 'modules', 'classrooms', 'periods', 'academic_years', 'cycles', 'google_registrations', 'sessions', 'password_reset_tokens', 'jobs', 'job_batches', 'failed_jobs', 'cache'] as $table) {
+                foreach (['audit_events', 'publications', 'assessments', 'module_grades', 'memberships', 'teams', 'challenge_student', 'challenge_module', 'challenges', 'classroom_module_user', 'classroom_module', 'enrollments', 'classroom_user', 'module_user', 'rubric_user', 'rubrics', 'modules', 'periods', 'classrooms', 'academic_years', 'cycles', 'google_registrations', 'sessions', 'password_reset_tokens', 'jobs', 'job_batches', 'failed_jobs', 'cache'] as $table) {
                     DB::table($table)->delete();
                 }
                 User::where('role', '!=', 'admin')->whereNotIn('id', $people->modelKeys())->delete();

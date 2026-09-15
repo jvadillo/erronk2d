@@ -65,15 +65,25 @@ class Classroom extends Model
         return $this->belongsToMany(User::class, 'enrollments', 'classroom_id', 'student_id')->where('role', 'student')->wherePivotNull('ended_at');
     }
 
+    public function periods(): HasMany
+    {
+        return $this->hasMany(Period::class)->orderBy('position');
+    }
+
     public function modules(): BelongsToMany
     {
-        return $this->belongsToMany(Module::class)->withPivot('name', 'code');
+        return $this->catalogModules()->wherePivotNull('ended_at');
+    }
+
+    public function catalogModules(): BelongsToMany
+    {
+        return $this->belongsToMany(Module::class, 'classroom_module')->withPivot('name', 'code', 'ended_at');
     }
 
     public function syncCatalog(): void
     {
         $modules = Module::where('cycle_id', $this->cycle_id)->where('level', $this->level)->get();
-        $existing = $this->modules()->pluck('modules.id');
+        $existing = $this->catalogModules()->pluck('modules.id');
         foreach ($modules as $module) {
             if (! $existing->contains($module->id)) {
                 $this->modules()->attach($module->id, ['name' => $module->name, 'code' => $module->code]);

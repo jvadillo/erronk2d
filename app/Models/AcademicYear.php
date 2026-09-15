@@ -17,11 +17,6 @@ class AcademicYear extends Model
         return ['is_open' => 'boolean'];
     }
 
-    public function periods(): HasMany
-    {
-        return $this->hasMany(Period::class)->orderBy('position');
-    }
-
     public function classrooms(): HasMany
     {
         return $this->hasMany(Classroom::class);

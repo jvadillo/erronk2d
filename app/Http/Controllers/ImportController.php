@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Domain\AcademicContext;
 use App\Models\AuditEvent;
-use App\Models\Classroom;
 use App\Models\Enrollment;
 use App\Models\Module;
 use App\Models\User;
@@ -27,7 +26,7 @@ class ImportController extends Controller
         $class = null;
         if ($r->kind === 'student') {
             app(AcademicContext::class)->requireWritable($r);
-            $r->validate(['classroom_id' => 'required|integer'], ['classroom_id.required' => 'Selecciona una clase antes de importar.']);
+            $r->validate(['classroom_id' => 'required|integer'], ['classroom_id.required' => 'Selecciona un grupo antes de importar.']);
             $class = app(AcademicContext::class)->classrooms($r->user())->findOrFail($r->integer('classroom_id'));
         } else {
             abort_unless($r->user()->role === 'admin', 403);
@@ -123,11 +122,6 @@ class ImportController extends Controller
                         if ($class) {
                             Enrollment::updateOrCreate(['classroom_id' => $class->id, 'student_id' => $user->id], ['ended_at' => null]);
                         }
-                    }
-                }
-                if ($r->kind === 'module') {
-                    foreach (Classroom::where('cycle_id', $r->integer('cycle_id'))->where('level', $r->integer('level'))->whereHas('academicYear', fn ($query) => $query->where('is_open', true))->get() as $classroom) {
-                        $classroom->syncCatalog();
                     }
                 }
                 AuditEvent::create(['user_id' => $r->user()->id, 'action' => 'import.'.$r->kind, 'after' => ['count' => count($valid)]]);

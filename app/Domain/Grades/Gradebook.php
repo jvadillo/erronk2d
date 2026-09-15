@@ -160,8 +160,8 @@ final class Gradebook
 
     public function report(Classroom $classroom): array
     {
-        $classroom->load(['academicYear.periods', 'modules']);
-        foreach ($classroom->modules as $module) {
+        $classroom->load(['academicYear', 'periods', 'catalogModules']);
+        foreach ($classroom->catalogModules as $module) {
             $module->name = $module->pivot->name;
             $module->code = $module->pivot->code;
         }
@@ -173,10 +173,10 @@ final class Gradebook
                 $participants->select('challenge_student.user_id')->from('challenge_student')->join('challenges', 'challenges.id', '=', 'challenge_student.challenge_id')->where('challenges.classroom_id', $classroom->id);
             });
         })->orderBy('name')->orderBy('id')->get() as $student) {
-            foreach ($classroom->modules as $module) {
+            foreach ($classroom->catalogModules as $module) {
                 $periodGrades = [];
                 $periods = [];
-                foreach ($classroom->academicYear->periods as $period) {
+                foreach ($classroom->periods as $period) {
                     $values = [];
                     $weights = [];
                     $details = [];

@@ -23,7 +23,7 @@ class EnrollmentTest extends TestCase
 
     private function challenge(Classroom $classroom): Challenge
     {
-        $period = $classroom->academicYear->periods()->create(['name' => 'Primera', 'position' => 1]);
+        $period = $classroom->periods()->create(['name' => 'Primera', 'position' => 1]);
 
         return Challenge::create(['name' => 'Reto', 'classroom_id' => $classroom->id, 'period_id' => $period->id, 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30], 'team_rubric' => ['items' => []], 'transversal_rubric' => ['items' => []]]);
     }
@@ -81,7 +81,7 @@ class EnrollmentTest extends TestCase
         }
     }
 
-    public function test_course_rename_preserves_periods_with_challenges_and_rejects_structure_changes(): void
+    public function test_course_rename_does_not_modify_group_evaluations(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $classroom = $this->classroom();
@@ -89,10 +89,7 @@ class EnrollmentTest extends TestCase
         $year = $classroom->academicYear;
         $this->actingAs($admin)->post('/setup/year', ['id' => $year->id, 'name' => 'Nombre corregido', 'periods' => ['Primera']])->assertRedirect();
         $this->assertSame('Nombre corregido', $year->fresh()->name);
-        $this->assertSame($challenge->period_id, $year->periods()->firstOrFail()->id);
-        $this->postJson('/setup/year', ['id' => $year->id, 'name' => 'No guardar', 'periods' => ['Nueva']])->assertUnprocessable()->assertJsonValidationErrors('periods');
-        $this->assertSame('Nombre corregido', $year->fresh()->name);
-        $this->assertSame('Primera', $year->periods()->firstOrFail()->name);
+        $this->assertSame($challenge->period_id, $classroom->periods()->firstOrFail()->id);
     }
 
     public function test_class_edit_keeps_teacher_membership_multiple_and_student_assignment_separate(): void

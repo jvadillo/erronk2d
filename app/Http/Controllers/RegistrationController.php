@@ -23,7 +23,7 @@ class RegistrationController extends Controller
             'decision' => 'required|in:approve,reject',
             'role' => 'required_if:decision,approve|in:student,teacher',
             'classroom_id' => 'exclude_unless:decision,approve|exclude_unless:role,student|required|integer|exists:classrooms,id',
-        ], ['classroom_id.required' => 'Selecciona una clase para el estudiante.']);
+        ], ['classroom_id.required' => 'Selecciona un grupo para el estudiante.']);
         try {
             DB::transaction(function () use ($request, $registration, $data) {
                 $registration = GoogleRegistration::lockForUpdate()->findOrFail($registration->id);

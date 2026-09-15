@@ -17,7 +17,7 @@ class OrganizationNavigationTest extends TestCase
         return [
             'courses' => ['courses', 'Cursos académicos'],
             'cycles' => ['cycles', 'Ciclos'],
-            'classrooms' => ['classrooms', 'Clases'],
+            'classrooms' => ['classrooms', 'Grupos'],
             'teachers' => ['teachers', 'Profesor'],
             'students' => ['students', 'Estudiante'],
             'modules' => ['modules', 'Módulos'],
@@ -81,7 +81,7 @@ class OrganizationNavigationTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($admin)->from('/setup/courses')->post('/setup/year', ['name' => '', 'periods' => []])
-            ->assertRedirect('/setup/courses')->assertSessionHasErrors(['name', 'periods']);
+            ->assertRedirect('/setup/courses')->assertSessionHasErrors(['name']);
 
         $this->assertDatabaseCount('academic_years', 0);
     }

@@ -102,7 +102,7 @@ final class ChallengeWriter
         }
         $students = $challenge->classroom->students()->where('active', true)->pluck('users.id');
         if ($students->isEmpty()) {
-            throw ValidationException::withMessages(['participants' => 'La clase no tiene estudiantes activos. Asígnalos primero desde Organización → Estudiante.']);
+            throw ValidationException::withMessages(['participants' => 'El grupo no tiene estudiantes activos. Asígnalos primero desde Organización → Estudiante.']);
         }
         $challenge->students()->sync($students);
     }
