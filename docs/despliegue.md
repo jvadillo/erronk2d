@@ -1,6 +1,6 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción actualizada el 10 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. Imágenes app/web `38e25ce`, con lateral plegable y páginas de Organización; sin nuevas migraciones. HTTPS y recursos compilados responden 200; las siete páginas nuevas exigen iniciar sesión. La API vecina sigue respondiendo 200. Ajuste de red en `9625eee`; la antigua vista previa está detenida y conservada.
+**Producción en 878840e; verificación cerrada el 15 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. Arquitectura anual y dos migraciones publicadas; reinicio inicial ejecutado con copia `backups/production-20260914-878840e` de la versión anterior **38e25ce**. Conservados 1 administrador, 40 estudiantes y 10 profesores activos, con datos y credenciales comprobados antes/después; actividad y catálogos académicos vacíos. HTTPS login/recursos 200, clases/ciclos/informes protegidos y API vecina 200. Mantenimiento retirado y entorno de pruebas eliminado. No repetir la limpieza. La antigua vista previa sigue detenida y conservada.
 
 ## Arquitectura preparada
 
@@ -162,6 +162,8 @@ No ejecutar manualmente el seeder local en producción. Retirar la carga fictici
 
 
 ### Transición a cursos independientes
+
+**Transición ya ejecutada en 878840e.** Las instrucciones siguientes documentan la operación realizada; los despliegues futuros omiten la opción de reinicio.
 
 La entrega académica requiere una única limpieza autorizada, separada de `migrate`. Después de validar las imágenes, ejecutar `bash ops/deploy VERSION backups/DIRECTORIO-NUEVO --reset-academics`. El script pone Erronk2D en mantenimiento, crea la copia y comprueba el índice del volcado PostgreSQL y la integridad gzip del almacenamiento antes de migrar y limpiar. Conservar también la versión y configuración anteriores para una restauración coherente.
 

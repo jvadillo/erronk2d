@@ -1,6 +1,6 @@
 # Estado del proyecto y siguiente fase
 
-Fecha de revisión: 14 de septiembre de 2026. `prompt.md` se conserva sin modificaciones y se interpreta junto con las aclaraciones recogidas en `decisiones.md`.
+Fecha de revisión: 15 de septiembre de 2026. `prompt.md` se conserva sin modificaciones y se interpreta junto con las aclaraciones recogidas en `decisiones.md`.
 
 ## Punto de partida y trabajo retomado
 
@@ -32,7 +32,7 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 ## Verificación
 
-Arquitectura anual `8d78888`: **138 pruebas / 1.179 aserciones** correctas en SQLite y PostgreSQL. Cubre ámbito anual y clase, responsables, matrícula múltiple, copias de rúbricas, nombres históricos, notas no matriculadas y reinicio único sin cambiar credenciales. Los 11 escenarios de navegador pasan, incluidos contexto entre pestañas, persistencia y curso cerrado. Publicación pendiente; consultar PROGRESS.md para el estado actualizado.
+Arquitectura anual `8d78888`: **138 pruebas / 1.179 aserciones** correctas en SQLite y PostgreSQL. Cubre ámbito anual y clase, responsables, matrícula múltiple, copias de rúbricas, nombres históricos, notas no matriculadas y reinicio único sin cambiar credenciales. Los 11 escenarios de navegador pasan, incluidos contexto entre pestañas, persistencia y curso cerrado. Versión 878840e publicada y reinicio verificado: 1 administrador y 50 cuentas de ejemplo, credenciales intactas y actividad vacía. HTTPS y API vecina correctos; entorno de pruebas retirado.
 
 Entrega de navegación `38e25ce`: **18 pruebas nuevas / 216 aserciones** correctas en SQLite y PostgreSQL tras corregir la respuesta 405 por 404 para secciones desconocidas; las **29 pruebas existentes afectadas** también resultaron correctas en ambos motores. **Las nueve pruebas Playwright pasan**, incluidas persistencia del lateral, recarga, historial, teclado, móvil y formularios. Capturas revisadas; compilación TypeScript/Vue, imágenes y Pint correctos. Producción: HTTPS y ambos recursos compilados 200, siete páginas protegidas con redirección a login y API vecina 200. Entorno de pruebas retirado; no se repitió OAuth externo.
 
@@ -54,10 +54,10 @@ También se verifican compilación TypeScript/Vue, formato PHP, configuración C
 2. **Base y dominio académico:** realizados; migraciones, permisos y cálculos con precisión exacta.
 3. **Flujos docentes y alumnado:** implementados y probados en la demostración.
 4. **Publicación, informes e importación:** implementados dentro del alcance indicado.
-5. **Producción:** actualizada el 10 de septiembre de 2026 en https://erronk2d.jonvadillo.com con las imágenes `38e25ce`. Navegación publicada, sin nuevas migraciones y mantenimiento retirado; 40 estudiantes y 10 profesores ficticios activos, cuentas manuales conservadas. HTTPS, recursos compilados y API existente HTTP 200; nuevas páginas protegidas. Cookies Secure/HttpOnly verificadas en entregas anteriores. No repetir bootstrap.
+5. **Producción:** arquitectura académica publicada en https://erronk2d.jonvadillo.com con imágenes **878840e**. Migraciones y reinicio inicial completados; mantenimiento retirado. Permanecen 40 estudiantes, 10 profesores ficticios y un administrador activos; comparación de datos/credenciales antes/después correcta. Cursos, ciclos, módulos, clases, matrículas, rúbricas y retos vacíos. HTTPS/recursos/API existente 200; rutas académicas protegidas. No repetir bootstrap ni limpieza.
 6. **Correo:** SDK Resend 1.13.0 integrado, recuperación en español y manejo de fallos; 7 pruebas específicas de correo/acceso y 57 aserciones correctas. Envío anterior confirmado como entregado; dominio verificado y remitente definitivo aplicado. La entrega con ese nuevo remitente queda por verificar en la próxima recuperación solicitada.
-7. **Operación:** última copia previa a navegación en `backups/production-20260910-38e25ce` (versión anterior `736925b`). Restauración completa de la copia anterior `4cd717d` ensayada en `compose.restore.yml`: PostgreSQL, 70 archivos coincidentes por SHA-256 y aplicación de la versión original `504db0b`; login, recursos, cálculos de retos e informes correctos. La copia ensayada no contenía publicaciones reales. Entornos temporales retirados y producción comprobada; política de copias externas pendiente.
-8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). El nuevo modelo sustituye la clase única por matrículas múltiples. Reinicio académico inicial autorizado conservando 40 estudiantes/10 profesores ficticios y acceso administrador; estado efectivo en PROGRESS.md. Corregido también el token CSRF obsoleto tras iniciar sesión.
+7. **Operación:** última copia previa al reinicio en `backups/production-20260914-878840e` (versión anterior `38e25ce`), índice PostgreSQL e integridad gzip comprobados. Restauración completa de la copia anterior `4cd717d` ensayada en `compose.restore.yml`: PostgreSQL, 70 archivos coincidentes por SHA-256 y aplicación de la versión original `504db0b`; login, recursos, cálculos de retos e informes correctos. La copia ensayada no contenía publicaciones reales. Entornos temporales retirados y producción comprobada; política de copias externas pendiente.
+8. **Correcciones solicitadas:** implementadas y publicadas; criterios en [plan-correcciones.md](plan-correcciones.md). El nuevo modelo sustituye la clase única por matrículas múltiples. Reinicio académico inicial ejecutado conservando 40 estudiantes/10 profesores ficticios y acceso administrador; estado efectivo en PROGRESS.md. Corregido también el token CSRF obsoleto tras iniciar sesión.
 
 ## Riesgos y límites pendientes
 

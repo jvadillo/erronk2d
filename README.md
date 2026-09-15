@@ -18,7 +18,7 @@ La antigua demostración SQLite está detenida y conservada. El puerto `127.0.0.
 
 La actividad se aísla por curso académico, seleccionado al entrar y recordado en la cuenta. El selector permite cambiar durante la sesión; los años cerrados son de solo lectura. Cada docente accede únicamente a sus clases (propietario o miembro), y solo los responsables de cada módulo introducen sus evaluaciones. Los estudiantes pueden tener varias matrículas; la baja conserva el histórico. Ciclos, módulos, cuentas y rúbricas son estables: las rúbricas se comparten para usar/copiar y cada reto congela su versión. «No matriculado» se distingue de pendiente y cero.
 
-`erronk2d:demo` mantiene únicamente las 40 cuentas de estudiantes y 10 de profesores ficticios, sin crear actividad académica. El reinicio inicial autorizado elimina años, catálogos, rúbricas, actividad y cuentas no ficticias, conservando administradores y credenciales de ejemplo. Está separado de las migraciones y protegido frente a una segunda ejecución. Consultar `PROGRESS.md` para la versión efectivamente desplegada.
+`erronk2d:demo` mantiene únicamente las 40 cuentas de estudiantes y 10 de profesores ficticios, sin crear actividad académica. El reinicio inicial autorizado ya se ejecutó en 878840e: eliminó años, catálogos, rúbricas, actividad y cuentas no ficticias, conservando el administrador y las credenciales de ejemplo. Está separado de las migraciones y protegido frente a una segunda ejecución. Para empezar, administración debe crear el primer curso académico, los ciclos y los módulos en Organización. Consultar `PROGRESS.md` para el estado de producción.
 
 ## Desarrollo aislado
 

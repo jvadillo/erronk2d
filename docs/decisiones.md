@@ -50,7 +50,7 @@ La auditoría encontró Caddy compartido en 80/443, FastAPI en 127.0.0.1:8000 y 
 
 ## Arquitectura académica confirmada el 14 de septiembre de 2026
 
-Estado: aclaraciones funcionales cerradas el 14 de septiembre; plan de implementación al final de esta sección. No implementado ni aplicado a producción.
+Estado: plan de siete bloques completado y publicado en **878840e**. Reinicio inicial ejecutado con copia previa; conservados 40 estudiantes, 10 profesores ficticios y acceso administrador con credenciales intactas. Actividad académica vacía. Verificación y continuidad en PROGRESS.md. El plan siguiente se conserva como referencia de alcance.
 
 - **Curso académico** (2025-26) y **curso/nivel** (1.º, 2.º) son conceptos distintos. Clases, matrículas, retos y su actividad pertenecen a un curso académico; cada año empieza desde cero sin traslado automático. Cuentas, ciclos, módulos y biblioteca de rúbricas son estables entre años.
 - Solo administración crea cursos académicos, los cierra y los reabre. Todos los profesores activos pueden acceder a cualquier curso abierto y crear clases sin asignación previa. Los cursos cerrados permiten consulta del histórico y bloquean creación/edición académica; corregir requiere reapertura administrativa.
