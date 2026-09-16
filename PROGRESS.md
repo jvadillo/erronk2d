@@ -1,44 +1,31 @@
 # Estado de la tarea
 
 ## Objetivo
-Gestión de Grupos, evaluaciones propias y matrícula/módulos rápidos publicada en `5a66325`; comprobación de producción terminada el 15/09/2026.
+Cargar el catálogo FP preparado y desplegar en producción, autorizado el 16/09/2026. El usuario permite omitir pruebas no necesarias porque aún no hay usuarios reales.
 
 ## Completado
-- Imágenes `5a66325` construidas desde `git archive`, sin el catálogo ajeno. TypeScript/Vite correctos; arranque aislado, esquema de Grupos, login/salud, rutas protegidas y 17 recursos HTTP correctos. Recuentos y huellas previos obtenidos mediante consultas de solo lectura para contrastar tras migrar.
-- Despliegue autorizado mediante `ops/deploy`, sin reinicio académico. Copia privada `backups/production-20260915-5a66325` de versión `878840e`, índice PostgreSQL/gzip validados y permisos 700/600. Migración aplicada; app/web en `5a66325`, mantenimiento retirado.
-- Producción: recuentos y huellas de cuentas, grupos, matrículas, módulos, retos y notas coinciden (excluidos campos técnicos modificados). Ningún reto con evaluación ajena ni grupo sin evaluaciones. Acceso administrativo, Grupos/cursos/informes autenticados, recursos HTTPS y cookies Secure/HttpOnly correctos. Sesión de comprobación cerrada; API vecina `/api/health` HTTP 200 y entorno aislado retirado.
-- Terminología Grupo en navegación, formularios, mensajes, retos e informes. Se conservan identificadores internos y rutas `classroom` por compatibilidad.
-- Evaluaciones propias de cada grupo (1–12; 3 por defecto). Migración copia las antiguas evaluaciones anuales a sus grupos, reasigna retos y conserva publicaciones. Cursos ya no configuran evaluaciones; creación de retos e informes usan las del grupo.
-- Gestión rápida desde tarjetas de grupo: matrícula por correo exacto, baja conservando histórico, añadir/retirar módulos y configurar evaluaciones.
-- Corregido orden de evaluaciones al guardar: se recargan posiciones tras el desplazamiento temporal para que Eloquent guarde también las que mantienen su orden. Regresión reproduce el fallo previo; 16 pruebas / 141 aserciones correctas en SQLite y PostgreSQL. Pint correcto en ambos archivos PHP modificados.
-- Navegador: 12/12 pruebas correctas (navegación, retos, notas, matrículas, equipos, revisión de solicitudes, Grupos, contexto y cursos cerrados). Ajustada anchura de nombres de evaluación en móvil; TypeScript/Vite y repetición focalizada de Grupos correctos. Capturas de tarjeta en escritorio/móvil y diálogo móvil revisadas; sin desbordamiento horizontal ni errores JavaScript en el flujo de Grupos.
-- Retirar un módulo mantiene su vínculo histórico, responsables, retos y notas; excluido de nuevos retos, restaurable sin duplicados. Nuevos módulos de catálogo/importación se añaden manualmente a grupos existentes.
-- Regresión SQLite: 155 pruebas correctas y una expectativa de texto Clase→Grupo corregida; sus 10 pruebas repetidas pasan. PostgreSQL: 156 pruebas / 1.347 aserciones correctas. Pruebas focalizadas correctas: migración desde esquema anterior, aislamiento, permisos, edición de evaluaciones, retirada/restauración y conservación/corrección de notas publicadas. TypeScript/Vite correctos; Pint aplicado a PHP modificados.
-- Entrega académica anterior publicada y reinicio único ya terminado: no repetir limpieza ni comprobaciones previas. Copia privada previa `backups/production-20260914-878840e` de versión 38e25ce; producción conserva administrador y cuentas demo 40/10.
+- Catálogo revisado: 181 ciclos (28 básicos, 62 medios, 91 superiores) y 2.691 módulos; currículo ministerial, distribución por cursos distinta de Euskadi. Alternativa ministerial autorizada previamente.
+- Importador transaccional con previsualización, filtro por ciclo, bloqueo concurrente, conservación de registros existentes y rechazo de coincidencias ambiguas. No añade módulos a grupos existentes.
+- Siete pruebas / 36 aserciones correctas en SQLite y PostgreSQL: carga completa, repetición sin duplicados, previsualización, conservación, cancelación de cargas ambiguas y bloqueo concurrente. Pint aplicado a ambos PHP.
+- Grupos y evaluaciones propias publicados y verificados en 5a66325 el 15/09/2026. Copia previa privada: backups/production-20260915-5a66325. No repetir pruebas de Grupos ni reinicio académico.
 
 ## Pendiente
-- Sin tareas pendientes de Grupos ni de su despliegue. No repetir el reinicio académico ni las comprobaciones terminadas salvo nuevos cambios o errores.
-- Catálogo oficial aplazado: mantener `app/Console/Commands/ImportOfficialCatalog.php` y `tests/Feature/ImportOfficialCatalogTest.php` ajenos sin incluir en commits. Extracción /tmp/erronk2d-* con 233 fichas estatales y 224 correspondencias IVAC; currículo vasco prioritario, ministerial autorizado como alternativa. No limpiar ni cargar producción.
-- Google aplazado (`redirect_uri_mismatch` externo), copias externas/carga/supervisión fuera de alcance.
+- Construir imágenes desde el commit, previsualizar catálogo en producción, desplegar mediante ops/deploy con copia previa y ejecutar erronk2d:catalog --execute; verificar recuentos, repetición y HTTPS.
+- Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
-- `app/Http/Controllers/{Setup,Challenge,Import}Controller.php`; `app/Models/{AcademicYear,Classroom,Period}.php`; `app/Domain/Grades/Gradebook.php`.
-- `resources/js/components/GroupCard.vue`, `resources/js/pages/{Setup,Dashboard}.vue`; textos de organización/retos/informes.
-- Migración `2026_09_15_111938_move_periods_to_classrooms.php`; factory Challenge, DatabaseSeeder y orden de borrado de ResetAcademicData.
-- Pruebas `GroupManagementTest`, `GroupMigrationTest`, Setup/Enrollment/ChallengeCreation/Gradebook/OrganizationNavigation; `tests/Browser/workflows.spec.ts`.
-- Fuente funcional: `prompt.md`, aclaraciones del usuario y `docs/decisiones.md` (plan académico anterior). PHP/Composer mediante `ops/php`; navegador solo compose.test.yml, destino http://browser-app:8083.
-- `docs/despliegue.md`: versión e identificadores de imágenes publicados, copia previa y comprobaciones. Construir futuras imágenes desde el commit para excluir archivos ajenos sin seguimiento.
-- Cambios ajenos: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md y archivos de catálogo sin seguimiento. No incluirlos.
+- app/Console/Commands/ImportOfficialCatalog.php; database/seeders/official-catalog.json; tests/Feature/ImportOfficialCatalogTest.php.
+- ops/deploy, ops/backup, ops/php, ops/Dockerfile.production, compose.production.yml, compose.test.yml; docs/despliegue.md.
+- Fuente funcional: prompt.md y aclaraciones del usuario; docs/decisiones.md conserva el plan académico anterior.
+- Cambios ajenos: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No incluirlos.
 - Privados: .env.production, ops/production-credentials, backups/, test-results/. Nunca mostrarlos ni versionarlos.
 
 ## Decisiones
-- Aclaraciones del usuario: módulos únicamente del mismo ciclo/nivel; retirada permitida conservando histórico; todo el profesorado miembro y administración gestiona módulos/evaluaciones; se pueden añadir evaluaciones y quitar solo las que no tengan retos.
-- Evaluaciones con retos conservan nombre e ID; las vacías pueden renombrarse/eliminarse. Propiedad, profesorado y responsables mantienen sus permisos previos (propietario/admin); matrícula sigue disponible a miembros.
-- Migración de evaluaciones sin reversión automática: volver a la arquitectura anual exige restaurar copia previa. No ejecutar rollback de esta migración.
-- Años cerrados solo lectura; contexto persistente y rechazo de pestañas antiguas. Matrícula de grupo cubre todos sus módulos; bajas no borran notas ni otras matrículas. No arrastrar ni sincronizar automáticamente retos ya evaluados/publicados.
-- VPS compartido: solo recursos propios, app web en 127.0.0.1:8082; no tocar gateway/API vecina/Docker global. Producción solo mediante despliegue con copia; pruebas de escritura exclusivamente aisladas.
+- Carga aditiva, sin limpieza, sin sobrescribir nombres/códigos ni modificar grupos existentes. Nuevos módulos se añaden desde Grupos.
+- VPS compartido: solo recursos propios, web en 127.0.0.1:8082. Producción con copia previa; pruebas de escritura aisladas.
+- Cursos cerrados solo lectura; evaluaciones propias de grupo; retirada de módulos conserva histórico. Migración de evaluaciones sin rollback automático.
+- Construir desde git archive para excluir cambios ajenos. Mantener cuentas demo y administrador; no repetir reinicio académico.
 
 ## Último error
-- Sin fallos pendientes conocidos. Orden de evaluaciones corregido en `11a2ee1`; regresión, navegador y comprobación de producción terminados.
-- Pint --dirty falla por ausencia de Git en imagen PHP; formato aplicado con lista explícita de archivos. Documentación Inertia v3 consultada por Boost con red autorizada; guías testing/Inertia leídas en vendor/laravel/boost. .ai/rules no existe.
-- Laravel 13.30.1, Inertia Laravel 3.3.3, PHPUnit 12.5.34, PHP 8.4.25. No repetir auditoría VPS, bootstrap, limpieza, correos ni OAuth.
+- Sin fallo funcional pendiente. Corregida comparación de prueba para leer ambos estados desde BD (orden de claves).
+- Pint --dirty no disponible por falta de Git en la imagen; aplicada lista explícita. Laravel 13.30.1, Inertia 3.3.3, PHPUnit 12.5.34. .ai/rules no existe; guía testing leída en vendor/laravel/boost.
