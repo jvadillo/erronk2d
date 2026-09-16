@@ -16,7 +16,11 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
 }
 
 async function assertNoOverflow(page: Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth, document: document.documentElement.scrollWidth,
+    outside: Array.from(document.querySelectorAll('main *')).filter(element => !element.closest('.rubric-table-scroll') && element.getBoundingClientRect().right > window.innerWidth).map(element => `${element.tagName}.${element.className}`).slice(0, 8),
+  }));
+  expect(dimensions.document, JSON.stringify(dimensions)).toBeLessThanOrEqual(dimensions.viewport);
 }
 
 test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y móvil', async ({ page }) => {
@@ -29,7 +33,7 @@ test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y m�
   await page.getByRole('link', { name: 'Rúbrica', exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/rubrics\/create$/);
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  const name = 'Rúbrica de tabla · navegador';
+  const name = `Rúbrica de tabla · navegador ${Date.now()}`;
   await page.getByLabel('Nombre de la rúbrica').fill(name);
   await page.getByLabel('Nombre del criterio 1', { exact: true }).fill('Calidad del código');
   await page.getByLabel('Descripción del criterio 1', { exact: true }).fill('Descripción opcional larga. '.repeat(14));
@@ -52,11 +56,14 @@ test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y m�
   await expect(page.getByLabel('Nombre de la rúbrica')).toHaveValue(name);
   await page.getByLabel('Peso del criterio 2').fill('70');
   await assertNoOverflow(page);
+  await page.locator('.rubric-table-scroll').evaluate(element => element.scrollLeft = 0);
+  await page.locator('textarea').evaluateAll(elements => elements.forEach(element => element.scrollTop = 0));
   await page.screenshot({ path: 'test-results/rubric-editor-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Guardar rúbrica', exact: true }).first().click();
   await expect(page).toHaveURL(/\/setup\/rubrics$/);
   const card = page.locator('.setup-grid > section').filter({ has: page.getByRole('heading', { name, exact: true }) });
   await card.getByRole('link', { name: 'Editar', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/rubrics\/\d+\/edit$/);
   await page.reload();
   await expect(page.getByLabel('Peso del criterio 1')).toHaveValue('30');
   await expect(page.getByLabel('Nota del nivel 5')).toHaveValue('9.5');
@@ -70,6 +77,8 @@ test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y m�
   await expect(page.getByRole('columnheader', { name: 'Módulo', exact: true })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await assertNoOverflow(page);
+  const organization = page.getByRole('button', { name: 'Organización', exact: true });
+  if (await organization.getAttribute('aria-expanded') === 'true') await organization.click();
   await page.screenshot({ path: 'test-results/rubric-editor-mobile.png', fullPage: true });
   await page.getByRole('button', { name: 'Guardar rúbrica', exact: true }).first().click();
   await expect(page).toHaveURL(/\/setup\/rubrics$/);
@@ -85,6 +94,7 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   page.on('pageerror', error => errors.push(error.message));
   await login(page, 'profesor2@erronk2d.test');
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
+  await expect(page).toHaveURL(/\/challenges\/\d+$/);
   const challengeUrl = page.url();
   await page.getByRole('button', { name: 'Rúbrica del equipo', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -100,6 +110,9 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await page.reload();
   await page.getByRole('button', { name: 'Rúbrica del equipo', exact: true }).click();
   await expect(code.getByRole('button').last()).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.rubric-table-scroll').evaluate(element => element.scrollLeft = 0);
+  const tableWidth = await page.locator('.rubric-table-scroll').evaluate(element => ({ content: element.scrollWidth, viewport: element.clientWidth }));
+  expect(tableWidth.content).toBeLessThanOrEqual(tableWidth.viewport);
   await page.screenshot({ path: 'test-results/rubric-assessment-desktop.png', fullPage: true });
   if (old) {
     await page.getByRole('button', { name: old, exact: true }).click();
@@ -116,4 +129,21 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await assertNoOverflow(page);
   await page.screenshot({ path: 'test-results/rubric-assessment-mobile.png', fullPage: true });
   expect(errors).toEqual([]);
+});
+
+
+test('rúbrica: convierte los pesos relativos antiguos a porcentajes al editar', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/rubrics');
+  const card = page.locator('.setup-grid > section').filter({ has: page.getByRole('heading', { name: 'Presentación de un prototipo', exact: true }) });
+  await card.getByRole('link', { name: 'Editar', exact: true }).click();
+  await expect(page.getByLabel('Peso del criterio 1')).toHaveValue('50');
+  await expect(page.getByLabel('Peso del criterio 2')).toHaveValue('50');
+  await expect(page.getByRole('status').filter({ hasText: 'Total: 100 %' })).toBeVisible();
+  await page.getByRole('button', { name: 'Añadir criterio', exact: true }).click();
+  await page.getByRole('button', { name: 'Repartir pesos por igual', exact: true }).click();
+  await expect(page.getByLabel('Peso del criterio 1')).toHaveValue('33.34');
+  await expect(page.getByLabel('Peso del criterio 2')).toHaveValue('33.33');
+  await expect(page.getByLabel('Peso del criterio 3')).toHaveValue('33.33');
+  await expect(page.getByRole('status').filter({ hasText: 'Total: 100 %' })).toBeVisible();
 });

@@ -6,12 +6,12 @@
 .rubric-toolbar .actions { flex-wrap: wrap; }
 .rubric-toolbar .helper { margin: 6px 0; }
 .rubric-toolbar h2 { font-size: 20px; }
-.rubric-table-scroll { max-width: 100%; overflow: auto; max-height: 72vh; border: 1px solid var(--border); border-radius: 9px; background: white; }
+.rubric-table-scroll { position: relative; max-width: 100%; overflow: auto; max-height: 72vh; border: 1px solid var(--border); border-radius: 9px; background: white; }
 .rubric-table { table-layout: fixed; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
-.rubric-table .rubric-module-col { width: 175px; }
-.rubric-table .rubric-name-col { width: 240px; }
-.rubric-table .rubric-weight-col { width: 100px; }
-.rubric-table .rubric-level-col { width: 220px; }
+.rubric-table .rubric-module-col { width: 125px; }
+.rubric-table .rubric-name-col { width: 205px; }
+.rubric-table .rubric-weight-col { width: 84px; }
+.rubric-table .rubric-level-col { width: 170px; }
 .rubric-table th, .rubric-table td { white-space: normal; overflow-wrap: anywhere; text-align: left; vertical-align: top; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 12px; }
 .rubric-table thead th { position: sticky; top: 0; z-index: 2; background: #edf2e6; text-transform: none; letter-spacing: normal; color: #415b39; font-size: 12px; }
 .rubric-table thead strong { display: block; margin-top: 7px; }
