@@ -1,13 +1,17 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 5a66325; verificación cerrada el 15 de septiembre de 2026.** Trabajar desde `/home/deploy/projects/erronk2d`. Publicadas la gestión de Grupos, las evaluaciones propias y las acciones rápidas de matrícula y módulos. Despliegue mediante `ops/deploy`, con copia privada `backups/production-20260915-5a66325` de la versión anterior **878840e**; índice del volcado PostgreSQL, integridad gzip y permisos 700/600 comprobados. Migración aplicada sin repetir el reinicio académico. Mantenimiento retirado y entorno aislado de pruebas eliminado.
+**Producción en 3bfe097; verificación cerrada el 16 de septiembre de 2026.** Catálogo FP cargado mediante `php artisan erronk2d:catalog --execute --no-interaction`: 179 ciclos y 2.687 módulos nuevos; total 181 ciclos y 2.691 módulos. Currículo ministerial incluido en `database/seeders/official-catalog.json`, cuya distribución por cursos no equivale a la de Euskadi. Los dos ciclos y cuatro módulos anteriores se conservan, junto con sus vínculos de grupo, comprobados mediante huellas antes/después. La previsualización posterior indica cero registros pendientes. Los módulos nuevos se incorporan a grupos existentes desde Grupos.
 
-Las imágenes se construyeron desde `git archive 5a66325`, excluyendo el comando de catálogo ajeno sin seguimiento. Identificadores publicados:
+Despliegue mediante `ops/deploy`, sin reinicio académico, con copia privada `backups/production-20260916-3bfe097` de la versión **5a66325**. Índice del volcado PostgreSQL, integridad gzip y permisos 700/600 comprobados. Sin migraciones de esquema pendientes; mantenimiento retirado.
 
-- `erronk2d-app:5a66325`: `sha256:c9c1c1a5d248331ef63c502ba076a6119028499da68e1b99a4f852da993b70df`.
-- `erronk2d-web:5a66325`: `sha256:99e69fd025264daaade14805a82560314c3fb5c0b30b3b6664dd92a9a9c7fa32`.
+Las imágenes se construyeron desde `git archive 3bfe097`, excluyendo cambios ajenos. Identificadores publicados:
 
-Comprobación del empaquetado en entorno aislado: TypeScript/Vite, esquema, salud/login, rutas protegidas y 17 recursos HTTP correctos. En producción coinciden los recuentos y las huellas de cuentas, cursos, grupos, matrículas, módulos, retos, valoraciones, notas y publicaciones; se excluyeron timestamps de actualización, tokens de sesión, la referencia de evaluación migrada y el campo nuevo de retirada de módulos. Todos los retos tienen una evaluación de su grupo y todos los grupos conservan evaluaciones. Acceso administrativo y páginas de Grupos/cursos/informes HTTP 200 con contenido verificado, recursos HTTPS y cookies Secure/HttpOnly correctos; sesión de comprobación cerrada. App/web ejecutan la versión publicada; web y PostgreSQL saludables. API vecina en `/api/health` HTTP 200.
+- `erronk2d-app:3bfe097`: `sha256:a3fcced078041933598383f8036696478f1ca23a481a275dcc2d643304284684`.
+- `erronk2d-web:3bfe097`: `sha256:43fb114cae3de283b137e5f000c6118aec32c57ebd9ec47230b733cab5959185`.
+
+Validación: siete pruebas del importador / 36 aserciones correctas en SQLite y PostgreSQL (previsualización, carga completa, repetición sin duplicados, conservación, ambigüedades y concurrencia). Pint, TypeScript y Vite correctos. En producción, acceso administrativo y páginas Ciclos/Módulos HTTP 200 con los totales esperados, recursos HTTPS y cookies Secure/HttpOnly correctos; sesión cerrada. App/web ejecutan 3bfe097, web y PostgreSQL saludables. Entorno de pruebas retirado. Se omitió repetir la batería de navegador y regresión de Grupos ya verificada, conforme a la autorización del usuario.
+
+Grupos, evaluaciones propias y gestión rápida publicados previamente en **5a66325**, con copia `backups/production-20260915-5a66325` de **878840e** y comprobación completa terminada el 15/09/2026.
 
 El reinicio inicial se ejecutó únicamente en **878840e**, con copia `backups/production-20260914-878840e` de **38e25ce**. **No repetir la limpieza:** producción ya contiene actividad académica. La migración de evaluaciones a grupos no admite rollback automático; una reversión exige restaurar la copia previa con autorización específica. La antigua vista previa sigue detenida y conservada.
 
