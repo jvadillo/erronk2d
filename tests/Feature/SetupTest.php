@@ -59,7 +59,7 @@ class SetupTest extends TestCase
         $year = AcademicYear::create(['name' => '2026-2027']);
         $class = $year->classrooms()->create(['name' => '2DAW']);
         $module = $this->moduleForClass($class, ['name' => 'Programación', 'code' => 'PROG']);
-        $this->actingAs($admin)->post('/setup/rubric', ['name' => 'Transversales', 'kind' => 'transversal', 'items' => [['key' => 'teamwork', 'name' => 'Colaboración', 'weight' => '1', 'module_id' => $module->id, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo']]]]])->assertRedirect();
+        $this->actingAs($admin)->post('/setup/rubric', ['name' => 'Transversales', 'kind' => 'transversal', 'items' => [['key' => 'teamwork', 'name' => 'Colaboración', 'weight' => '100', 'module_id' => $module->id, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo']]]]])->assertRedirect();
 
         $this->assertNull(Rubric::firstOrFail()->items[0]['module_id']);
     }

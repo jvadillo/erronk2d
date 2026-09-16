@@ -1,9 +1,11 @@
 # Estado de la tarea
 
 ## Objetivo
-Planificar el editor de rúbricas en página propia y tabla: criterios por fila; Módulo (solo tipo reto), Nombre, Peso y niveles por columnas. Catálogo FP publicado en 3bfe097.
+Implementar rúbricas en página propia y tabla, y evaluación coherente dentro del reto. Catálogo FP publicado en 3bfe097; este cambio aún no desplegado.
 
 ## Completado
+- Rúbricas: implementado editor de página propia y tabla común de evaluación; servidor exige columnas/notas comunes y pesos porcentuales con dos decimales que sumen 100 %. Rutas protegidas por propiedad/rol; copia histórica de retos conservada.
+- Primera verificación del cambio: 52 pruebas / 428 aserciones correctas tanto en SQLite como PostgreSQL; TypeScript/Vite correctos; Pint aplicado. Falta completar navegador y revisar capturas antes del commit funcional.
 - Producción app/web en 3bfe097, construidas desde git archive; TypeScript/Vite correctos. Despliegue mediante ops/deploy y copia previa privada backups/production-20260916-3bfe097 de 5a66325: índice PostgreSQL, gzip y permisos 700/600 verificados. Mantenimiento retirado; sin migraciones de esquema pendientes.
 - Carga ejecutada: 179 ciclos y 2.687 módulos nuevos; total 181/2.691. Previsualización posterior indica cero pendientes. Huellas de ciclos/módulos anteriores y vínculos de grupos coinciden exactamente.
 - HTTPS: acceso administrativo, Ciclos y Módulos con totales correctos, recursos y cookie Secure/HttpOnly verificados; sesión cerrada. Web/PostgreSQL saludables. Entorno de pruebas retirado.
@@ -13,12 +15,14 @@ Planificar el editor de rúbricas en página propia y tabla: criterios por fila;
 - Grupos y evaluaciones propias publicados y verificados en 5a66325 el 15/09/2026. Copia previa privada: backups/production-20260915-5a66325. No repetir pruebas de Grupos ni reinicio académico.
 
 ## Pendiente
-- Rúbricas: revisión inicial realizada; pendientes respuestas sobre alcance (editor/evaluación), notas comunes por columna o por celda, pesos relativos o porcentajes y descripción del criterio. No implementado ni desplegado este cambio.
-- Propuesta base: crear/editar en página propia, número de niveles común configurable, cuatro iniciales, añadir criterio como fila, ordenar filas y conservar GENERAL para criterios de reto. Concretar plan tras las respuestas.
-- Catálogo FP sin tareas pendientes. No repetir pruebas ya verificadas salvo nuevos cambios o fallos.
+- Implementado, pendiente revisar en navegador: editor crear/editar en página propia; criterios por fila y niveles comunes por columna, cuatro iniciales ampliables. Módulo solo en tipo reto; descripción opcional dentro de Nombre sin romper alineación.
+- Última aclaración del usuario: pesos en PORCENTAJES, suma obligatoria 100 % (sustituye recomendación inicial de pesos relativos). Nota común por columna, descripción por celda.
+- Implementada evaluación docente en tabla en zona principal del reto con selector de equipo/estudiante y vuelta a matriz; auto/coevaluación con el mismo componente. No exige páginas propias de evaluación.
+- En curso: PostgreSQL, navegador con tests/Browser/rubrics.spec.ts y workflows afectados, capturas escritorio/móvil. Tras validar, commit funcional; no se ha desplegado el nuevo editor.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
+- Nuevos: resources/js/pages/RubricEditor.vue, resources/js/components/RubricAssessment.vue, resources/js/rubrics.ts, resources/css/rubrics.css; tests/Feature/RubricEditorTest.php y tests/Browser/rubrics.spec.ts.
 - Rúbricas: resources/js/pages/Setup.vue (modal actual), Challenge.vue (evaluación docente), Student.vue (auto/coevaluación); app/Http/Controllers/SetupController.php, ChallengeController.php; app/Models/Rubric.php; routes/web.php; resources/css/app.css.
 - Pruebas relacionadas: SetupTest, ChallengeCreationTest y tests/Browser/workflows.spec.ts. prompt.md secciones de rúbricas consultadas; cada reto conserva copia independiente.
 - app/Console/Commands/ImportOfficialCatalog.php; database/seeders/official-catalog.json; tests/Feature/ImportOfficialCatalogTest.php.
@@ -28,7 +32,7 @@ Planificar el editor de rúbricas en página propia y tabla: criterios por fila;
 - Privados: .env.production, ops/production-credentials, backups/, test-results/. Nunca mostrarlos ni versionarlos.
 
 ## Decisiones
-- El usuario solicita preguntas y plan antes de desarrollar el nuevo editor. Autoriza borrar rúbricas/evaluaciones anteriores si surge incompatibilidad; no hay usuarios reales. Por ahora parece viable conservar los datos, pendiente del diseño acordado.
+- Implementación autorizada tras aclaraciones. Se permite borrar datos de rúbricas/evaluaciones incompatibles, pero se prevé conservarlos: porcentajes equivalentes al editar y tablas compatibles para copias históricas. No tocar catálogo FP ni otras áreas.
 - Carga aditiva, sin limpieza, sin sobrescribir nombres/códigos ni modificar grupos existentes. Nuevos módulos se añaden desde Grupos.
 - VPS compartido: solo recursos propios, web en 127.0.0.1:8082. Producción con copia previa; pruebas de escritura aisladas.
 - Cursos cerrados solo lectura; evaluaciones propias de grupo; retirada de módulos conserva histórico. Migración de evaluaciones sin rollback automático.

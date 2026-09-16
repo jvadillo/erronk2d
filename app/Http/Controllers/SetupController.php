@@ -13,6 +13,7 @@ use App\Models\GoogleRegistration;
 use App\Models\Module;
 use App\Models\Rubric;
 use App\Models\User;
+use Brick\Math\BigDecimal;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -70,7 +71,8 @@ class SetupController extends Controller
             'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->orderBy('name')->get(['id', 'name', 'role']),
             'cycles' => Cycle::orderBy('name')->get(),
             'modules' => Module::with('cycle')->orderBy('name')->get(),
-            'rubrics' => $section === 'rubrics' ? Rubric::availableTo($actor)->with('sharedUsers:id,name')->orderBy('name')->get() : [],
+            'rubricCreateUrl' => route('rubrics.create'),
+            'rubrics' => $section === 'rubrics' ? Rubric::availableTo($actor)->with('sharedUsers:id,name')->orderBy('name')->get()->map(fn (Rubric $rubric): array => [...$rubric->toArray(), 'edit_url' => route('rubrics.edit', ['rubric' => $rubric->id])]) : [],
             'permissions' => [],
             'registrations' => $section === 'registrations' ? GoogleRegistration::where('status', 'pending')->orderBy('created_at')->get(['id', 'name', 'email', 'created_at'])->map(fn ($registration) => [...$registration->toArray(), 'review_url' => route('registrations.update', $registration)]) : [],
         ]);
@@ -84,6 +86,23 @@ class SetupController extends Controller
         $student = User::where('role', 'student')->where('active', true)->whereRaw('LOWER(email) = ?', [Str::lower($data['email'])])->first(['id', 'name', 'email']);
 
         return response()->json(['student' => $student]);
+    }
+
+    public function rubricEditor(Request $request, ?int $rubric = null): Response
+    {
+        $actor = $request->user();
+        abort_unless(in_array($actor->role, ['admin', 'teacher'], true), 403);
+        $model = $rubric ? Rubric::availableTo($actor)->with('sharedUsers:id,name')->findOrFail($rubric) : null;
+        abort_unless($model === null || $actor->role === 'admin' || $model->owner_id === $actor->id, 403, 'Puedes crear una copia de esta rúbrica compartida.');
+
+        return Inertia::render('RubricEditor', [
+            'rubric' => $model,
+            'cycles' => Cycle::orderBy('name')->get(['id', 'name']),
+            'modules' => Module::orderBy('name')->get(['id', 'cycle_id', 'level', 'name', 'code']),
+            'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->whereKeyNot($actor->id)->orderBy('name')->get(['id', 'name']),
+            'saveUrl' => route('setup.store', ['entity' => 'rubric']),
+            'libraryUrl' => route('setup.section', ['section' => 'rubrics']),
+        ]);
     }
 
     public function store(Request $request, string $entity): RedirectResponse
@@ -116,7 +135,7 @@ class SetupController extends Controller
             AuditEvent::create(['user_id' => $actor->id, 'action' => 'setup.'.$entity, 'after' => $model->only(['id', 'name', 'role', 'is_open', 'owner_id', 'classroom_id', 'student_id', 'ended_at'])]);
         });
 
-        return back()->with('success', 'Información guardada.');
+        return ($entity === 'rubric' ? redirect()->route('setup.section', ['section' => 'rubrics']) : back())->with('success', 'Información guardada.');
     }
 
     private function year(Request $request, ?int $id): AcademicYear
@@ -312,9 +331,20 @@ class SetupController extends Controller
             return $model;
         }
         abort_unless(! $id || $model->owner_id === $actor->id || $actor->role === 'admin', 403, 'Solo el propietario puede editar el original. Puedes crear una copia.');
-        $data = $request->validate(['name' => 'required|string|max:150', 'kind' => 'required|in:team,transversal', 'cycle_id' => 'nullable|integer|exists:cycles,id', 'level' => 'nullable|integer|between:1,4', 'shared_user_ids' => 'sometimes|array', 'shared_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)], 'items' => 'required|array|min:1|max:40', 'items.*.key' => 'required|string|max:80|distinct|regex:/^[a-zA-Z0-9_-]+$/', 'items.*.name' => 'required|string|max:150', 'items.*.description' => 'nullable|string|max:2000', 'items.*.module_id' => 'nullable|integer|exists:modules,id', 'items.*.weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'items.*.levels' => 'required|array|min:2|max:20', 'items.*.levels.*.score' => ['required', 'numeric', 'between:0,10', ChallengeWriter::DECIMAL], 'items.*.levels.*.description' => 'required|string|max:2000']);
+        $data = $request->validate(['name' => 'required|string|max:150', 'kind' => 'required|in:team,transversal', 'cycle_id' => 'nullable|integer|exists:cycles,id', 'level' => 'nullable|integer|between:1,4', 'shared_user_ids' => 'sometimes|array', 'shared_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)], 'items' => 'required|array|list|min:1|max:40', 'items.*.key' => 'required|string|max:80|distinct|regex:/^[a-zA-Z0-9_-]+$/', 'items.*.name' => 'required|string|max:150', 'items.*.description' => 'nullable|string|max:2000', 'items.*.module_id' => 'nullable|integer|exists:modules,id', 'items.*.weight' => ['required', 'numeric', 'gt:0', 'max:100', 'decimal:0,2', ChallengeWriter::DECIMAL], 'items.*.levels' => 'required|array|list|min:2|max:20', 'items.*.levels.*.score' => ['required', 'numeric', 'between:0,10', ChallengeWriter::DECIMAL], 'items.*.levels.*.description' => 'required|string|max:2000']);
         if (empty($data['cycle_id']) !== empty($data['level'])) {
             throw ValidationException::withMessages(['cycle_id' => 'Selecciona ciclo y nivel juntos, o deja ambos vacíos para una rúbrica general.']);
+        }
+        $scores = array_map(fn (array $level): float => (float) $level['score'], $data['items'][0]['levels']);
+        $totalWeight = BigDecimal::zero();
+        foreach ($data['items'] as $index => $item) {
+            if (array_map(fn (array $level): float => (float) $level['score'], $item['levels']) !== $scores) {
+                throw ValidationException::withMessages(["items.$index.levels" => 'Todos los criterios deben tener los mismos niveles y la misma nota en cada columna.']);
+            }
+            $totalWeight = $totalWeight->plus($item['weight']);
+        }
+        if (! $totalWeight->isEqualTo(100)) {
+            throw ValidationException::withMessages(['items' => 'Los pesos de los criterios deben sumar exactamente 100 %.']);
         }
         foreach ($data['items'] as &$item) {
             if ($data['kind'] === 'transversal') {

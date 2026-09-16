@@ -31,10 +31,12 @@ Route::middleware(['auth', 'active', 'academic'])->group(function () {
     Route::get('/challenges/{challenge}', [ChallengeController::class, 'show']);
     Route::post('/challenges/{challenge}', [ChallengeController::class, 'update']);
     Route::get('/challenges/{challenge}/history', [ChallengeController::class, 'history']);
+    Route::get('/setup/rubrics/create', [SetupController::class, 'rubricEditor'])->name('rubrics.create');
+    Route::get('/setup/rubrics/{rubric}/edit', [SetupController::class, 'rubricEditor'])->whereNumber('rubric')->name('rubrics.edit');
     Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
     Route::get('/setup/{section}', [SetupController::class, 'index'])->name('setup.section');
     Route::post('/registrations/{registration}', [RegistrationController::class, 'update'])->name('registrations.update');
-    Route::post('/setup/{entity}', [SetupController::class, 'store']);
+    Route::post('/setup/{entity}', [SetupController::class, 'store'])->name('setup.store');
     Route::post('/students/lookup', [SetupController::class, 'lookupStudent'])->middleware('throttle:20,1')->name('students.lookup');
     Route::post('/imports', [ImportController::class, 'import'])->middleware('throttle:20,1');
     Route::get('/reports', [ReportController::class, 'index']);
