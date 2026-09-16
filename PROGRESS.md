@@ -1,7 +1,7 @@
 # Estado de la tarea
 
 ## Objetivo
-Catálogo FP cargado y versión 3bfe097 desplegada y verificada en producción el 16/09/2026.
+Planificar el editor de rúbricas en página propia y tabla: criterios por fila; Módulo (solo tipo reto), Nombre, Peso y niveles por columnas. Catálogo FP publicado en 3bfe097.
 
 ## Completado
 - Producción app/web en 3bfe097, construidas desde git archive; TypeScript/Vite correctos. Despliegue mediante ops/deploy y copia previa privada backups/production-20260916-3bfe097 de 5a66325: índice PostgreSQL, gzip y permisos 700/600 verificados. Mantenimiento retirado; sin migraciones de esquema pendientes.
@@ -13,10 +13,14 @@ Catálogo FP cargado y versión 3bfe097 desplegada y verificada en producción e
 - Grupos y evaluaciones propias publicados y verificados en 5a66325 el 15/09/2026. Copia previa privada: backups/production-20260915-5a66325. No repetir pruebas de Grupos ni reinicio académico.
 
 ## Pendiente
-- Sin tareas pendientes de esta carga y despliegue. No repetir pruebas ya verificadas salvo nuevos cambios o fallos.
+- Rúbricas: revisión inicial realizada; pendientes respuestas sobre alcance (editor/evaluación), notas comunes por columna o por celda, pesos relativos o porcentajes y descripción del criterio. No implementado ni desplegado este cambio.
+- Propuesta base: crear/editar en página propia, número de niveles común configurable, cuatro iniciales, añadir criterio como fila, ordenar filas y conservar GENERAL para criterios de reto. Concretar plan tras las respuestas.
+- Catálogo FP sin tareas pendientes. No repetir pruebas ya verificadas salvo nuevos cambios o fallos.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
+- Rúbricas: resources/js/pages/Setup.vue (modal actual), Challenge.vue (evaluación docente), Student.vue (auto/coevaluación); app/Http/Controllers/SetupController.php, ChallengeController.php; app/Models/Rubric.php; routes/web.php; resources/css/app.css.
+- Pruebas relacionadas: SetupTest, ChallengeCreationTest y tests/Browser/workflows.spec.ts. prompt.md secciones de rúbricas consultadas; cada reto conserva copia independiente.
 - app/Console/Commands/ImportOfficialCatalog.php; database/seeders/official-catalog.json; tests/Feature/ImportOfficialCatalogTest.php.
 - ops/deploy, ops/backup, ops/php, ops/Dockerfile.production, compose.production.yml, compose.test.yml; docs/despliegue.md.
 - Fuente funcional: prompt.md y aclaraciones del usuario; docs/decisiones.md conserva el plan académico anterior.
@@ -24,6 +28,7 @@ Catálogo FP cargado y versión 3bfe097 desplegada y verificada en producción e
 - Privados: .env.production, ops/production-credentials, backups/, test-results/. Nunca mostrarlos ni versionarlos.
 
 ## Decisiones
+- El usuario solicita preguntas y plan antes de desarrollar el nuevo editor. Autoriza borrar rúbricas/evaluaciones anteriores si surge incompatibilidad; no hay usuarios reales. Por ahora parece viable conservar los datos, pendiente del diseño acordado.
 - Carga aditiva, sin limpieza, sin sobrescribir nombres/códigos ni modificar grupos existentes. Nuevos módulos se añaden desde Grupos.
 - VPS compartido: solo recursos propios, web en 127.0.0.1:8082. Producción con copia previa; pruebas de escritura aisladas.
 - Cursos cerrados solo lectura; evaluaciones propias de grupo; retirada de módulos conserva histórico. Migración de evaluaciones sin rollback automático.
