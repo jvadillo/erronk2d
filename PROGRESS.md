@@ -10,10 +10,11 @@ Simplificar evaluación y retos; mostrar módulos y ciclos en tablas, filtrar m�
 - Ciclos: tabla ordenable y popup Ver módulos para quitar, buscar por nombre sin distinguir tildes y añadir módulos sin ciclo.
 - Alta/edición de módulos sin ciclo disponible. Validación de permisos, pertenencia, duplicados y curso; bloqueo transaccional de asociación.
 - 28 pruebas PHP correctas (185 aserciones): CycleModulesTest, SetupTest y GroupManagementTest. TypeScript/Vite y Pint correctos.
+- Producción actualizada a `cb7206a`; copia previa `backups/production-20260922-cb7206a` validada. Sin migraciones pendientes. Servicios iniciados y HTTPS `/up`, `/login` y nuevo recurso Setup JS responden 200.
 - Dos flujos Playwright correctos: evaluación docente y catálogo (orden, filtros, altas/bajas, recarga y móvil). Capturas revisadas.
 
 ## Pendiente
-- Construir imágenes desde el commit, ejecutar ops/deploy con copia previa y verificar HTTPS.
+- Entrega completada; no quedan tareas de esta petición.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
