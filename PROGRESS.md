@@ -6,9 +6,11 @@ Ordenar el menú Organización como Cursos académicos, Ciclos, Módulos, Grupos
 ## Completado en esta petición
 - Reordenada la navegación y actualizadas sus etiquetas plurales. Los títulos propios de las páginas siguen iguales.
 - Prueba de navegación: 20 pruebas / 305 aserciones correctas. TypeScript/Vite y Pint correctos.
+- Commit `6371599`; imágenes de producción construidas desde ese commit. App/web saludables y release activo `6371599`; HTTPS `/up` y `/login` correctos.
+- Despliegue con copia previa `backups/production-20260922-6371599`, permisos 700; índice PostgreSQL y gzip de almacenamiento correctos. Sin migraciones pendientes ni reinicio académico.
 
 ## Pendiente
-- Crear imagen etiquetada, desplegar con copia previa y comprobar producción.
+- No quedan tareas de esta petición.
 
 ## Archivos relevantes
 - `app/Http/Controllers/SetupController.php`, `app/Http/Middleware/HandleInertiaRequests.php`, `tests/Feature/OrganizationNavigationTest.php`, `ops/deploy`.
