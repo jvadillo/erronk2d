@@ -11,9 +11,10 @@ Compactar las descripciones de evaluación y simplificar la página del reto y l
 - Flujos compartidos verificados: 11/12 workflows correctos en ejecución completa; el restante se corrigió por expectativas antiguas (progreso eliminado y botón Atrás) y pasó al repetirlo. Incluye autoevaluación y cursos cerrados. Total: 13 flujos distintos correctos contando evaluación docente.
 - Entrega anterior: editor de rúbricas en página propia, pesos porcentuales y evaluación en tabla. Producción publicada en 0298155; detalle y copias previas en `docs/despliegue.md`.
 - Catálogo FP publicado previamente en 3bfe097. No repetir carga de catálogo ni reinicio académico.
+- Producción publicada en 65c4d24 el 22/09/2026. Copia previa en `backups/production-20260922-65c4d24`; migraciones sin cambios, app/web saludables y HTTPS verificado.
 
 ## Pendiente
-- Implementación terminada; cambios todavía no desplegados.
+- Implementación y despliegue terminados.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
@@ -30,4 +31,4 @@ Compactar las descripciones de evaluación y simplificar la página del reto y l
 - Sin cambios de PHP, dependencias o esquema. `.ai/rules` no existe. Guías locales testing/Inertia leídas; documentación Inertia v3 consultada mediante Boost con red autorizada.
 
 ## Último error
-- Sin errores pendientes. Prueba antigua exigía el bloque de progreso eliminado: ajustada y repetida correctamente.
+- Sin errores pendientes. La primera construcción fue bloqueada por el acceso sandbox al socket Docker y se completó con acceso autorizado; el diagnóstico Tinker mostró solo un aviso de permisos de PsySH.
