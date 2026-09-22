@@ -1,6 +1,10 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 7bca158; verificación cerrada el 22 de septiembre de 2026.** Publicados el editor de rúbricas en página propia, pesos porcentuales que suman 100 %, niveles comunes por columna y evaluación docente/auto/coevaluación en tabla con guardado automático. Las copias históricas de las rúbricas conservan sus criterios, notas y selecciones.
+**Producción en 8df6f23; verificación cerrada el 22 de septiembre de 2026.** La evaluación de rúbricas permite seleccionar el nivel desde toda la celda y expandir el texto solo con «+ Leer más».
+
+Imágenes construidas desde `git archive 8df6f23`, excluyendo cambios ajenos. `npm run build` (TypeScript/Vite) correcto. `ops/deploy` completado con copia privada `backups/production-20260922-8df6f23`; índice PostgreSQL y gzip del almacenamiento comprobados, sin migraciones pendientes. Se prepararon los datos de demo prescritos. App/web usan `8df6f23`, app/web/PostgreSQL activos y web saludable; mantenimiento retirado. `/up` y `/login` verificados por HTTPS; login HTTP 200. No se repitieron pruebas funcionales ni escrituras académicas.
+
+**Producción anterior en 7bca158.** Publicados el editor de rúbricas en página propia, pesos porcentuales que suman 100 %, niveles comunes por columna y evaluación docente/auto/coevaluación en tabla con guardado automático. Las copias históricas de las rúbricas conservan sus criterios, notas y selecciones.
 
 Imágenes construidas desde `git archive 7bca158`, excluyendo cambios ajenos. TypeScript/Vite y rutas del editor en la imagen correctos. Identificadores publicados:
 

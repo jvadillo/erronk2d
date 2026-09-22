@@ -4,7 +4,7 @@
 Compactar las descripciones de evaluación y simplificar la página del reto y la gestión de equipos, según la petición del 22/09/2026.
 
 ## Cambio actual
-- En evaluación de rúbricas, la celda completa selecciona el nivel; un control «+ Leer más» permite expandir la descripción sin seleccionar.
+- Publicado en producción: en evaluación de rúbricas, la celda completa selecciona el nivel; un control «+ Leer más» expande la descripción sin seleccionar.
 
 ## Completado
 - Acceso a la demo de producción preparado para dos cuentas ficticias de profesor y dos de estudiante. Credenciales guardadas solo en `ops/demo-credentials` (archivo privado, ignorado por Git); verificada la contraseña de las cuatro cuentas.
@@ -16,10 +16,10 @@ Compactar las descripciones de evaluación y simplificar la página del reto y l
 - Entrega anterior: editor de rúbricas en página propia, pesos porcentuales y evaluación en tabla. Producción publicada en 0298155; detalle y copias previas en `docs/despliegue.md`.
 - Catálogo FP publicado previamente en 3bfe097. No repetir carga de catálogo ni reinicio académico.
 - Producción publicada en 65c4d24 el 22/09/2026. Copia previa en `backups/production-20260922-65c4d24`; migraciones sin cambios, app/web saludables y HTTPS verificado.
+- Producción actualizada a 8df6f23 el 22/09/2026. Copia previa `backups/production-20260922-8df6f23`; copia validada, sin migraciones pendientes, servicios saludables y `/up`/`/login` HTTPS verificados (200).
 
 ## Pendiente
-- Revisar el cambio actual; no desplegar sin petición explícita.
-- Implementación y despliegue anteriores terminados.
+- Despliegue actual terminado.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
