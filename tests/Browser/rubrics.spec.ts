@@ -12,7 +12,7 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
   await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill(password!);
   await page.getByRole('button', { name: 'Entrar a Erronk2D' }).click();
-  await expect(page.getByRole('heading', { name: 'Los retos, en perspectiva.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tus retos.' })).toBeVisible();
 }
 
 async function assertNoOverflow(page: Page) {
@@ -99,6 +99,7 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(page.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
   await expect(page.locator('.formula-note, .evaluation-progress')).toHaveCount(0);
   await expect(page.locator('.workspace-heading .bottom-actions')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Evaluación', exact: true })).toBeVisible();
   await expect(page.getByText('Una única nota de reto. Todos los módulos conectados.', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Rúbrica del equipo', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -128,15 +129,9 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(description).toHaveAttribute('aria-expanded', 'true');
   await description.click();
   await expect(description).toHaveAttribute('aria-expanded', 'false');
-  const levelDescription = architecture.locator('td .rubric-description-toggle').first();
-  const selectionBefore = await architecture.locator('.rubric-choice').first().getAttribute('aria-pressed');
-  await expect(levelDescription.locator('.rubric-description')).toHaveCSS('-webkit-line-clamp', '4');
-  await levelDescription.click();
-  await expect(levelDescription).toHaveAttribute('aria-expanded', 'true');
-  await expect(levelDescription.locator('.rubric-description')).toHaveCSS('max-height', 'none');
-  await expect(architecture.locator('.rubric-choice').first()).toHaveAttribute('aria-pressed', selectionBefore!);
-  await levelDescription.press('Enter');
-  await expect(levelDescription).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.rubric-choice-state')).toHaveCount(0);
+  await expect(architecture.locator('td .rubric-description').first()).toHaveCSS('-webkit-line-clamp', '4');
+  await expect(architecture.locator('.rubric-read-more')).toHaveCount(0);
   await expect(code.locator('.rubric-choice').first()).toBeEnabled();
   await expect(architecture.locator('.rubric-choice').first()).toBeDisabled();
   const old = await code.locator('.chosen').getAttribute('aria-label');

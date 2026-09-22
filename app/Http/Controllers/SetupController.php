@@ -71,6 +71,7 @@ class SetupController extends Controller
             'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->orderBy('name')->get(['id', 'name', 'role']),
             'cycles' => Cycle::orderBy('name')->get(),
             'modules' => Module::with('cycle')->orderBy('name')->get(),
+            'cycleModuleUrl' => route('setup.store', ['entity' => 'cycle-module']),
             'rubricCreateUrl' => route('rubrics.create'),
             'rubrics' => $section === 'rubrics' ? Rubric::availableTo($actor)->with('sharedUsers:id,name')->orderBy('name')->get()->map(fn (Rubric $rubric): array => [...$rubric->toArray(), 'edit_url' => route('rubrics.edit', ['rubric' => $rubric->id])]) : [],
             'permissions' => [],
@@ -109,8 +110,8 @@ class SetupController extends Controller
     {
         $actor = $request->user();
         abort_unless(in_array($actor->role, ['admin', 'teacher'], true), 403);
-        abort_unless(in_array($entity, ['year', 'year-status', 'cycle', 'module', 'classroom', 'group-module', 'group-periods', 'responsibility', 'student', 'teacher', 'enrollment', 'rubric', 'rubric-copy'], true), 404);
-        if (in_array($entity, ['year', 'year-status', 'cycle', 'module', 'teacher'], true)) {
+        abort_unless(in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'classroom', 'group-module', 'group-periods', 'responsibility', 'student', 'teacher', 'enrollment', 'rubric', 'rubric-copy'], true), 404);
+        if (in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'teacher'], true)) {
             abort_unless($actor->role === 'admin', 403);
         }
         DB::transaction(function () use ($request, $entity, $actor) {
@@ -123,6 +124,7 @@ class SetupController extends Controller
                 'year' => $this->year($request, $id),
                 'year-status' => $this->yearStatus($request),
                 'cycle' => $this->cycle($request, $id),
+                'cycle-module' => $this->cycleModule($request),
                 'module' => $this->module($request, $id),
                 'classroom' => $this->classroom($request, $id),
                 'group-module' => $this->groupModule($request),
@@ -166,11 +168,33 @@ class SetupController extends Controller
         return $model;
     }
 
+    private function cycleModule(Request $request): Module
+    {
+        $data = $request->validate(['cycle_id' => 'required|integer|exists:cycles,id', 'module_id' => 'required|integer|exists:modules,id', 'active' => 'required|boolean', 'level' => 'required|integer|between:1,4']);
+        Cycle::lockForUpdate()->findOrFail($data['cycle_id']);
+        $module = Module::lockForUpdate()->findOrFail($data['module_id']);
+        if (! $data['active']) {
+            abort_unless($module->cycle_id === (int) $data['cycle_id'], 404);
+            $module->update(['cycle_id' => null]);
+
+            return $module;
+        }
+        if ($module->cycle_id !== null) {
+            throw ValidationException::withMessages(['module_id' => 'Solo puedes añadir módulos que no estén asociados a un ciclo.']);
+        }
+        if (Module::where('cycle_id', $data['cycle_id'])->where('level', $data['level'])->where('code', $module->code)->exists()) {
+            throw ValidationException::withMessages(['module_id' => 'Ya existe un módulo con ese código en el curso seleccionado.']);
+        }
+        $module->update(['cycle_id' => $data['cycle_id'], 'level' => $data['level']]);
+
+        return $module;
+    }
+
     private function module(Request $request, ?int $id): Module
     {
         $model = $id ? Module::findOrFail($id) : new Module;
-        $data = $request->validate(['name' => 'required|string|max:150', 'code' => ['required', 'string', 'max:30', Rule::unique('modules')->where('cycle_id', $request->input('cycle_id'))->where('level', $request->input('level'))->ignore($id)], 'cycle_id' => 'required|integer|exists:cycles,id', 'level' => 'required|integer|between:1,4']);
-        if ($id && ($model->cycle_id !== (int) $data['cycle_id'] || $model->level !== (int) $data['level'])) {
+        $data = $request->validate(['name' => 'required|string|max:150', 'code' => ['required', 'string', 'max:30', Rule::unique('modules')->where('cycle_id', $request->input('cycle_id'))->where('level', $request->input('level'))->ignore($id)], 'cycle_id' => 'nullable|integer|exists:cycles,id', 'level' => 'required|integer|between:1,4']);
+        if ($id && ($model->cycle_id !== (empty($data['cycle_id']) ? null : (int) $data['cycle_id']) || $model->level !== (int) $data['level'])) {
             throw ValidationException::withMessages(['cycle_id' => 'Un módulo existente conserva su ciclo y nivel.']);
         }
         $model->fill($data)->save();

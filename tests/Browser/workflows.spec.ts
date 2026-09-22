@@ -18,7 +18,7 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
   await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill(password!);
   await page.getByRole('button', { name: 'Entrar a Erronk2D' }).click();
-  await expect(page.getByRole('heading', { name: 'Los retos, en perspectiva.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tus retos.' })).toBeVisible();
 }
 
 test('navegación: lateral plegable, páginas propias, recarga e historial', async ({ page }) => {
@@ -426,4 +426,68 @@ test('curso cerrado: histórico del estudiante y bloqueo de edición del profeso
   await page.goto('/setup/classrooms');
   await expect(page.getByRole('heading', { name: '2DAW-A', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Editar grupo', exact: true })).toHaveCount(0);
+});
+
+test('catálogo: tablas, filtros, orden y módulos libres por ciclo', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page);
+  await expect(page.locator('.overview-grid')).toHaveCount(0);
+  const suffix = Date.now().toString();
+  const cycleName = `Ciclo catálogo ${suffix}`;
+  await page.goto('/setup/cycles');
+  await page.getByRole('button', { name: 'Ciclo', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Nombre', { exact: true }).fill(cycleName);
+  await dialog.getByLabel('Código', { exact: true }).fill(`C${suffix}`);
+  await dialog.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const cycleRow = page.getByRole('table', { name: 'Ciclos', exact: true }).getByRole('row').filter({ hasText: cycleName });
+  await expect(cycleRow).toBeVisible();
+  await page.goto('/setup/modules');
+  for (const name of ['Álgebra', 'Zoología']) {
+    await page.getByRole('button', { name: 'Módulo', exact: true }).click();
+    await dialog.getByLabel('Nombre', { exact: true }).fill(`${name} ${suffix}`);
+    await dialog.getByLabel('Código', { exact: true }).fill(`${name[0]}${suffix}`);
+    await dialog.getByRole('combobox', { name: 'Ciclo', exact: true }).selectOption('');
+    await dialog.getByRole('combobox', { name: 'Curso / nivel', exact: true }).selectOption('1');
+    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+  await page.getByRole('combobox', { name: 'Ciclo', exact: true }).selectOption('unassigned');
+  await page.getByRole('combobox', { name: 'Curso', exact: true }).selectOption('1');
+  const table = page.getByRole('table', { name: 'Módulos', exact: true });
+  const names = () => table.locator('tbody tr').filter({ hasText: suffix }).locator('td:nth-child(2)').allTextContents();
+  expect(await names()).toEqual([`Álgebra ${suffix}`, `Zoología ${suffix}`]);
+  await table.getByRole('button', { name: 'Nombre' }).click();
+  expect(await names()).toEqual([`Zoología ${suffix}`, `Álgebra ${suffix}`]);
+  await page.getByRole('combobox', { name: 'Curso', exact: true }).selectOption('4');
+  await expect(table.getByText('No hay módulos que coincidan con los filtros.')).toBeVisible();
+  await page.goto('/setup/cycles');
+  await cycleRow.getByRole('button', { name: 'Ver módulos' }).click();
+  await dialog.getByLabel('Buscar módulos por nombre').fill(`Algebra ${suffix}`);
+  await dialog.getByRole('combobox', { name: 'Curso de destino', exact: true }).selectOption('2');
+  await dialog.getByRole('button', { name: `Añadir Álgebra ${suffix}`, exact: true }).click();
+  await expect(dialog.getByRole('table').getByText(`Álgebra ${suffix}`)).toBeVisible();
+  await expect(dialog.getByRole('button', { name: `Añadir Álgebra ${suffix}`, exact: true })).toHaveCount(0);
+  await page.reload();
+  await cycleRow.getByRole('button', { name: 'Ver módulos' }).click();
+  await expect(dialog.getByRole('table').getByText(`Álgebra ${suffix}`)).toBeVisible();
+  await dialog.getByRole('button', { name: `Quitar Álgebra ${suffix}`, exact: true }).click();
+  await expect(dialog.getByRole('table').getByText('Este ciclo todavía no incluye módulos.')).toBeVisible();
+  await dialog.getByLabel('Buscar módulos por nombre').fill(`Algebra ${suffix}`);
+  await dialog.getByRole('combobox', { name: 'Curso de destino', exact: true }).selectOption('2');
+  await dialog.getByRole('button', { name: `Añadir Álgebra ${suffix}`, exact: true }).click();
+  await expect(dialog.getByRole('table').getByText(`Álgebra ${suffix}`)).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/cycle-modules-mobile.png', fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.goto('/setup/modules');
+  await page.getByRole('combobox', { name: 'Ciclo', exact: true }).selectOption({ label: cycleName });
+  await page.getByRole('combobox', { name: 'Curso', exact: true }).selectOption('2');
+  await expect(table.locator('tbody tr')).toHaveCount(1);
+  await expect(table.getByText(`Álgebra ${suffix}`)).toBeVisible();
+  await page.screenshot({ path: 'test-results/modules-table-mobile.png', fullPage: true });
+  expect(errors).toEqual([]);
 });

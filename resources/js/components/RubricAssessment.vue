@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Check } from 'lucide-vue-next';
 import { commonScores, decimal, percentage, type RubricData, type RubricModule } from '../rubrics';
 const props = withDefaults(defineProps<{
   rubric: RubricData;
@@ -44,7 +43,6 @@ function toggleDescription(key: string): void {
             </div>
             <button type="button" class="rubric-choice" :class="{ chosen: selections[item.key] === n - 1 }" :aria-pressed="selections[item.key] === n - 1" :aria-label="`${subject}, ${item.name}: ${item.levels[n - 1].score}. ${item.levels[n - 1].description}`" :disabled="disabled || disabledCriteria.includes(item.key)" @click="emit('select', item.key, n - 1)">
               <strong v-if="!shared">{{ percentage(decimal(item.levels[n - 1].score)) }} puntos</strong>
-              <span class="rubric-choice-state"><Check v-if="selections[item.key] === n - 1" :size="15"/>{{ selections[item.key] === n - 1 ? 'Seleccionado' : 'Seleccionar' }}</span>
             </button></div><span v-else class="muted">—</span>
           </td>
         </tr></tbody>
