@@ -15,10 +15,11 @@ Editor de rúbricas en página propia y evaluación en tabla publicados en produ
 - Navegador: 3 pruebas nuevas correctas (editor completo y persistencia, evaluación/permisos y conversión de pesos antiguos) más 12 workflows existentes correctos, incluidos alumnado e históricos cerrados. Capturas escritorio/móvil revisadas. Contenido largo contenido en celdas, cuatro niveles visibles en escritorio; sin desbordamiento horizontal de página. Prueba de editor repetida tras mejorar capturas: correcta.
 - Pantalla de evaluación compactada: `topline` ofrece Atrás al reto, desaparecen las cabeceras redundantes, módulo/nombre/peso ocupan una única columna y las descripciones se contraen a cuatro líneas con expansión por clic.
 - Verificación de esta mejora: build TypeScript/Vite correcto y 3 flujos Playwright de `tests/Browser/rubrics.spec.ts` correctos.
+- Ajuste visual posterior: la columna `Nombre` iguala el ancho de los niveles y cada criterio separa chips de módulo/peso y título en dos bloques verticales.
 - Catálogo FP publicado en 3bfe097 el 16/09/2026: total 181 ciclos y 2.691 módulos ministeriales. Copia previa privada backups/production-20260916-3bfe097, migración/carga y HTTPS verificados. Grupos publicados previamente en 5a66325. No repetir reinicio académico ni carga de catálogo.
 
 ## Pendiente
-- Sin tareas pendientes de esta entrega. Próximos cambios requieren nueva instrucción funcional.
+- Desplegar el ajuste final de anchuras y metadatos de criterios.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes

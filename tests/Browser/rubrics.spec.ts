@@ -106,6 +106,11 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(page.locator('.rubric-evaluation-header')).toHaveCount(0);
   const code = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: /Calidad del código/ }) });
   const architecture = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: /Arquitectura del servidor/ }) });
+  await expect(code.locator('.rubric-criterion-name > *')).toHaveCount(2);
+  await expect(code.locator('.rubric-criterion-meta > *')).toHaveCount(2);
+  await expect(code.locator('.rubric-criterion-name')).toHaveCSS('flex-direction', 'column');
+  const columnWidths = await page.locator('.rubric-assessment-table col').evaluateAll(columns => columns.map(column => Math.round(column.getBoundingClientRect().width)));
+  expect(columnWidths.every(width => width === columnWidths[0])).toBe(true);
   const description = code.locator('.rubric-description');
   await expect(description).toHaveAttribute('aria-expanded', 'false');
   await description.click();

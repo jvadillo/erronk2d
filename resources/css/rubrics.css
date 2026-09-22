@@ -8,7 +8,7 @@
 .rubric-toolbar h2 { font-size: 20px; }
 .rubric-table-scroll { position: relative; max-width: 100%; overflow: auto; max-height: 72vh; border: 1px solid var(--border); border-radius: 9px; background: white; }
 .rubric-table { table-layout: fixed; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
-.rubric-table .rubric-name-col { width: 330px; }
+.rubric-table .rubric-name-col { width: 170px; }
 .rubric-table .rubric-level-col { width: 170px; }
 .rubric-table th, .rubric-table td { white-space: normal; overflow-wrap: anywhere; text-align: left; vertical-align: top; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 12px; }
 .rubric-table thead th { position: sticky; top: 0; z-index: 2; background: #edf2e6; text-transform: none; letter-spacing: normal; color: #415b39; font-size: 12px; }
@@ -31,9 +31,10 @@
 .rubric-table .icon-button { min-width: 27px; width: 27px; height: 27px; }
 .rubric-table button:disabled { cursor: not-allowed; }
 .rubric-table .module-chip { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
-.rubric-criterion-name { display: flex; align-items: baseline; gap: 7px; }
-.rubric-criterion-name > strong { flex: 1; font-size: 13px; }
-.rubric-criterion-name .rubric-weight { flex: 0 0 auto; }
+.rubric-criterion-name { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.rubric-criterion-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.rubric-criterion-meta .rubric-weight { display: inline-block; padding: 3px 7px; border: 1px solid #e7eae2; border-radius: 4px; background: #f2f4ef; color: #728067; font-size: 9px; font-weight: 600; }
+.rubric-criterion-name > strong { font-size: 13px; }
 .rubric-description { display: -webkit-box; margin: 9px 0 0; padding: 0; border: 0; background: transparent; font-size: 12px; color: #697660; font-weight: 400; line-height: 1.55; text-align: left; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
 .rubric-description.expanded { display: block; }
 .rubric-description:hover { color: #42593d; }
@@ -61,7 +62,7 @@
 @media (max-width: 650px) {
   .rubric-settings { grid-template-columns: 1fr; }
   .rubric-toolbar { align-items: stretch; }
-  .rubric-table .rubric-name-col { width: 280px; }
+  .rubric-table .rubric-name-col { width: 190px; }
   .rubric-table .rubric-level-col { width: 190px; }
   .rubric-evaluation-toolbar h1, .rubric-evaluation-toolbar label { flex-basis: 100%; }
   .rubric-evaluation-toolbar .save-status { margin-left: 0; }
