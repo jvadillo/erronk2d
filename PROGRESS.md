@@ -4,6 +4,7 @@
 Compactar las descripciones de evaluación y simplificar la página del reto y la gestión de equipos, según la petición del 22/09/2026.
 
 ## Completado
+- Acceso a la demo de producción preparado para dos cuentas ficticias de profesor y dos de estudiante. Credenciales guardadas solo en `ops/demo-credentials` (archivo privado, ignorado por Git); verificada la contraseña de las cuatro cuentas.
 - Descripciones generales de criterios y de niveles limitadas a cuatro líneas, expandibles por clic o teclado. Leer un nivel no cambia la nota y funciona también en solo lectura.
 - Eliminados `formula-note`, `evaluation-progress` y su cálculo/estilos; botón Histórico oculto temporalmente, conservando su funcionalidad interna.
 - Gestión de equipos: inicialmente solo miembros actuales, eliminación directa y botón Añadir estudiantes que despliega casillas en columnas adaptables. Conservados validación de 2–5 miembros, exclusividad entre equipos y guardado explícito.
