@@ -18,11 +18,11 @@ class HandleInertiaRequests extends Middleware
 
         $setupNavigation = [];
         if ($user && $user->role !== 'student') {
-            foreach (SetupController::SECTIONS as $section => $label) {
+            foreach (array_keys(SetupController::SECTIONS) as $section) {
                 if (in_array($section, SetupController::ADMIN_SECTIONS, true) && $user->role !== 'admin') {
                     continue;
                 }
-                $setupNavigation[] = ['section' => $section, 'label' => $label, 'url' => route('setup.section', ['section' => $section])];
+                $setupNavigation[] = ['section' => $section, 'label' => SetupController::NAVIGATION_LABELS[$section], 'url' => route('setup.section', ['section' => $section])];
             }
         }
 

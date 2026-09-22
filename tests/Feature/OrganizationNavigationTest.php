@@ -34,7 +34,14 @@ class OrganizationNavigationTest extends TestCase
         $this->actingAs($admin)->get('/setup/'.$section)->assertInertia(fn (Assert $page) => $page
             ->component('Setup')->where('section', $section)->where('title', $title)
             ->has('setupNavigation', 8)
-            ->where('setupNavigation.0.url', route('setup.section', ['section' => 'courses'])));
+            ->where('setupNavigation.0.section', 'courses')
+            ->where('setupNavigation.1.section', 'cycles')
+            ->where('setupNavigation.2.section', 'modules')
+            ->where('setupNavigation.3.section', 'classrooms')
+            ->where('setupNavigation.4.label', 'Profesores')
+            ->where('setupNavigation.5.label', 'Estudiantes')
+            ->where('setupNavigation.6.label', 'Rúbricas')
+            ->where('setupNavigation.7.label', 'Solicitudes'));
     }
 
     #[DataProvider('sections')]

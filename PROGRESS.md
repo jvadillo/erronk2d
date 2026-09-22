@@ -1,5 +1,25 @@
 # Estado de la tarea
 
+## Objetivo actual
+Ordenar el menú Organización como Cursos académicos, Ciclos, Módulos, Grupos, Profesores, Estudiantes, Rúbricas y Solicitudes; publicar el cambio en producción.
+
+## Completado en esta petición
+- Reordenada la navegación y actualizadas sus etiquetas plurales. Los títulos propios de las páginas siguen iguales.
+- Prueba de navegación: 20 pruebas / 305 aserciones correctas. TypeScript/Vite y Pint correctos.
+
+## Pendiente
+- Crear imagen etiquetada, desplegar con copia previa y comprobar producción.
+
+## Archivos relevantes
+- `app/Http/Controllers/SetupController.php`, `app/Http/Middleware/HandleInertiaRequests.php`, `tests/Feature/OrganizationNavigationTest.php`, `ops/deploy`.
+
+## Decisiones
+- Mantener los títulos de página actuales y usar etiquetas de menú específicas.
+- Desplegar sin reinicio académico ni cambios de datos.
+
+## Último error
+- PHP no está instalado en el host y Pint `--dirty` requiere Git dentro del contenedor. Ejecutados Pint sobre archivos explícitos y PHPUnit en el contenedor aislado; ambos correctos.
+
 ## Objetivo
 Simplificar evaluación y retos; mostrar módulos y ciclos en tablas, filtrar módulos y gestionar su asociación desde ciclos. Desplegar a producción.
 

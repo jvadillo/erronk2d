@@ -27,7 +27,9 @@ use Inertia\Response;
 
 class SetupController extends Controller
 {
-    public const SECTIONS = ['courses' => 'Cursos académicos', 'cycles' => 'Ciclos', 'classrooms' => 'Grupos', 'teachers' => 'Profesor', 'students' => 'Estudiante', 'modules' => 'Módulos', 'rubrics' => 'Biblioteca de rúbricas', 'registrations' => 'Solicitudes'];
+    public const SECTIONS = ['courses' => 'Cursos académicos', 'cycles' => 'Ciclos', 'modules' => 'Módulos', 'classrooms' => 'Grupos', 'teachers' => 'Profesor', 'students' => 'Estudiante', 'rubrics' => 'Biblioteca de rúbricas', 'registrations' => 'Solicitudes'];
+
+    public const NAVIGATION_LABELS = ['courses' => 'Cursos académicos', 'cycles' => 'Ciclos', 'modules' => 'Módulos', 'classrooms' => 'Grupos', 'teachers' => 'Profesores', 'students' => 'Estudiantes', 'rubrics' => 'Rúbricas', 'registrations' => 'Solicitudes'];
 
     public const ADMIN_SECTIONS = ['courses', 'cycles', 'teachers', 'modules', 'registrations'];
 
