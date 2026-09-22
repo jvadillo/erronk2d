@@ -1,7 +1,7 @@
 # Estado de la tarea
 
 ## Objetivo
-Editor de rúbricas en página propia y evaluación en tabla publicados en producción en 7bca158 el 22/09/2026. Despliegue y comprobación HTTPS completados.
+Editor de rúbricas en página propia y evaluación en tabla publicados en producción en 7bca158 el 22/09/2026. Ajustar la pantalla de evaluación para reducir espacio y mejorar la lectura de criterios.
 
 ## Completado
 - Despliegue de 7bca158 desde `git archive`, con TypeScript/Vite y rutas de la imagen correctos. `ops/deploy` completado con copia privada `backups/production-20260922-7bca158` de 3bfe097; índice PostgreSQL, gzip y permisos 700/600 verificados. Sin migraciones pendientes, sin reinicio académico ni recarga del catálogo.
@@ -12,10 +12,12 @@ Editor de rúbricas en página propia y evaluación en tabla publicados en produ
 - Compatibilidad sin borrar datos: pesos relativos antiguos se convierten en porcentajes al editar. Plantillas con niveles desiguales requieren unificación explícita en editor. Copias históricas conservan notas, criterios y selecciones originales; tabla admite sus diferencias sin recalcularlas.
 - Verificación: 52 pruebas / 428 aserciones correctas tanto en SQLite como PostgreSQL (editor, validación, permisos, histórico, creación y organización). Pint correcto en los PHP modificados; TypeScript/Vite correctos.
 - Navegador: 3 pruebas nuevas correctas (editor completo y persistencia, evaluación/permisos y conversión de pesos antiguos) más 12 workflows existentes correctos, incluidos alumnado e históricos cerrados. Capturas escritorio/móvil revisadas. Contenido largo contenido en celdas, cuatro niveles visibles en escritorio; sin desbordamiento horizontal de página. Prueba de editor repetida tras mejorar capturas: correcta.
+- Pantalla de evaluación compactada: `topline` ofrece Atrás al reto, desaparecen las cabeceras redundantes, módulo/nombre/peso ocupan una única columna y las descripciones se contraen a cuatro líneas con expansión por clic.
+- Verificación de esta mejora: build TypeScript/Vite correcto y 3 flujos Playwright de `tests/Browser/rubrics.spec.ts` correctos.
 - Catálogo FP publicado en 3bfe097 el 16/09/2026: total 181 ciclos y 2.691 módulos ministeriales. Copia previa privada backups/production-20260916-3bfe097, migración/carga y HTTPS verificados. Grupos publicados previamente en 5a66325. No repetir reinicio académico ni carga de catálogo.
 
 ## Pendiente
-- Sin tareas pendientes de esta entrega. Próximos cambios requieren nueva instrucción funcional.
+- Desplegar la mejora compacta de evaluación en producción.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
@@ -32,6 +34,5 @@ Editor de rúbricas en página propia y evaluación en tabla publicados en produ
 - Cursos cerrados solo lectura; cada reto conserva copia de su rúbrica. Cambiar plantilla no cambia evaluaciones históricas.
 - VPS compartido: solo recursos propios. Producción con copia previa y pruebas de escritura aisladas. Construir desde git archive para excluir cambios ajenos.
 
-## Último error
-- Sin fallos pendientes. Comprobación HTTPS completada tras corregir en el script temporal la sesión de redirección y el recuento de assets duplicados; no requirió cambios de aplicación.
+- Sin fallos pendientes. La primera ejecución del navegador falló solo por un selector de prueba que conservaba el nombre accesible anterior tras expandir; corregido y repetido con 3/3 flujos correctos.
 - Pint --dirty no disponible por falta de Git en imagen; aplicado formato a lista explícita. Laravel 13.30.1, Inertia 3.3.3, PHPUnit 12.5.34. .ai/rules no existe. Guías testing/Inertia leídas; documentación Inertia v3 consultada mediante Boost con red autorizada.

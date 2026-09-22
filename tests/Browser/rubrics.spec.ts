@@ -100,10 +100,18 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page).toHaveURL(challengeUrl);
   await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(5);
+  await expect(page.getByRole('button', { name: 'Atrás', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Todos los retos', exact: true })).toHaveCount(0);
+  await expect(page.locator('.page-heading.compact')).toHaveCount(0);
+  await expect(page.locator('.rubric-evaluation-header')).toHaveCount(0);
   const code = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: /Calidad del código/ }) });
   const architecture = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: /Arquitectura del servidor/ }) });
-  await expect(code.getByRole('button').first()).toBeEnabled();
-  await expect(architecture.getByRole('button').first()).toBeDisabled();
+  const description = code.locator('.rubric-description');
+  await expect(description).toHaveAttribute('aria-expanded', 'false');
+  await description.click();
+  await expect(description).toHaveAttribute('aria-expanded', 'true');
+  await expect(code.locator('.rubric-choice').first()).toBeEnabled();
+  await expect(architecture.locator('.rubric-choice').first()).toBeDisabled();
   const old = await code.locator('.chosen').getAttribute('aria-label');
   await code.getByRole('button').last().click();
   await expect(page.getByRole('status')).toHaveText('Cambios guardados');
@@ -120,7 +128,7 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   }
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await page.getByRole('button', { name: 'Anterior', exact: true }).click();
-  await page.getByRole('button', { name: 'Volver a la matriz de notas' }).click();
+  await page.getByRole('button', { name: 'Atrás', exact: true }).click();
   await page.getByRole('button', { name: 'Transversales del profesorado', exact: true }).click();
   await expect(page.getByRole('columnheader', { name: 'Módulo', exact: true })).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Estudiante a evaluar' }).locator('option')).toHaveCount(20);
