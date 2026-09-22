@@ -3,6 +3,9 @@
 ## Objetivo
 Compactar las descripciones de evaluación y simplificar la página del reto y la gestión de equipos, según la petición del 22/09/2026.
 
+## Cambio actual
+- En evaluación de rúbricas, la celda completa selecciona el nivel; un control «+ Leer más» permite expandir la descripción sin seleccionar.
+
 ## Completado
 - Acceso a la demo de producción preparado para dos cuentas ficticias de profesor y dos de estudiante. Credenciales guardadas solo en `ops/demo-credentials` (archivo privado, ignorado por Git); verificada la contraseña de las cuatro cuentas.
 - Descripciones generales de criterios y de niveles limitadas a cuatro líneas, expandibles por clic o teclado. Leer un nivel no cambia la nota y funciona también en solo lectura.
@@ -15,7 +18,8 @@ Compactar las descripciones de evaluación y simplificar la página del reto y l
 - Producción publicada en 65c4d24 el 22/09/2026. Copia previa en `backups/production-20260922-65c4d24`; migraciones sin cambios, app/web saludables y HTTPS verificado.
 
 ## Pendiente
-- Implementación y despliegue terminados.
+- Revisar el cambio actual; no desplegar sin petición explícita.
+- Implementación y despliegue anteriores terminados.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
