@@ -16,6 +16,7 @@ const shared = computed(() => commonScores(props.rubric.items));
 const count = computed(() => Math.max(0, ...props.rubric.items.map(item => item.levels.length)));
 const total = computed(() => props.rubric.items.reduce((sum, item) => sum + decimal(item.weight), 0));
 const moduleName = (id: number | null) => id ? props.modules.find(module => module.id === id)?.code ?? 'Módulo' : 'GENERAL';
+const expandedLevels = ref<Record<string, boolean>>({});
 const expandedCriteria = ref<Set<string>>(new Set());
 function toggleDescription(key: string): void {
   const next = new Set(expandedCriteria.value);
@@ -36,11 +37,14 @@ function toggleDescription(key: string): void {
         <tbody><tr v-for="item in rubric.items" :key="item.key" class="student-rubric">
           <th scope="row"><div class="rubric-criterion-name"><div class="rubric-criterion-meta"><span v-if="showModules" class="module-chip">{{ moduleName(item.module_id) }}</span><span class="rubric-weight">{{ percentage(total ? decimal(item.weight) / total * 100 : 0) }} %</span></div><strong>{{ item.name }}</strong></div><button v-if="item.description" type="button" class="rubric-description-toggle" :aria-expanded="expandedCriteria.has(item.key)" :aria-label="`${expandedCriteria.has(item.key) ? 'Contraer' : 'Expandir'} descripción de ${item.name}`" @click="toggleDescription(item.key)"><span class="rubric-description" :class="{ expanded: expandedCriteria.has(item.key) }">{{ item.description }}</span></button><small v-if="disabledCriteria.includes(item.key)">Solo el responsable del módulo puede evaluar este criterio.</small></th>
           <td v-for="n in count" :key="n" class="rubric-choice-cell" :class="{ 'is-selected': selections[item.key] === n - 1 }">
-            <button v-if="item.levels[n - 1]" type="button" class="rubric-choice" :class="{ chosen: selections[item.key] === n - 1 }" :aria-pressed="selections[item.key] === n - 1" :aria-label="`${subject}, ${item.name}: ${item.levels[n - 1].score}. ${item.levels[n - 1].description}`" :disabled="disabled || disabledCriteria.includes(item.key)" @click="emit('select', item.key, n - 1)">
+            <div v-if="item.levels[n - 1]" class="rubric-level-content">
+            <button type="button" class="rubric-description-toggle" :aria-expanded="!!expandedLevels[`${item.key}:${n}`]" :aria-label="`${expandedLevels[`${item.key}:${n}`] ? 'Contraer' : 'Expandir'} descripción de ${item.name}, nivel ${n}`" @click="expandedLevels[`${item.key}:${n}`] = !expandedLevels[`${item.key}:${n}`]">
+              <span class="rubric-description" :class="{ expanded: expandedLevels[`${item.key}:${n}`] }">{{ item.levels[n - 1].description }}</span>
+            </button>
+            <button type="button" class="rubric-choice" :class="{ chosen: selections[item.key] === n - 1 }" :aria-pressed="selections[item.key] === n - 1" :aria-label="`${subject}, ${item.name}: ${item.levels[n - 1].score}. ${item.levels[n - 1].description}`" :disabled="disabled || disabledCriteria.includes(item.key)" @click="emit('select', item.key, n - 1)">
               <strong v-if="!shared">{{ percentage(decimal(item.levels[n - 1].score)) }} puntos</strong>
-              <span>{{ item.levels[n - 1].description }}</span>
               <span class="rubric-choice-state"><Check v-if="selections[item.key] === n - 1" :size="15"/>{{ selections[item.key] === n - 1 ? 'Seleccionado' : 'Seleccionar' }}</span>
-            </button><span v-else class="muted">—</span>
+            </button></div><span v-else class="muted">—</span>
           </td>
         </tr></tbody>
       </table>

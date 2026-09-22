@@ -126,7 +126,7 @@ test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page
   await page.screenshot({ path: 'test-results/dashboard.png', fullPage: true });
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
   await expect(page.locator('.matrix tbody tr')).toHaveCount(20);
-  await expect(page.getByLabel('Progreso por tipo de evaluación')).toContainText('Exámenes');
+  await expect(page.getByLabel('Progreso por tipo de evaluación')).toHaveCount(0);
   const first = page.getByLabel('Examen PROG de Ainhoa Agirre', { exact: true });
   const second = page.getByLabel('Examen DWEC de Ainhoa Agirre', { exact: true });
   const oldFirst = await first.inputValue(), oldSecond = await second.inputValue();
@@ -146,7 +146,7 @@ test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page
     await page.getByRole('button', { name: 'Transversales del profesorado', exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Estudiante a evaluar' }).locator('option')).toHaveCount(20);
     await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(4);
-    await page.getByRole('button', { name: 'Volver a la matriz de notas' }).click();
+    await page.getByRole('button', { name: 'Atrás', exact: true }).click();
     await page.getByRole('button', { name: 'Configurar reto', exact: true }).click();
     await expect(page.getByRole('dialog').getByText('Defensas por módulo')).toBeVisible();
     await page.keyboard.press('Escape');
@@ -242,10 +242,22 @@ test('equipos: recuperar participantes y guardar dos equipos desde los selectore
   await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
   await dialog.getByRole('button', { name: 'Incorporar estudiantes del grupo', exact: true }).click();
   const teams = dialog.locator('.team-editor > section');
+  await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+  await teams.first().getByRole('button', { name: 'Añadir estudiantes', exact: true }).click();
   await expect(teams.first().getByRole('checkbox').first()).toBeVisible();
   await teams.first().getByRole('checkbox').nth(0).check();
   await teams.first().getByRole('checkbox').nth(1).check();
+  await expect(teams.first().locator('.team-members li')).toHaveCount(2);
+  await teams.first().locator('.team-members button').first().click();
+  await expect(teams.first().getByRole('checkbox').nth(0)).not.toBeChecked();
+  await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
+  await teams.first().getByRole('checkbox').nth(0).check();
+  await teams.first().getByRole('checkbox').nth(1).uncheck();
+  await expect(teams.first().locator('.team-members li')).toHaveCount(1);
+  await teams.first().getByRole('checkbox').nth(1).check();
+  await teams.first().getByRole('button', { name: 'Cerrar selección', exact: true }).click();
   await dialog.getByRole('button', { name: 'Añadir equipo', exact: true }).click();
+  await teams.nth(1).getByRole('button', { name: 'Añadir estudiantes', exact: true }).click();
   await expect(teams.nth(1).getByRole('checkbox').nth(0)).toBeDisabled();
   await teams.nth(1).getByRole('checkbox').nth(2).check();
   await teams.nth(1).getByRole('checkbox').nth(3).check();
@@ -255,6 +267,13 @@ test('equipos: recuperar participantes y guardar dos equipos desde los selectore
   await page.getByRole('button', { name: 'Gestionar', exact: true }).click();
   await expect(dialog.locator('.team-editor > section')).toHaveCount(2);
   await expect(dialog.getByText('2 integrantes', { exact: true })).toHaveCount(2);
+  await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+  await expect(dialog.locator('.team-members li')).toHaveCount(4);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await teams.first().getByRole('button', { name: 'Añadir estudiantes', exact: true }).click();
+  await expect(teams.first().getByRole('checkbox').nth(0)).toBeChecked();
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/team-picker-mobile.png', fullPage: true });
   expect(errors).toEqual([]);
 });
 
@@ -398,7 +417,7 @@ test('curso cerrado: histórico del estudiante y bloqueo de edición del profeso
   await expect(page.getByRole('status').filter({ hasText: 'Solo lectura' })).toBeVisible();
   await page.locator('.challenge-card').filter({ has: page.locator('.badge.published') }).click();
   await expect(page.getByRole('heading', { name: 'Tus resultados publicados' })).toBeVisible();
-  await expect(page.locator('.student-rubric button').first()).toBeDisabled();
+  await expect(page.locator('.student-rubric .rubric-choice').first()).toBeDisabled();
   await page.screenshot({ path: 'test-results/academic-history.png', fullPage: true });
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
   await login(page, 'profesor1@erronk2d.test');
