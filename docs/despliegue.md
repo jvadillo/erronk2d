@@ -1,6 +1,17 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 3bfe097; verificación cerrada el 16 de septiembre de 2026.** Catálogo FP cargado mediante `php artisan erronk2d:catalog --execute --no-interaction`: 179 ciclos y 2.687 módulos nuevos; total 181 ciclos y 2.691 módulos. Currículo ministerial incluido en `database/seeders/official-catalog.json`, cuya distribución por cursos no equivale a la de Euskadi. Los dos ciclos y cuatro módulos anteriores se conservan, junto con sus vínculos de grupo, comprobados mediante huellas antes/después. La previsualización posterior indica cero registros pendientes. Los módulos nuevos se incorporan a grupos existentes desde Grupos.
+**Producción en 7bca158; verificación cerrada el 22 de septiembre de 2026.** Publicados el editor de rúbricas en página propia, pesos porcentuales que suman 100 %, niveles comunes por columna y evaluación docente/auto/coevaluación en tabla con guardado automático. Las copias históricas de las rúbricas conservan sus criterios, notas y selecciones.
+
+Imágenes construidas desde `git archive 7bca158`, excluyendo cambios ajenos. TypeScript/Vite y rutas del editor en la imagen correctos. Identificadores publicados:
+
+- `erronk2d-app:7bca158`: `sha256:5c04e7d60a48ae13f4e7e842539cd1e56e8b830ab0b734008dda74788c73f1a1`.
+- `erronk2d-web:7bca158`: `sha256:2c6ec4fe6bf398f5207442586d6a68c84aa430616603a6ca9a60dad9b0ba2927`.
+
+`ops/deploy` completado con copia privada `backups/production-20260922-7bca158` de **3bfe097**. Índice del volcado PostgreSQL, integridad gzip y permisos 700/600 comprobados. No había migraciones pendientes. No se ejecutó reinicio académico ni recarga del catálogo. App/web ejecutan 7bca158, web y PostgreSQL saludables, mantenimiento retirado.
+
+Validación funcional previa: 52 pruebas / 428 aserciones tanto en SQLite como PostgreSQL; tres pruebas nuevas de navegador y doce workflows existentes correctos, con capturas de escritorio/móvil revisadas. Tras desplegar: acceso administrativo, biblioteca, nuevo editor, apertura de una rúbrica existente y página del reto HTTP 200; enlaces y recursos de editor/evaluación por HTTPS y cookies Secure/HttpOnly correctos; sesión cerrada. La comprobación de producción fue de solo lectura académica; no se repitieron guardados ni la batería funcional ya verificada en aislamiento.
+
+**Catálogo FP publicado previamente en 3bfe097, el 16 de septiembre de 2026.** Cargado mediante `php artisan erronk2d:catalog --execute --no-interaction`: 179 ciclos y 2.687 módulos nuevos; total 181 ciclos y 2.691 módulos. Currículo ministerial incluido en `database/seeders/official-catalog.json`, cuya distribución por cursos no equivale a la de Euskadi. Los dos ciclos y cuatro módulos anteriores se conservan, junto con sus vínculos de grupo, comprobados mediante huellas antes/después. La previsualización posterior indica cero registros pendientes. Los módulos nuevos se incorporan a grupos existentes desde Grupos.
 
 Despliegue mediante `ops/deploy`, sin reinicio académico, con copia privada `backups/production-20260916-3bfe097` de la versión **5a66325**. Índice del volcado PostgreSQL, integridad gzip y permisos 700/600 comprobados. Sin migraciones de esquema pendientes; mantenimiento retirado.
 

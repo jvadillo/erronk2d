@@ -1,9 +1,11 @@
 # Estado de la tarea
 
 ## Objetivo
-Editor de rúbricas en página propia y evaluación en tabla implementados y verificados. Producción permanece en 3bfe097 (catálogo FP); nuevo editor aún sin desplegar.
+Editor de rúbricas en página propia y evaluación en tabla publicados en producción en 7bca158 el 22/09/2026. Despliegue y comprobación HTTPS completados.
 
 ## Completado
+- Despliegue de 7bca158 desde `git archive`, con TypeScript/Vite y rutas de la imagen correctos. `ops/deploy` completado con copia privada `backups/production-20260922-7bca158` de 3bfe097; índice PostgreSQL, gzip y permisos 700/600 verificados. Sin migraciones pendientes, sin reinicio académico ni recarga del catálogo.
+- Producción: app/web ejecutan 7bca158; web y PostgreSQL saludables, mantenimiento retirado. Acceso administrativo, biblioteca, nuevo editor, apertura de rúbrica existente y reto HTTP 200; enlaces y recursos de editor/evaluación HTTPS correctos, cookies Secure/HttpOnly y cierre de sesión comprobados. Verificación solo de lectura académica; guardado y permisos ya cubiertos en el entorno aislado.
 - Implementación principal en 8270aed: crear/editar rúbricas en página propia; filas de criterios y columnas de niveles con nota común. Cuatro niveles iniciales, ampliables hasta 20; hasta 40 criterios ordenables. Módulo solo para tipo reto, con opción GENERAL; descripción opcional debajo del nombre.
 - Última aclaración del usuario aplicada: pesos en PORCENTAJES (hasta dos decimales), suma obligatoria de 100 %, con total/faltante/exceso y reparto igualitario que ajusta el redondeo. Sustituye la propuesta inicial de pesos relativos.
 - Evaluación docente en zona principal del reto, selector de equipo/estudiante, anterior/siguiente y vuelta a matriz. Auto/coevaluación usa la misma tabla. Guardado automático, permisos por módulo y bloqueo por curso/reto cerrado conservados.
@@ -13,7 +15,7 @@ Editor de rúbricas en página propia y evaluación en tabla implementados y ver
 - Catálogo FP publicado en 3bfe097 el 16/09/2026: total 181 ciclos y 2.691 módulos ministeriales. Copia previa privada backups/production-20260916-3bfe097, migración/carga y HTTPS verificados. Grupos publicados previamente en 5a66325. No repetir reinicio académico ni carga de catálogo.
 
 ## Pendiente
-- Nuevo editor sin desplegar: siguiente entrega debe construir imágenes desde commit y usar ops/deploy con copia previa, sin limpiar datos ni volver a cargar catálogo. No hay migración de esquema nueva.
+- Sin tareas pendientes de esta entrega. Próximos cambios requieren nueva instrucción funcional.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
@@ -21,15 +23,15 @@ Editor de rúbricas en página propia y evaluación en tabla implementados y ver
 - resources/js/pages/{Setup,Challenge,Student}.vue; app/Http/Controllers/SetupController.php; routes/web.php.
 - tests/Feature/RubricEditorTest.php, SetupTest, AcademicWorkflowTest, ChallengeCreationTest, OrganizationNavigationTest; tests/Browser/{rubrics,workflows}.spec.ts.
 - Capturas privadas test-results/rubric-{editor,assessment}-{desktop,mobile}.png. Pruebas solo compose.test.yml, destino http://browser-app:8083. PHP/Composer mediante ops/php.
-- Fuente funcional: prompt.md y aclaraciones del usuario. docs/despliegue.md registra producción actual. ops/deploy, ops/backup y ops/Dockerfile.production para próxima entrega.
+- Fuente funcional: prompt.md y aclaraciones del usuario. docs/despliegue.md registra producción actual y digests. ops/deploy, ops/backup y ops/Dockerfile.production para próximas entregas.
 - Cambios ajenos: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md sin seguimiento. No incluirlos.
 - Privados: .env.production, ops/production-credentials, backups/, test-results/. Nunca mostrarlos ni versionarlos.
 
 ## Decisiones
-- Usuario autorizó implementar y actualizar progreso durante el trabajo. Evaluación coherente sin exigir páginas propias. Permitió borrar datos incompatibles, pero no ha sido necesario.
+- Usuario autorizó implementar y actualizar progreso; el 22/09 pidió retomar la entrega y su despliegue. Evaluación coherente sin exigir páginas propias. Permitió borrar datos incompatibles, pero no ha sido necesario.
 - Cursos cerrados solo lectura; cada reto conserva copia de su rúbrica. Cambiar plantilla no cambia evaluaciones históricas.
 - VPS compartido: solo recursos propios. Producción con copia previa y pruebas de escritura aisladas. Construir desde git archive para excluir cambios ajenos.
 
 ## Último error
-- Sin fallos pendientes. Desbordamiento de etiquetas accesibles corregido al posicionar el contenedor de tabla. Pruebas esperan visitas Inertia antes de leer URL/recargar.
+- Sin fallos pendientes. Comprobación HTTPS completada tras corregir en el script temporal la sesión de redirección y el recuento de assets duplicados; no requirió cambios de aplicación.
 - Pint --dirty no disponible por falta de Git en imagen; aplicado formato a lista explícita. Laravel 13.30.1, Inertia 3.3.3, PHPUnit 12.5.34. .ai/rules no existe. Guías testing/Inertia leídas; documentación Inertia v3 consultada mediante Boost con red autorizada.
