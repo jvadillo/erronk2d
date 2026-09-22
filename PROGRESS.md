@@ -1,11 +1,12 @@
 # Estado de la tarea
 
 ## Objetivo
-Editor de rúbricas en página propia y evaluación en tabla publicados en producción en 6f232e1 el 22/09/2026. Ajustar la pantalla de evaluación para reducir espacio y mejorar la lectura de criterios.
+Editor de rúbricas en página propia y evaluación en tabla publicados en producción en 1229bac el 22/09/2026. Ajustar la pantalla de evaluación para reducir espacio y mejorar la lectura de criterios.
 
 ## Completado
 - Despliegue de 7bca158 desde `git archive`, con TypeScript/Vite y rutas de la imagen correctos. `ops/deploy` completado con copia privada `backups/production-20260922-7bca158` de 3bfe097; índice PostgreSQL, gzip y permisos 700/600 verificados. Sin migraciones pendientes, sin reinicio académico ni recarga del catálogo.
 - Despliegue de 6f232e1 desde `git archive`, con imágenes app/web construidas y copia privada `backups/production-20260922-6f232e1`; sin migraciones pendientes, reinicio académico ni recarga del catálogo. App/web saludables y `/up` responde por HTTPS.
+- Despliegue de 1229bac desde `git archive`, con copia privada `backups/production-20260922-1229bac`; sin migraciones pendientes, reinicio académico ni recarga del catálogo. App/web saludables y `/up` responde por HTTPS.
 - Producción: app/web ejecutan 7bca158; web y PostgreSQL saludables, mantenimiento retirado. Acceso administrativo, biblioteca, nuevo editor, apertura de rúbrica existente y reto HTTP 200; enlaces y recursos de editor/evaluación HTTPS correctos, cookies Secure/HttpOnly y cierre de sesión comprobados. Verificación solo de lectura académica; guardado y permisos ya cubiertos en el entorno aislado.
 - Implementación principal en 8270aed: crear/editar rúbricas en página propia; filas de criterios y columnas de niveles con nota común. Cuatro niveles iniciales, ampliables hasta 20; hasta 40 criterios ordenables. Módulo solo para tipo reto, con opción GENERAL; descripción opcional debajo del nombre.
 - Última aclaración del usuario aplicada: pesos en PORCENTAJES (hasta dos decimales), suma obligatoria de 100 %, con total/faltante/exceso y reparto igualitario que ajusta el redondeo. Sustituye la propuesta inicial de pesos relativos.
@@ -19,7 +20,7 @@ Editor de rúbricas en página propia y evaluación en tabla publicados en produ
 - Catálogo FP publicado en 3bfe097 el 16/09/2026: total 181 ciclos y 2.691 módulos ministeriales. Copia previa privada backups/production-20260916-3bfe097, migración/carga y HTTPS verificados. Grupos publicados previamente en 5a66325. No repetir reinicio académico ni carga de catálogo.
 
 ## Pendiente
-- Desplegar el ajuste final de anchuras y metadatos de criterios.
+- Sin tareas pendientes de esta entrega. Próximos cambios requieren nueva instrucción funcional.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
