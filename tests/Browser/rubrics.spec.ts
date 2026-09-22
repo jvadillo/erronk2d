@@ -96,6 +96,8 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
   await expect(page).toHaveURL(/\/challenges\/\d+$/);
   const challengeUrl = page.url();
+  await expect(page.locator('.workspace-heading .bottom-actions')).toBeVisible();
+  await expect(page.getByText('Una única nota de reto. Todos los módulos conectados.', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Rúbrica del equipo', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page).toHaveURL(challengeUrl);
@@ -104,6 +106,7 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(page.getByRole('link', { name: 'Todos los retos', exact: true })).toHaveCount(0);
   await expect(page.locator('.page-heading.compact')).toHaveCount(0);
   await expect(page.locator('.rubric-evaluation-header')).toHaveCount(0);
+  await expect(page.locator('.rubric-summary')).toHaveCount(0);
   const code = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: /Calidad del código/ }) });
   const architecture = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: /Arquitectura del servidor/ }) });
   await expect(code.locator('.rubric-criterion-name > *')).toHaveCount(2);
@@ -111,7 +114,13 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(code.locator('.rubric-criterion-name')).toHaveCSS('flex-direction', 'column');
   const columnWidths = await page.locator('.rubric-assessment-table col').evaluateAll(columns => columns.map(column => Math.round(column.getBoundingClientRect().width)));
   expect(columnWidths.every(width => width === columnWidths[0])).toBe(true);
-  const description = code.locator('.rubric-description');
+  const description = code.locator('.rubric-description-toggle');
+  const descriptionLayout = await code.locator('.rubric-description').evaluate(element => {
+    const style = getComputedStyle(element);
+    return { lineClamp: style.webkitLineClamp, lineHeight: parseFloat(style.lineHeight), maxHeight: parseFloat(style.maxHeight) };
+  });
+  expect(descriptionLayout.lineClamp).toBe('4');
+  expect(descriptionLayout.maxHeight).toBeLessThanOrEqual(descriptionLayout.lineHeight * 4 + 0.5);
   await expect(description).toHaveAttribute('aria-expanded', 'false');
   await description.click();
   await expect(description).toHaveAttribute('aria-expanded', 'true');

@@ -17,10 +17,12 @@ Editor de rúbricas en página propia y evaluación en tabla publicados en produ
 - Pantalla de evaluación compactada: `topline` ofrece Atrás al reto, desaparecen las cabeceras redundantes, módulo/nombre/peso ocupan una única columna y las descripciones se contraen a cuatro líneas con expansión por clic.
 - Verificación de esta mejora: build TypeScript/Vite correcto y 3 flujos Playwright de `tests/Browser/rubrics.spec.ts` correctos.
 - Ajuste visual posterior: la columna `Nombre` iguala el ancho de los niveles y cada criterio separa chips de módulo/peso y título en dos bloques verticales.
+- Limpieza final: se elimina el resumen de la evaluación, la descripción usa cuatro líneas máximas con expansión, y los controles del reto pasan a `workspace-heading`.
+- Verificación: build TypeScript/Vite correcto y 3 flujos Playwright correctos, incluida la comprobación explícita de `line-clamp: 4`.
 - Catálogo FP publicado en 3bfe097 el 16/09/2026: total 181 ciclos y 2.691 módulos ministeriales. Copia previa privada backups/production-20260916-3bfe097, migración/carga y HTTPS verificados. Grupos publicados previamente en 5a66325. No repetir reinicio académico ni carga de catálogo.
 
 ## Pendiente
-- Sin tareas pendientes de esta entrega. Próximos cambios requieren nueva instrucción funcional.
+- Desplegar la limpieza final de la página de evaluación.
 - Google aplazado (redirect_uri_mismatch externo). Copias externas/carga/supervisión fuera de alcance.
 
 ## Archivos relevantes
