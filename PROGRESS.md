@@ -7,6 +7,7 @@ Unificar las columnas de módulo y criterio al crear o editar una rúbrica y est
 - Selector de módulo, nombre y descripción opcional comparten la primera celda.
 - Peso usa un campo numérico de hasta dos decimales con ancho compacto.
 - Prueba de navegador actualizada y pasada; compilación frontend correcta.
+- Desplegado en producción como release `47c80d6`; copia previa verificada en `backups/production-20260923-47c80d6`.
 
 ## Pendiente
 - Ninguno.
@@ -19,4 +20,4 @@ Unificar las columnas de módulo y criterio al crear o editar una rúbrica y est
 - La columna de peso tiene 102 px y el campo ocupa 6,5 em.
 
 ## Último error
-- La primera ejecución de navegador encontró vacía la base de datos de prueba; se sembró la base aislada y la prueba enfocada pasó.
+- La verificación DNS falló dentro del sandbox; `/up` y `/login` respondieron correctamente al reintentar fuera de él.
