@@ -3,6 +3,7 @@
 use App\Http\Controllers\AcademicContextController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChallengeController;
+use App\Http\Controllers\ChallengeEvidenceController;
 use App\Http\Controllers\ChallengeRubricController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ImportController;
@@ -31,6 +32,8 @@ Route::middleware(['auth', 'active', 'academic'])->group(function () {
     Route::post('/challenges', [ChallengeController::class, 'store']);
     Route::get('/challenges/{challenge}', [ChallengeController::class, 'show'])->name('challenges.show');
     Route::post('/challenges/{challenge}', [ChallengeController::class, 'update'])->name('challenges.update');
+    Route::get('/challenges/{challenge}/evidence', [ChallengeEvidenceController::class, 'index'])->name('challenges.evidence.index');
+    Route::post('/challenges/{challenge}/evidence', [ChallengeEvidenceController::class, 'store'])->name('challenges.evidence.store');
     Route::get('/challenges/{challenge}/rubrics/{kind}/edit', [ChallengeRubricController::class, 'edit'])->whereIn('kind', ['team', 'transversal'])->name('challenges.rubrics.edit');
     Route::post('/challenges/{challenge}/rubrics/{kind}/preview', [ChallengeRubricController::class, 'preview'])->whereIn('kind', ['team', 'transversal'])->name('challenges.rubrics.preview');
     Route::get('/challenges/{challenge}/history', [ChallengeController::class, 'history']);

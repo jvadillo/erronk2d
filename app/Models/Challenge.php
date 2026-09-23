@@ -59,6 +59,11 @@ class Challenge extends Model
         return $this->hasMany(Publication::class);
     }
 
+    public function evidences(): HasMany
+    {
+        return $this->hasMany(ChallengeEvidence::class);
+    }
+
     public function students(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'challenge_student')->orderBy('name');
