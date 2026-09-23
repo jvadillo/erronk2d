@@ -98,6 +98,14 @@ class ChallengeRubricEditingTest extends TestCase
         }
     }
 
+    public function test_rubric_scores_reject_more_than_two_decimal_places(): void
+    {
+        $input = $this->payload();
+        $input['rubric']['items'][0]['levels'][0]['score'] = '4.001';
+
+        $this->preview($input)->assertUnprocessable()->assertJsonValidationErrors('rubric.items.0.levels.0.score');
+    }
+
     public function test_preview_is_read_only_and_deleting_a_middle_level_preserves_other_selections_and_history(): void
     {
         $deleted = $this->assessment('team', $this->teams[0]->id, 'quality', 1);

@@ -16,6 +16,8 @@ final class ChallengeWriter
 {
     public const DECIMAL = 'regex:/^[+-]?\d{1,4}(?:\.\d{1,4})?$/';
 
+    public const GRADE_DECIMAL = 'regex:/^[+-]?\d{1,4}(?:\.\d{1,2})?$/';
+
     public function __construct(private Gradebook $book, private Calculator $calc, private ChallengeRubricEditor $rubrics) {}
 
     public function change(User $actor, int $id, array $input): array
@@ -140,7 +142,7 @@ final class ChallengeWriter
     {
         $this->permit($actor, 'evaluate_team');
         abort_unless($ch->distribution_enabled, 422, 'Este reto no utiliza reparto.');
-        Validator::make($input, ['team_id' => 'required|integer', 'allocations' => 'required|array|min:2|max:5', 'allocations.*' => ['required', 'numeric', 'between:0,10', self::DECIMAL]])->validate();
+        Validator::make($input, ['team_id' => 'required|integer', 'allocations' => 'required|array|min:2|max:5', 'allocations.*' => ['required', 'numeric', 'between:0,10', self::GRADE_DECIMAL]])->validate();
         $team = $ch->teams()->with('memberships')->findOrFail($input['team_id']);
         $this->correction($actor, $team->memberships->whereNotNull('allocation')->isNotEmpty());
         $keys = collect(array_keys($input['allocations']))->map(fn ($id) => (int) $id)->sort()->values()->all();
@@ -149,7 +151,19 @@ final class ChallengeWriter
         }
         $bookTeam = collect($this->book->challenge($ch)['teams'])->firstWhere('id', $team->id);
         if ($bookTeam['grade'] === null || ! $this->calc->allocationValid($this->calc->number($bookTeam['grade']), $input['allocations'])) {
-            throw ValidationException::withMessages(['allocations' => 'El reparto no es válido. Se deben repartir '.($bookTeam['points'] ?? 'los puntos de una rúbrica completa').' puntos.']);
+            $expected = $this->calc->budget($this->calc->number($bookTeam['grade'] ?? '0'))->multipliedBy(count($input['allocations']));
+            $actual = $this->calc->number(0);
+            foreach ($input['allocations'] as $allocation) {
+                $actual = $actual->plus((string) $allocation);
+            }
+            $difference = $expected->minus($actual);
+            $amount = rtrim(rtrim($this->calc->display($difference->abs(), 2), '0'), '.');
+            $amount = str_replace('.', ',', $amount);
+            $expectedPoints = rtrim(rtrim($this->calc->display($expected, 2), '0'), '.');
+            $expectedPoints = str_replace('.', ',', $expectedPoints);
+            $direction = $difference->isNegative() ? 'sobra' : 'falta';
+            $points = $amount === '1' ? 'punto' : 'puntos';
+            throw ValidationException::withMessages(['allocations' => 'El reparto no es válido. Se deben repartir '.($bookTeam['grade'] === null ? 'los puntos de una rúbrica completa' : $expectedPoints.' puntos')." ({$direction} {$amount} {$points})."]);
         }
         foreach ($team->memberships as $member) {
             $member->update(['allocation' => $input['allocations'][$member->student_id]]);
@@ -169,7 +183,7 @@ final class ChallengeWriter
         $students = $ch->students()->pluck('users.id');
         foreach ($input['entries'] as $entry) {
             abort_unless($students->contains((int) $entry['student_id']), 422, 'El estudiante no participa en el reto.');
-            Validator::make($entry, ['value' => $field === 'not_enrolled' ? ['required', 'boolean'] : ['nullable', 'numeric', $field === 'exam' ? 'between:0,10' : 'between:-10,10', self::DECIMAL]])->validate();
+            Validator::make($entry, ['value' => $field === 'not_enrolled' ? ['required', 'boolean'] : ['nullable', 'numeric', $field === 'exam' ? 'between:0,10' : 'between:-10,10', self::GRADE_DECIMAL]])->validate();
             $grade = ModuleGrade::firstOrNew(['challenge_id' => $ch->id, 'module_id' => $module->id, 'student_id' => $entry['student_id']]);
             if ($field === 'not_enrolled' && $entry['value'] && ($grade->exam !== null || $grade->defense !== null)) {
                 throw ValidationException::withMessages(['entries' => 'Retira las notas de este módulo antes de marcar No matriculado.']);

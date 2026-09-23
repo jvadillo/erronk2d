@@ -43,7 +43,7 @@ final class ChallengeRubricEditor
             'rubric.items.*.levels' => 'required|array|list|min:2|max:20',
             'rubric.items.*.levels.*' => 'required|array:score,description,source_index',
             'rubric.items.*.levels.*.source_index' => 'present|nullable|integer|min:0|max:19',
-            'rubric.items.*.levels.*.score' => ['required', 'numeric', 'between:0,10', ChallengeWriter::DECIMAL],
+            'rubric.items.*.levels.*.score' => ['required', 'numeric', 'between:0,10', ChallengeWriter::GRADE_DECIMAL],
             'rubric.items.*.levels.*.description' => 'required|string|max:2000',
         ], ['reason.required' => 'Indica el motivo de la corrección de la rúbrica publicada.'])->validate();
         abort_if($challenge->revision !== (int) $data['revision'], 409, 'El reto ha cambiado. Vuelve a abrir el editor y revisa los cambios antes de guardar.');

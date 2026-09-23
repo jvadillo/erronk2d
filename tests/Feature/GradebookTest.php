@@ -166,10 +166,18 @@ class GradebookTest extends TestCase
     public function test_invalid_distribution_rolls_back_and_valid_distribution_is_saved(): void
     {
         $this->teamGrade();
-        $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7', $this->students[1]->id => '8', $this->students[2]->id => '8']])->assertUnprocessable();
+        $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7', $this->students[1]->id => '8', $this->students[2]->id => '8']])->assertUnprocessable()->assertJsonPath('errors.allocations.0', 'El reparto no es válido. Se deben repartir 24 puntos (falta 1 punto).');
+        $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7', $this->students[1]->id => '8', $this->students[2]->id => '10']])->assertUnprocessable()->assertJsonPath('errors.allocations.0', 'El reparto no es válido. Se deben repartir 24 puntos (sobra 1 punto).');
+        $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7.001', $this->students[1]->id => '8', $this->students[2]->id => '8']])->assertUnprocessable()->assertJsonValidationErrors('allocations.'.$this->students[0]->id);
         $this->assertSame(0, Membership::whereNotNull('allocation')->count());
         $this->allocate();
         $this->assertSame('7.0000', Membership::where('student_id', $this->students[0]->id)->first()->allocation);
+    }
+
+    public function test_grade_inputs_reject_more_than_two_decimal_places(): void
+    {
+        $this->write(['action' => 'grades', 'field' => 'exam', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => '7.001']]])
+            ->assertUnprocessable()->assertJsonValidationErrors('value');
     }
 
     public function test_optional_distribution_and_optional_defense(): void
