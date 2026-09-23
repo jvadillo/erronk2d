@@ -52,6 +52,11 @@ final class Calculator
         return $this->number($this->display($team, 4));
     }
 
+    public function allocationBudget(BigRational $team, int $members): BigRational
+    {
+        return $this->number($this->display($team->multipliedBy($members), 2));
+    }
+
     public function allocationValid(BigRational $team, array $allocations): bool
     {
         if (count($allocations) < 2 || count($allocations) > 5) {
@@ -69,7 +74,7 @@ final class Calculator
             $sum = $sum->plus($n);
         }
 
-        return $sum->isEqualTo($this->budget($team)->multipliedBy(count($allocations)));
+        return $sum->isEqualTo($this->allocationBudget($team, count($allocations)));
     }
 
     public function challenge(?BigRational $base, array $defenses, bool $clamp): array

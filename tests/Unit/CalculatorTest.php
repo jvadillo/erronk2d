@@ -13,6 +13,8 @@ class CalculatorTest extends TestCase
         $this->assertTrue($c->allocationValid($c->number(8), ['7', '8', '9']));
         $this->assertFalse($c->allocationValid($c->number(8), ['7', '8', '8']));
         $this->assertTrue($c->allocationValid($c->number('8.1'), ['8.0', '8.1', '8.2']));
+        $this->assertTrue($c->allocationValid($c->number('8.3333'), ['8.33', '8.33', '8.34']));
+        $this->assertFalse($c->allocationValid($c->number('8.3333'), ['8.33', '8.33', '8.33']));
         $this->assertFalse($c->allocationValid($c->number(8), ['7', '8', '9.0001']));
         $this->assertFalse($c->allocationValid($c->number(8), ['8']));
         $this->assertFalse($c->allocationValid($c->number(8), ['6', '7', '11']));

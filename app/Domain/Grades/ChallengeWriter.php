@@ -142,7 +142,12 @@ final class ChallengeWriter
     {
         $this->permit($actor, 'evaluate_team');
         abort_unless($ch->distribution_enabled, 422, 'Este reto no utiliza reparto.');
-        Validator::make($input, ['team_id' => 'required|integer', 'allocations' => 'required|array|min:2|max:5', 'allocations.*' => ['required', 'numeric', 'between:0,10', self::GRADE_DECIMAL]])->validate();
+        Validator::make($input, ['team_id' => 'required|integer', 'allocations' => 'required|array|min:2|max:5', 'allocations.*' => ['required', 'numeric', 'between:0,10']])->validate();
+        foreach ($input['allocations'] as $allocation) {
+            if (! preg_match('/^[+-]?\d{1,4}(?:\.\d{1,2})?$/', (string) $allocation)) {
+                throw ValidationException::withMessages(['allocations' => 'Cada nota debe tener como máximo dos decimales.']);
+            }
+        }
         $team = $ch->teams()->with('memberships')->findOrFail($input['team_id']);
         $this->correction($actor, $team->memberships->whereNotNull('allocation')->isNotEmpty());
         $keys = collect(array_keys($input['allocations']))->map(fn ($id) => (int) $id)->sort()->values()->all();
@@ -151,7 +156,7 @@ final class ChallengeWriter
         }
         $bookTeam = collect($this->book->challenge($ch)['teams'])->firstWhere('id', $team->id);
         if ($bookTeam['grade'] === null || ! $this->calc->allocationValid($this->calc->number($bookTeam['grade']), $input['allocations'])) {
-            $expected = $this->calc->budget($this->calc->number($bookTeam['grade'] ?? '0'))->multipliedBy(count($input['allocations']));
+            $expected = $this->calc->allocationBudget($this->calc->number($bookTeam['grade'] ?? '0'), count($input['allocations']));
             $actual = $this->calc->number(0);
             foreach ($input['allocations'] as $allocation) {
                 $actual = $actual->plus((string) $allocation);

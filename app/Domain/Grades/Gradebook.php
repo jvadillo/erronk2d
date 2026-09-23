@@ -67,7 +67,7 @@ final class Gradebook
                 'id' => $team->id, 'name' => $team->name, 'members' => $members->toArray(),
                 'grade' => $teamGrade === null ? null : $c->display($c->budget($teamGrade), 4),
                 'rubric_exact' => $teamGrade === null ? null : (string) $teamGrade,
-                'points' => $teamGrade === null ? null : $c->display($c->budget($teamGrade)->multipliedBy($members->count()), 4),
+                'points' => $teamGrade === null ? null : $c->display($c->allocationBudget($teamGrade, $members->count()), 2),
                 'distribution_valid' => $valid,
             ];
         }

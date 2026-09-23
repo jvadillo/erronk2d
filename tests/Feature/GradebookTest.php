@@ -168,7 +168,7 @@ class GradebookTest extends TestCase
         $this->teamGrade();
         $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7', $this->students[1]->id => '8', $this->students[2]->id => '8']])->assertUnprocessable()->assertJsonPath('errors.allocations.0', 'El reparto no es válido. Se deben repartir 24 puntos (falta 1 punto).');
         $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7', $this->students[1]->id => '8', $this->students[2]->id => '10']])->assertUnprocessable()->assertJsonPath('errors.allocations.0', 'El reparto no es válido. Se deben repartir 24 puntos (sobra 1 punto).');
-        $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7.001', $this->students[1]->id => '8', $this->students[2]->id => '8']])->assertUnprocessable()->assertJsonValidationErrors('allocations.'.$this->students[0]->id);
+        $this->write(['action' => 'allocation', 'team_id' => $this->challenge->teams()->first()->id, 'allocations' => [$this->students[0]->id => '7.001', $this->students[1]->id => '8', $this->students[2]->id => '8']])->assertUnprocessable()->assertJsonPath('errors.allocations.0', 'Cada nota debe tener como máximo dos decimales.');
         $this->assertSame(0, Membership::whereNotNull('allocation')->count());
         $this->allocate();
         $this->assertSame('7.0000', Membership::where('student_id', $this->students[0]->id)->first()->allocation);
