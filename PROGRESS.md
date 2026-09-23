@@ -13,9 +13,10 @@ Limitar a dos decimales todas las notas, equilibrar los repartos iniciales al c�
 - Campos del reparto limitados a dos decimales; reparto inicial equitativo con céntimos sobrantes asignados desde el final.
 - Mensaje localizado para rechazar entradas antiguas con más de dos decimales; presupuesto total del reparto redondeado a céntimos.
 - PHPUnit afectado: 27 pruebas / 313 aserciones correctas. Pint y `npm run build` correctos.
+- Corrección desplegada en `51bb0ec`; HTTPS `/up` y `/login` responde 200. Copia previa verificada en `backups/production-20260923-51bb0ec`.
 
 ## Pendiente
-- Desplegar esta corrección en producción con una copia previa nueva.
+- Ninguno.
 
 ## Archivos relevantes
 - app/Domain/Grades/ChallengeWriter.php, ChallengeRubricEditor.php, app/Http/Controllers/SetupController.php.
@@ -28,4 +29,4 @@ Limitar a dos decimales todas las notas, equilibrar los repartos iniciales al c�
 - Se conservan cambios ajenos del espacio de trabajo: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md sin seguimiento.
 
 ## Último error
-- Ninguno pendiente. La validación del reparto cubre entradas antiguas y el mensaje localizado.
+- Ninguno pendiente.
