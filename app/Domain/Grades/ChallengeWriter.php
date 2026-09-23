@@ -16,7 +16,7 @@ final class ChallengeWriter
 {
     public const DECIMAL = 'regex:/^[+-]?\d{1,4}(?:\.\d{1,4})?$/';
 
-    public function __construct(private Gradebook $book, private Calculator $calc) {}
+    public function __construct(private Gradebook $book, private Calculator $calc, private ChallengeRubricEditor $rubrics) {}
 
     public function change(User $actor, int $id, array $input): array
     {
@@ -33,6 +33,8 @@ final class ChallengeWriter
             }
             $before = $this->book->challenge($challenge);
             switch ($action) {
+                case 'rubric': $this->rubrics->apply($actor, $challenge, $input);
+                    break;
                 case 'participants': $this->participants($actor, $challenge);
                     break;
                 case 'teams': $this->teams($actor, $challenge, $input);

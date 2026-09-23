@@ -26,7 +26,7 @@ final class Gradebook
         return $this->calc->weighted($values, $weights);
     }
 
-    public function challenge(Challenge $challenge): array
+    public function challenge(Challenge $challenge, ?Collection $previewAssessments = null): array
     {
         $challenge->load(['students', 'modules', 'teams.memberships', 'assessments', 'moduleGrades', 'classroom.academicYear', 'period']);
         foreach ($challenge->modules as $module) {
@@ -38,7 +38,7 @@ final class Gradebook
         $issues = [];
         $teams = [];
         $rows = [];
-        $assessments = $challenge->assessments;
+        $assessments = $previewAssessments ?? $challenge->assessments;
         if ($challenge->modules->isEmpty()) {
             $issues[] = 'El reto no tiene módulos.';
         }

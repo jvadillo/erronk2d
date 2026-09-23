@@ -1,23 +1,19 @@
 # Estado de la tarea
 
 ## Objetivo
-Analizar y definir la edición de la rúbrica propia de un reto por su profesorado, con acceso desde Evaluación y aviso previo ante pérdida de valoraciones.
+Implementar la edición de ambas rúbricas del reto por cualquier profesor del grupo y administración, con acceso desde Evaluación y aviso previo ante pérdida de valoraciones.
 
 ## Completado
-- Revisados editor, copias de rúbricas de retos, permisos, guardado, cálculo de notas, reparto individual, publicación e historial.
-- Cada reto conserva team_rubric y transversal_rubric independientes de la biblioteca. El editor actual solo edita plantillas; no basta enlazarlo.
-- Las valoraciones identifican criterios por key y niveles por índice: borrar columnas exige remapear las valoraciones conservadas para evitar cambios silenciosos de nota.
-- Cambiar pesos/notas recalcula resultados; añadir criterios deja evaluaciones pendientes; el reparto puede quedar inválido. Transversales afecta teacher/self/peer.
-- ChallengeWriter ya usa transacción, bloqueo y revision, protege cursos cerrados y retos publicados/finalizados y registra antes/después. Publicaciones guardan snapshots.
-- Preguntas enviadas: equipo o ambas rúbricas; profesores autorizados; borrar solo valoraciones afectadas o reiniciar esa rúbrica.
-- Producción sigue en 6371599 (menú Organización). Copia validada backups/production-20260922-6371599; entrega anterior verificada con 20 pruebas / 305 aserciones, Pint, TypeScript/Vite y HTTPS.
+- Backend: editor de copia del reto, previsualización sin escrituras, confirmación firmada ligada a usuario/contenido/revisión y guardado transaccional mediante ChallengeWriter.
+- Borrado selectivo y remapeo de niveles por origen en la revisión; conservación del resto, reparto, biblioteca, otros retos y publicaciones. Transversales cubre teacher/self/peer.
+- Permisos del grupo, curso cerrado, reapertura con motivo, concurrencia y auditoría antes/después. Sin migraciones ni dependencias nuevas.
+- 49 pruebas / 479 aserciones correctas tanto en SQLite como PostgreSQL (edición nueva, editor de biblioteca y Gradebook). Pint correcto con archivos explícitos.
+- Interfaz implementada: botón a la derecha de Anterior/Siguiente, editor contextual, revisión del impacto y vuelta al mismo sujeto. TypeScript/Vite correctos; validación de navegador en curso.
+- Producción sigue en 6371599; copia previa validada backups/production-20260922-6371599. Esta petición no se ha desplegado.
 
 ## Pendiente
-- Recibir las decisiones funcionales antes de implementar las operaciones que invalidan evaluaciones.
-- Propuesta: editar copia del reto, conservar valoraciones válidas mediante identidad estable de niveles, previsualizar impacto en servidor y confirmar al guardar; conservar evidencia histórica y proteger concurrencia.
-- Precisar cambios de significado de criterios/descripciones, puntuaciones/pesos, módulos y reparto; tratar rúbricas antiguas sin unificación silenciosa.
-- Botón Editar rúbrica a la derecha de Anterior/Siguiente en Evaluación; volver al mismo reto/equipo tras guardar.
-- No se ha cambiado código ni desplegado nada de esta petición.
+- Terminar flujos de navegador de ambas rúbricas, cancelación, confirmación, persistencia y móvil; revisar capturas y registrar el resultado.
+- Commit de interfaz después de sus comprobaciones.
 
 ## Archivos relevantes
 - resources/js/pages/{Challenge,RubricEditor}.vue, resources/js/rubrics.ts, resources/js/components/RubricAssessment.vue.
@@ -26,11 +22,11 @@ Analizar y definir la edición de la rúbrica propia de un reto por su profesora
 - prompt.md: preservación de rúbricas históricas (378–380, 978). routes/web.php.
 
 ## Decisiones
-- Pendientes de respuesta; las propuestas anteriores aún no son decisiones del usuario.
+- Usuario confirmó ambas rúbricas, cualquier profesor del grupo y administración; borrar solo valoraciones afectadas y conservar evidencia histórica.
 - .ai/rules no existe. Preservar cambios ajenos: CLAUDE.md y docs/PROGRESS.md eliminados; LARAVEL_BOOST_GUIDELINES.md sin seguimiento.
 - Privados: .env.production, ops/*credentials, backups/ y test-results/. No mostrar ni versionar.
 - VPS compartido: solo recursos propios y despliegues con copia previa; no repetir reinicio académico ni carga del catálogo.
 - Google aplazado; copias externas/carga/supervisión fuera de alcance.
 
 ## Último error
-- Ninguno en el análisis. PHP solo disponible en contenedor; Pint --dirty requiere Git ausente en él (usar archivos explícitos).
+- Sin fallos pendientes de servidor. PHP solo disponible en contenedor; Pint --dirty requiere Git ausente en él (usar archivos explícitos).

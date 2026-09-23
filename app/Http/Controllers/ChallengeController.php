@@ -120,7 +120,8 @@ class ChallengeController extends Controller
             return Inertia::render('Student', ['book' => $this->studentBook($request, $challenge, $data)]);
         }
 
-        return Inertia::render('Challenge', ['book' => $data, 'history' => $challenge->publications()->select('id', 'version', 'created_at')->orderByDesc('version')->get()]);
+        return Inertia::render('Challenge', ['book' => $data, 'history' => $challenge->publications()->select('id', 'version', 'created_at')->orderByDesc('version')->get(),
+            'rubricEditorUrls' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $kind])])->all()]);
     }
 
     public function update(Request $request, Challenge $challenge, ChallengeWriter $writer): JsonResponse
