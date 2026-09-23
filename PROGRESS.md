@@ -8,17 +8,18 @@ Implementar la edición de ambas rúbricas del reto por cualquier profesor del g
 - Borrado selectivo y remapeo de niveles por origen en la revisión; conservación del resto, reparto, biblioteca, otros retos y publicaciones. Transversales cubre teacher/self/peer.
 - Permisos del grupo, curso cerrado, reapertura con motivo, concurrencia y auditoría antes/después. Sin migraciones ni dependencias nuevas.
 - 49 pruebas / 479 aserciones correctas tanto en SQLite como PostgreSQL (edición nueva, editor de biblioteca y Gradebook). Pint correcto con archivos explícitos.
-- Interfaz implementada: botón a la derecha de Anterior/Siguiente, editor contextual, revisión del impacto y vuelta al mismo sujeto. TypeScript/Vite correctos; validación de navegador en curso.
+- Interfaz implementada: botón a la derecha de Anterior/Siguiente, editor contextual, revisión del impacto y vuelta al mismo sujeto. TypeScript/Vite correctos. Cuatro flujos de navegador correctos: dos de biblioteca y edición de ambas rúbricas (avisos, cancelación, conservación, borrado, recarga y móvil). Capturas revisadas.
+- Corregida actualización de la copia local de evaluación al recargar tras un conflicto. Flujos de dos pestañas verificados para equipo y transversales.
+- Backend registrado en 7a7c34e; interfaz y pruebas registradas en el siguiente commit.
 - Producción sigue en 6371599; copia previa validada backups/production-20260922-6371599. Esta petición no se ha desplegado.
 
 ## Pendiente
-- Terminar flujos de navegador de ambas rúbricas, cancelación, confirmación, persistencia y móvil; revisar capturas y registrar el resultado.
-- Commit de interfaz después de sus comprobaciones.
+- Implementación y comprobaciones completadas. Despliegue no solicitado en esta petición; producción conserva la versión anterior.
 
 ## Archivos relevantes
 - resources/js/pages/{Challenge,RubricEditor}.vue, resources/js/rubrics.ts, resources/js/components/RubricAssessment.vue.
-- app/Http/Controllers/{ChallengeController,SetupController}.php, app/Domain/Grades/{ChallengeWriter,Gradebook,Calculator}.php.
-- app/Models/{User,Classroom,Challenge,Assessment,Publication,AuditEvent}.php, tests/Feature/{RubricEditorTest,GradebookTest}.php.
+- app/Http/Controllers/{ChallengeController,ChallengeRubricController}.php, app/Domain/Grades/{ChallengeRubricEditor,ChallengeWriter,Gradebook}.php.
+- app/Models/{User,Classroom,Challenge,Assessment,Publication,AuditEvent}.php, tests/Feature/{ChallengeRubricEditingTest,RubricEditorTest,GradebookTest}.php, tests/Browser/rubrics.spec.ts.
 - prompt.md: preservación de rúbricas históricas (378–380, 978). routes/web.php.
 
 ## Decisiones
@@ -29,4 +30,4 @@ Implementar la edición de ambas rúbricas del reto por cualquier profesor del g
 - Google aplazado; copias externas/carga/supervisión fuera de alcance.
 
 ## Último error
-- Sin fallos pendientes de servidor. PHP solo disponible en contenedor; Pint --dirty requiere Git ausente en él (usar archivos explícitos).
+- Sin errores pendientes. Corregida espera de navegación de Playwright. PHP solo disponible en contenedor; Pint --dirty requiere Git ausente en él (usar archivos explícitos).

@@ -70,3 +70,5 @@
   .rubric-evaluation-toolbar h1, .rubric-evaluation-toolbar label { flex-basis: 100%; }
   .rubric-evaluation-toolbar .save-status { margin-left: 0; }
 }
+
+.rubric-editor-fields { border: 0; padding: 0; margin: 0; min-width: 0; }

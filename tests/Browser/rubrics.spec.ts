@@ -177,3 +177,78 @@ test('rúbrica: convierte los pesos relativos antiguos a porcentajes al editar',
   await expect(page.getByLabel('Peso del criterio 3')).toHaveValue('33.33');
   await expect(page.getByRole('status').filter({ hasText: 'Total: 100 %' })).toBeVisible();
 });
+
+for (const kind of ['team', 'transversal'] as const) {
+  test(`reto: edición de rúbrica ${kind}, aviso, cancelación y selección conservada`, async ({ page }) => {
+    test.setTimeout(90_000);
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('dialog', dialog => dialog.accept());
+    await login(page, 'profesor2@erronk2d.test');
+    await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad', exact: true }) }).click();
+    await expect(page).toHaveURL(/\/challenges\/\d+$/);
+    const challengeUrl = page.url();
+    await page.getByRole('button', { name: kind === 'team' ? 'Rúbrica del equipo' : 'Transversales del profesorado', exact: true }).click();
+    const selector = page.getByRole('combobox', { name: kind === 'team' ? 'Equipo a evaluar' : 'Estudiante a evaluar' });
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    const subject = await selector.inputValue();
+    const row = page.locator('.rubric-assessment tbody tr').first();
+    await expect(row.locator('.chosen')).toHaveCount(1);
+    const oldLabel = await row.locator('.chosen').getAttribute('aria-label');
+    const stale = await page.context().newPage();
+    await stale.goto(`${challengeUrl}?evaluation=${kind === 'team' ? 'team' : 'teacher'}&subject=${subject}`);
+    const staleRow = stale.locator('.rubric-assessment tbody tr').first();
+    await expect(staleRow.locator('.rubric-choice')).toHaveCount(4);
+    await page.getByRole('button', { name: 'Editar rúbrica', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/rubrics/${kind}/edit`));
+    await expect(page.getByRole('combobox', { name: 'Tipo', exact: true })).toHaveCount(0);
+    await expect(page.getByLabel('Peso del criterio 1')).toHaveValue('1');
+    await page.getByRole('button', { name: 'Quitar nivel 2', exact: true }).click();
+    await page.getByRole('button', { name: 'Revisar cambios', exact: true }).first().click();
+    const confirmation = page.getByRole('dialog', { name: 'Confirmar cambios de la rúbrica' });
+    await expect(confirmation).toContainText('0 valoraciones se eliminarán.');
+    await confirmation.getByRole('button', { name: 'Seguir editando' }).click();
+    await page.getByRole('link', { name: 'Volver a la evaluación' }).click();
+    await expect(selector).toHaveValue(subject);
+    await expect(row.locator('.rubric-choice')).toHaveCount(4);
+    await expect(row.locator('.chosen')).toHaveAttribute('aria-label', oldLabel!);
+    await page.getByRole('button', { name: 'Editar rúbrica', exact: true }).click();
+    await page.getByRole('button', { name: 'Quitar nivel 2', exact: true }).click();
+    await page.getByRole('button', { name: 'Revisar cambios', exact: true }).first().click();
+    await expect(confirmation).toContainText('0 valoraciones se eliminarán.');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await assertNoOverflow(page);
+    await page.screenshot({ path: `test-results/challenge-rubric-${kind}-confirmation.png`, fullPage: true });
+    await confirmation.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${challengeUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\?`));
+    await expect(selector).toHaveValue(subject);
+    await expect(row.locator('.rubric-choice')).toHaveCount(3);
+    await expect(row.locator('.chosen')).toHaveAttribute('aria-label', oldLabel!);
+    await staleRow.locator('.rubric-choice').first().click();
+    await expect(stale.getByRole('alert')).toContainText('Otra persona ha guardado cambios');
+    await stale.getByRole('button', { name: 'Actualizar datos', exact: true }).click();
+    await expect(staleRow.locator('.rubric-choice')).toHaveCount(3);
+    await expect(stale.getByRole('alert')).toHaveCount(0);
+    await expect(staleRow.locator('.chosen')).toHaveAttribute('aria-label', oldLabel!);
+    await stale.close();
+    await page.reload();
+    await expect(selector).toHaveValue(subject);
+    await expect(row.locator('.chosen')).toHaveAttribute('aria-label', oldLabel!);
+    await page.getByRole('button', { name: 'Editar rúbrica', exact: true }).click();
+    await page.getByRole('button', { name: 'Quitar nivel 2', exact: true }).click();
+    await page.getByRole('button', { name: 'Revisar cambios', exact: true }).first().click();
+    await expect(confirmation).toContainText(kind === 'team' ? '25 valoraciones se eliminarán.' : '400 valoraciones se eliminarán.');
+    if (kind === 'transversal') {
+      await expect(confirmation).toContainText('docentes: 80');
+      await expect(confirmation).toContainText('autoevaluaciones: 80');
+      await expect(confirmation).toContainText('coevaluaciones: 240');
+    }
+    await confirmation.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click();
+    await expect(selector).toHaveValue(subject);
+    await expect(row.locator('.chosen')).toHaveCount(0);
+    await expect(row.locator('.rubric-choice')).toHaveCount(2);
+    await page.reload();
+    await expect(row.locator('.chosen')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}

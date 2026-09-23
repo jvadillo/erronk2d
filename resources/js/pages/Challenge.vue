@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref } from 'vue';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, Search, SlidersHorizontal, Check, Users, BookOpen, AlertCircle, Upload, Download, History, Settings2, X, ChevronRight, Save } from 'lucide-vue-next';
 import RubricAssessment from '../components/RubricAssessment.vue';
 import Layout from '../components/Layout.vue'; import Modal from '../components/Modal.vue'; import GradeInput from '../components/GradeInput.vue';
 import { api, grade, permission, statusLabel, type Auth } from '../lib';
-const props=defineProps<{book:any;history:any[]}>();const book=ref(props.book);const auth=usePage().props.auth as Auth;
+const props=defineProps<{book:any;history:any[];rubricEditorUrls:Record<string,string>}>();const book=ref(props.book);const auth=usePage().props.auth as Auth;
 const busy=ref(false),message=ref(''),error=ref(''),search=ref(''),onlyPending=ref(false),teamFilter=ref(''),sort=ref('name');
+watch(()=>props.book,value=>{book.value=value;error.value='';message.value='Datos actualizados'});
 const modal=ref(''),detail=ref<any>(null),rubricKind=ref('team'),allocTeam=ref<any>(null),allocations=reactive<Record<string,string>>({}),draftTeams=ref<any[]>([]),historyData=ref<any>(null),batch=ref({module_id:0,field:'exam',text:''});
 const visible=reactive({transversal:true,team:true,defenses:true}); const settings=ref<any>({}); const showColumns=ref(false);
 const closed=computed(()=>!(usePage().props.academic as any)?.year?.is_open||['published','finished'].includes(book.value.challenge.status));
@@ -46,14 +47,19 @@ const allocated=computed(()=>Object.values(allocations).reduce((sum,v)=>sum+(Num
 async function submitAllocation(){if(await save({action:'allocation',team_id:allocTeam.value.id,allocations:Object.fromEntries(Object.entries(allocations).map(([k,v])=>[k,v.replace(',','.')]))}))modal.value=''}
 function openTeams(){error.value='';draftTeams.value=book.value.teams.map((t:any)=>({selecting:false,name:t.name,students:t.members.map((m:any)=>m.student_id)}));if(!draftTeams.value.length)draftTeams.value=[{name:'Equipo 1',students:[]}];modal.value='teams'}
 const teamErrors=computed(()=>draftTeams.value.map((team:any)=>!team.name.trim()?'Escribe un nombre para el equipo.':draftTeams.value.filter((other:any)=>other.name.trim()===team.name.trim()).length>1?'Los nombres de los equipos deben ser distintos.':team.students.length<2||team.students.length>5?'Selecciona entre 2 y 5 estudiantes.':''));
-const evaluating=ref(false),evaluationSubject=ref<number|null>(null),evaluationHeading=ref<HTMLElement|null>(null);
+const evaluationQuery=new URLSearchParams(usePage().url.split('?')[1]??'');
+const initialEvaluation=evaluationQuery.get('evaluation');
+if(initialEvaluation==='team'||initialEvaluation==='teacher')rubricKind.value=initialEvaluation;
+const evaluating=ref(initialEvaluation==='team'||initialEvaluation==='teacher'),evaluationSubject=ref<number|null>(Number(evaluationQuery.get('subject'))||null),evaluationHeading=ref<HTMLElement|null>(null);
 function openRubric(kind:string,subjectId?:number){rubricKind.value=kind;evaluationSubject.value=subjectId??subjects.value[0]?.id??null;evaluating.value=true;nextTick(()=>evaluationHeading.value?.focus())}
+function editRubric(){if(busy.value||closed.value)return;router.visit(props.rubricEditorUrls[rubricKind.value==='team'?'team':'transversal'],{data:{subject:evaluationSubject.value??''}})}
 const currentSubject=computed(()=>subjects.value.find((subject:any)=>subject.id===Number(evaluationSubject.value)));
 const evaluationSelections=computed(()=>Object.fromEntries(rubric.value.items.map((item:any)=>[item.key,selected(Number(evaluationSubject.value),item.key)])));
 const disabledCriteria=computed(()=>rubricKind.value==='team'?rubric.value.items.filter((item:any)=>item.module_id&&auth.role!=='admin'&&!modules.value.find((module:any)=>module.id===Number(item.module_id))?.teachers.some((teacher:any)=>teacher.id===auth.id)).map((item:any)=>item.key):[]);
 function changeSubject(by:number){const index=subjects.value.findIndex((subject:any)=>subject.id===Number(evaluationSubject.value));const target=subjects.value[index+by];if(target)evaluationSubject.value=target.id}
 const rubric=computed(()=>rubricKind.value==='team'?book.value.challenge.team_rubric:book.value.challenge.transversal_rubric);
 const subjects=computed(()=>rubricKind.value==='team'?book.value.teams:book.value.rows);
+if(evaluating.value&&!subjects.value.some((subject:any)=>subject.id===evaluationSubject.value))evaluationSubject.value=subjects.value[0]?.id??null;
 function selected(subject:number,key:string){return book.value.assessments.find((a:any)=>a.kind===rubricKind.value&&a.subject_id===subject&&a.criterion===key)?.level}
 function openSettings(){settings.value=JSON.parse(JSON.stringify({...book.value.challenge,defenses:Object.fromEntries(modules.value.map((m:any)=>[m.id,m.defense_enabled])),reason:''}));modal.value='settings'}
 async function history(){error.value='';try{historyData.value=await api(`/challenges/${book.value.challenge.id}/history`);modal.value='history'}catch(e){error.value=(e as Error).message}}
@@ -79,7 +85,7 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 <section v-else class="rubric-evaluation">
   <div v-if="error" class="notice error" role="alert">{{error}}<button @click="router.reload()">Actualizar datos</button></div>
   <p v-if="closed" class="notice info">Solo lectura. El reto o el curso académico está cerrado.</p>
-  <div class="rubric-evaluation-toolbar"><h1 ref="evaluationHeading" tabindex="-1">{{rubricKind==='team'?'Rúbrica del equipo':'Transversales del profesorado'}}</h1><label>{{rubricKind==='team'?'Equipo a evaluar':'Estudiante a evaluar'}}<select v-model="evaluationSubject" :disabled="busy"><option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{subject.name}}</option></select></label><div class="actions"><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[0]?.id" @click="changeSubject(-1)">Anterior</button><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[subjects.length-1]?.id" @click="changeSubject(1)">Siguiente</button></div><span class="save-status" role="status">{{message}}</span></div>
+  <div class="rubric-evaluation-toolbar"><h1 ref="evaluationHeading" tabindex="-1">{{rubricKind==='team'?'Rúbrica del equipo':'Transversales del profesorado'}}</h1><label>{{rubricKind==='team'?'Equipo a evaluar':'Estudiante a evaluar'}}<select v-model="evaluationSubject" :disabled="busy"><option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{subject.name}}</option></select></label><div class="actions"><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[0]?.id" @click="changeSubject(-1)">Anterior</button><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[subjects.length-1]?.id" @click="changeSubject(1)">Siguiente</button></div><button v-if="writable('manage_challenges')" class="button" :disabled="busy" @click="editRubric">Editar rúbrica</button><span class="save-status" role="status">{{message}}</span></div>
   <RubricAssessment v-if="currentSubject" :rubric="rubric" :subject="currentSubject.name" :selections="evaluationSelections" :show-modules="rubricKind==='team'" :modules="modules" :disabled="busy||!writable(rubricKind==='team'?'evaluate_team':'evaluate_transversal')" :disabled-criteria="disabledCriteria" @select="(key,level)=>save({action:'assess',kind:rubricKind,entries:[{subject_id:Number(evaluationSubject),criterion:key,level}]})"/>
   <p v-else class="empty-state">{{rubricKind==='team'?'Crea los equipos del reto para poder evaluarlos.':'No hay estudiantes en este reto.'}}</p>
 </section>

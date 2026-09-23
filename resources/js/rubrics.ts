@@ -1,4 +1,4 @@
-export type RubricLevel = { score: string | number; description: string };
+export type RubricLevel = { score: string | number; description: string; source_index?: number | null };
 export type RubricItem = { key: string; name: string; description?: string; module_id: number | null; weight: string | number; levels: RubricLevel[] };
 export type RubricData = { name: string; items: RubricItem[] };
 export type RubricModule = { id: number; code: string; name: string; cycle_id?: number; level?: number };
