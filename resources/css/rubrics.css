@@ -8,17 +8,21 @@
 .rubric-toolbar h2 { font-size: 20px; }
 .rubric-table-scroll { position: relative; max-width: 100%; overflow: auto; max-height: 72vh; border: 1px solid var(--border); border-radius: 9px; background: white; }
 .rubric-table { table-layout: fixed; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
-.rubric-table .rubric-name-col { width: 170px; }
+.rubric-table .rubric-criterion-col { width: 300px; }
+.rubric-table .rubric-weight-col { width: 102px; }
 .rubric-table .rubric-level-col { width: 170px; }
 .rubric-table th, .rubric-table td { white-space: normal; overflow-wrap: anywhere; text-align: left; vertical-align: top; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 12px; }
 .rubric-table thead th { position: sticky; top: 0; z-index: 2; background: #edf2e6; text-transform: none; letter-spacing: normal; color: #415b39; font-size: 12px; }
 .rubric-table thead strong { display: block; margin-top: 7px; }
 .rubric-table tbody th { font-weight: 400; background: #fafbf7; }
+.rubric-table .rubric-criterion-cell { min-width: 0; }
 .rubric-table tbody th > strong { display: block; font-size: 13px; }
 .rubric-table td:last-child, .rubric-table th:last-child { border-right: 0; }
 .rubric-table tbody tr:last-child > * { border-bottom: 0; }
 .rubric-table select { width: 100%; min-width: 0; max-width: 100%; }
 .rubric-table input, .rubric-table textarea { font-size: 12px; font-weight: 400; }
+.rubric-table .rubric-module-select { margin-bottom: 8px; }
+.rubric-table .rubric-weight-input { display: block; width: 6.5em !important; max-width: 100%; min-width: 0; padding: 8px 6px; text-align: right; font-variant-numeric: tabular-nums; }
 .rubric-table textarea { resize: vertical; min-height: 128px; max-height: 300px; line-height: 1.5; }
 .rubric-table .rubric-criterion-description { margin-top: 8px; min-height: 62px; max-height: 160px; }
 .rubric-level-heading, .rubric-score, .rubric-row-actions { display: flex; flex-direction: row; align-items: center; gap: 7px; }
@@ -65,7 +69,7 @@
 @media (max-width: 650px) {
   .rubric-settings { grid-template-columns: 1fr; }
   .rubric-toolbar { align-items: stretch; }
-  .rubric-table .rubric-name-col { width: 190px; }
+  .rubric-table .rubric-criterion-col { width: 250px; }
   .rubric-table .rubric-level-col { width: 190px; }
   .rubric-evaluation-toolbar h1, .rubric-evaluation-toolbar label { flex-basis: 100%; }
   .rubric-evaluation-toolbar .save-status { margin-left: 0; }

@@ -41,8 +41,14 @@ test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y m�
   await page.getByRole('button', { name: 'Añadir criterio', exact: true }).click();
   await page.getByLabel('Nombre del criterio 2', { exact: true }).fill('Presentación');
   await page.getByRole('button', { name: 'Añadir nivel', exact: true }).click();
-  await expect(page.locator('.rubric-editor-table tbody tr').first().locator('td,th')).toHaveCount(8);
-  await expect(page.locator('.rubric-editor-table tbody tr').last().locator('td,th')).toHaveCount(8);
+  await expect(page.locator('.rubric-editor-table tbody tr').first().locator('td,th')).toHaveCount(7);
+  await expect(page.locator('.rubric-editor-table tbody tr').last().locator('td,th')).toHaveCount(7);
+  const firstCriterionCell = page.locator('.rubric-criterion-cell').first();
+  await expect(firstCriterionCell.locator('select')).toHaveCount(1);
+  await expect(firstCriterionCell.locator('input[placeholder="Nombre del criterio"]')).toHaveCount(1);
+  await expect(firstCriterionCell.locator('textarea[placeholder="Descripción opcional"]')).toHaveCount(1);
+  await expect(page.getByLabel('Peso del criterio 1')).toHaveAttribute('type', 'number');
+  await expect(page.getByLabel('Peso del criterio 1')).toHaveAttribute('step', '0.01');
   await page.getByLabel('Nota del nivel 1').fill('0');
   await page.getByLabel('Nota del nivel 5').fill('9,5');
   for (let row = 1; row <= 2; row++) for (let col = 1; col <= 5; col++) {
@@ -72,7 +78,7 @@ test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y m�
   await expect(page.getByLabel('Nombre del criterio 1', { exact: true })).toHaveValue('Presentación');
   await page.getByRole('button', { name: 'Quitar nivel 5' }).click();
   await expect(page.getByLabel('Nota del nivel 5')).toHaveCount(0);
-  await expect(page.locator('.rubric-editor-table tbody tr').first().locator('td,th')).toHaveCount(7);
+  await expect(page.locator('.rubric-editor-table tbody tr').first().locator('td,th')).toHaveCount(6);
   await page.getByRole('combobox', { name: 'Tipo', exact: true }).selectOption('transversal');
   await expect(page.getByRole('columnheader', { name: 'Módulo', exact: true })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });

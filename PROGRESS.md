@@ -1,21 +1,22 @@
 # Estado de la tarea
 
 ## Objetivo
-Simplificar el encabezado del reto y mostrar el profesorado participante desde el resumen.
+Unificar las columnas de módulo y criterio al crear o editar una rúbrica y estrechar la columna del peso.
 
 ## Completado
-- Quitado el párrafo con los nombres docentes; el nuevo contador abre un modal con los nombres únicos.
-- Quitado el encabezado del aula y el estado del reto.
-- La corrección de notas y reparto sigue desplegada en `51bb0ec`, con copia previa verificada.
+- Selector de módulo, nombre y descripción opcional comparten la primera celda.
+- Peso usa un campo numérico de hasta dos decimales con ancho compacto.
+- Prueba de navegador actualizada y pasada; compilación frontend correcta.
 
 ## Pendiente
 - Ninguno.
 
 ## Archivos relevantes
-- `resources/js/pages/Challenge.vue`, `resources/css/app.css`.
+- `resources/js/pages/RubricEditor.vue`, `resources/css/rubrics.css`, `tests/Browser/rubrics.spec.ts`.
 
 ## Decisiones
-- Los nombres se deduplican entre los módulos y se muestran en el modal existente.
+- La primera columna mantiene el selector arriba, seguido del nombre y la descripción.
+- La columna de peso tiene 102 px y el campo ocupa 6,5 em.
 
 ## Último error
-- Ninguno.
+- La primera ejecución de navegador encontró vacía la base de datos de prueba; se sembró la base aislada y la prueba enfocada pasó.
