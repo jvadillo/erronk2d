@@ -1,31 +1,29 @@
 # Estado de la tarea
 
 ## Objetivo
-Mejorar la creación de equipos en los retos y mantener el seguimiento de evidencias individuales.
+Rehacer la UI de Evidencias para consultar anotaciones por estudiante con agilidad y desplegarla en producción.
 
 ## Completado
-- Añadido el botón «Evidencias» junto a la rúbrica y una página con búsqueda y anotaciones por estudiante.
-- Persistencia con estudiante, autor y fecha; solo profesorado puede consultar o guardar.
-- La pantalla queda en modo lectura cuando el curso o el reto están cerrados.
-- Compilación del frontend y Pint dirigido a los archivos PHP modificados correctos.
-- Desplegado `03a73f0` en producción; migración aplicada y app/web saludables.
-- HTTPS `/up` correcto y `/login` HTTP 200. Copia previa en `backups/production-20260923-03a73f0` validada por `ops/deploy`.
-- Editor de equipos renovado con tarjetas, integrantes visibles y selector desplegable con búsqueda por nombre.
-- La lista ofrece solo estudiantes sin equipo, ordenados alfabéticamente; la búsqueda ignora tildes.
-- `npm run build` y el flujo Playwright de equipos pasan.
+- Vista con lista alfabética, búsqueda sin tildes por nombre/equipo, contadores y filtro «Con anotaciones».
+- Ficha individual con historial, autor y fecha; formulario contextual y borradores independientes por estudiante durante la visita.
+- Diseño adaptado a escritorio, tablet y móvil; navegación móvil entre lista y ficha con foco accesible.
+- Las evidencias de antiguos participantes siguen accesibles en modo lectura.
+- `npm run build` y tres pruebas Playwright específicas pasan: consulta/guardado persistente, borradores, errores de validación, solo lectura y denegación al alumnado.
+- Capturas revisadas y ausencia de desbordamiento comprobada en 390, 768, 820 y 1024 px.
+- Editor de equipos mejorado previamente en `99ecaea`; producción anterior `03a73f0`.
 
 ## Pendiente
-- Verificación funcional específica de permisos, guardado y modo lectura de evidencias.
+- Construir las imágenes desde el commit, desplegar con copia previa y verificar HTTPS.
 
 ## Archivos relevantes
-- `resources/js/pages/Challenge.vue`, `resources/js/pages/Evidence.vue`, `routes/web.php`.
-- `app/Http/Controllers/ChallengeEvidenceController.php`, `app/Models/ChallengeEvidence.php`, `database/migrations/2026_09_23_160418_create_challenge_evidence_table.php`.
-- `resources/css/app.css`, `tests/Browser/workflows.spec.ts`.
+- `resources/js/pages/Evidence.vue`, `tests/Browser/evidence.spec.ts`.
+- `app/Http/Controllers/ChallengeEvidenceController.php`, `routes/web.php`.
+- `ops/deploy`, `ops/Dockerfile.production`, `compose.production.yml`.
 
 ## Decisiones
-- Las evidencias se guardan como anotaciones acumulativas y muestran autor y fecha.
-- El acceso sigue el contexto académico del reto; estudiantes no pueden abrir esta página.
-- Para cambiar un estudiante de equipo, se quita de su equipo actual y vuelve a aparecer entre los disponibles.
+- Seleccionar un estudiante muestra solo su historial; el formulario guarda para esa misma persona.
+- Borradores en memoria, sin guardar anotaciones privadas en el almacenamiento del navegador.
+- Despliegue desde un archivo Git del commit para excluir cambios locales ajenos en rúbricas y documentación.
 
 ## Último error
-La primera expectativa del test de equipos asumía un orden alfabético incorrecto; se corrigió y la ejecución enfocada pasó.
+Una prueba leyó la URL antes de terminar la navegación de Inertia; corregida esperando la URL del reto y comprobada de nuevo con éxito.
