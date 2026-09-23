@@ -30,6 +30,7 @@ test('rúbrica: página propia, columnas comunes, porcentajes, persistencia y m�
   page.on('dialog', dialog => dialog.accept());
   await login(page);
   await page.goto('/setup/rubrics');
+  await expect(page.getByText('ORGANIZACIÓN DEL CENTRO', { exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: 'Rúbrica', exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/rubrics\/create$/);
   await expect(page.getByRole('dialog')).toHaveCount(0);
