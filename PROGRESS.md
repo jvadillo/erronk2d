@@ -13,6 +13,7 @@ Rehacer la UI de Evidencias para consultar anotaciones por estudiante con agilid
 - Editor de equipos mejorado previamente en `99ecaea`; producción anterior `03a73f0`.
 - Botones de evaluación de la página del reto renombrados a «Ev. técnica» y «Ev. transversales».
 - Resumen de estudiantes/equipos retirado del popup «Organizar equipos».
+- Espaciado interior del buscador y de la lista de estudiantes en «Organizar equipos» ampliado.
 
 ## Pendiente
 - Construir las imágenes desde el commit, desplegar con copia previa y verificar HTTPS.
