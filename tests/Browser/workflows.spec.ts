@@ -75,7 +75,7 @@ test('navegación móvil: submenú accesible y sin desbordamiento', async ({ pag
   await expect(page.getByRole('heading', { name: 'Estudiante.', level: 1, exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Organización', exact: true }).click();
-  await page.getByRole('link', { name: 'Biblioteca de rúbricas', exact: true }).click();
+  await page.getByRole('link', { name: 'Rúbricas', exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/rubrics$/);
   await expect(page.getByRole('heading', { name: 'Biblioteca de rúbricas.', level: 1, exact: true })).toBeVisible();
   expect(errors).toEqual([]);
@@ -160,7 +160,7 @@ test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page
   await expect(page.getByRole('heading', { name: 'Cada Evaluación cuenta.' })).toBeVisible();
   await expect(page.locator('tbody tr')).toHaveCount(80);
   await page.goto('/setup');
-  await page.getByRole('link', { name: 'Biblioteca de rúbricas', exact: true }).click();
+  await page.getByRole('link', { name: 'Rúbricas', exact: true }).click();
   await page.getByRole('button', { name: 'Duplicar rúbrica' }).first().click();
   await expect(page.getByRole('heading', { name: /\(copia\)/ }).first()).toBeVisible();
   expect(errors).toEqual([]);

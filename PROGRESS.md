@@ -8,11 +8,12 @@ Reorganizar la página del reto en cuatro pestañas y desplegarla en producción
 - Equipos y configuración integrados en la página; evidencias extraídas a un componente reutilizable; enlace antiguo redirigido a su pestaña.
 - Borradores conservados entre pestañas; formularios deshabilitados según permisos y cierre del reto/curso.
 - Compilación frontend correcta y cuatro pruebas PHP (49 aserciones) sobre evidencias, redirecciones y privacidad.
+- Seis pruebas Playwright afectadas pasan: evidencias, pestañas/borradores/configuración, matriz y equipos. Revisión visual de escritorio/tablet y ausencia de desbordamiento en móvil/tablet.
+- Imágenes de aplicación y web construidas desde el commit `219d3b8`.
 - Pint aplicado a los archivos PHP cambiados; el contenedor no permite `--dirty` por no disponer de Git.
 
 ## Pendiente
-- Completar pruebas de navegador y revisión visual.
-- Commit de implementación, construcción de imágenes desde Git, copia previa, despliegue y comprobación HTTPS.
+- Copia previa, despliegue de `219d3b8` y comprobación HTTPS.
 
 ## Archivos relevantes
 - `resources/js/pages/Challenge.vue`, `resources/js/components/EvidenceWorkspace.vue`.
@@ -27,4 +28,4 @@ Reorganizar la página del reto en cuatro pestañas y desplegarla en producción
 - No están instaladas las skills adicionales de Vue/pruebas mencionadas por AGENTS; se usan las convenciones existentes y documentación oficial de Inertia 3.
 
 ## Último error
-Las nuevas pruebas PHP usaban inicialmente el nombre singular de la tabla de evidencias; corregido y las cuatro pruebas pasan.
+La prueba antigua de matriz tenía datos de cuatro decimales y un enlace con nombre obsoleto. Adaptada al límite actual de dos decimales y al enlace «Rúbricas»; pasa. La prueba de equipos se repitió con la base ficticia reinicializada y pasa.
