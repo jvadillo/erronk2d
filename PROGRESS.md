@@ -11,6 +11,7 @@ Rehacer la UI de Evidencias para consultar anotaciones por estudiante con agilid
 - `npm run build` y tres pruebas Playwright específicas pasan: consulta/guardado persistente, borradores, errores de validación, solo lectura y denegación al alumnado.
 - Capturas revisadas y ausencia de desbordamiento comprobada en 390, 768, 820 y 1024 px.
 - Editor de equipos mejorado previamente en `99ecaea`; producción anterior `03a73f0`.
+- Botones de evaluación de la página del reto renombrados a «Ev. técnica» y «Ev. transversales».
 
 ## Pendiente
 - Construir las imágenes desde el commit, desplegar con copia previa y verificar HTTPS.
