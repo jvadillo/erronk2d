@@ -104,12 +104,6 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 <Modal v-if="modal==='allocation'" :title="`Reparto · ${allocTeam.name}`" @close="modal=''"><div class="points-banner"><div><small>NOTA DEL EQUIPO</small><strong>{{grade(allocTeam.grade)}}</strong></div><span>× {{allocTeam.members.length}} =</span><div><small>PUNTOS A REPARTIR</small><strong>{{grade(allocTeam.points)}}</strong></div></div><form @submit.prevent="submitAllocation"><label v-for="member in allocTeam.members" class="allocation-row"><span>{{book.rows.find((r:any)=>r.id===member.student_id)?.name}}</span><input v-model="allocations[member.student_id]" inputmode="decimal" maxlength="5" required :disabled="!writable('evaluate_team')" @input="limitAllocation($event,member.student_id)"/></label><div class="breakdown-row total"><span>Total introducido</span><strong>{{grade(allocated)}}</strong></div><p class="helper">El profesor registra el reparto acordado presencialmente. Se validará la suma exacta antes de guardar.</p><p v-if="error" class="notice error" role="alert">{{error}}</p><button v-if="writable('evaluate_team')" class="button primary full" :disabled="busy||allocTeam.grade===null">Guardar reparto</button></form></Modal>
 <Modal v-if="modal==='teams'" title="Organizar equipos" @close="modal=''" wide>
   <p class="team-dialog-intro">Distribuye al alumnado en equipos de 2 a 5 personas. Cada estudiante puede pertenecer a un solo equipo.</p>
-  <div class="team-overview" role="status">
-    <div><strong>{{book.rows.length}}</strong><span>Estudiantes en el reto</span></div>
-    <div><strong>{{draftTeams.length}}</strong><span>{{draftTeams.length===1?'Equipo':'Equipos'}}</span></div>
-    <div><strong>{{unassignedStudents.length}}</strong><span>Sin equipo</span></div>
-    <p>Para cambiar a alguien de equipo, quítalo primero de su equipo actual.</p>
-  </div>
   <div v-if="!book.rows.length" class="notice">
     <p>Este reto no tiene estudiantes. Asígnalos primero a su grupo desde <Link :href="(usePage().props.setupNavigation as any[]).find(link=>link.section==='students')?.url">Organización → Estudiante</Link>.</p>
     <p>Después puedes incorporar la matrícula actual a este reto vacío. Los retos con evaluaciones conservan sus participantes.</p>

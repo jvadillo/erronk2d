@@ -20,11 +20,6 @@
 .team-editor > section.selecting { grid-column: 1 / -1; }
 
 .team-dialog-intro { color: #62736b; margin: 0 0 14px; }
-.team-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 14px 16px; margin: 0 0 18px; border: 1px solid var(--border); border-radius: 10px; background: #f7f9f5; }
-.team-overview > div { display: flex; flex-direction: column; gap: 2px; }
-.team-overview strong { color: var(--green); font-size: 20px; line-height: 1.2; font-weight: 600; font-variant-numeric: tabular-nums; }
-.team-overview span { color: var(--muted); font-size: 11px; }
-.team-overview p { grid-column: 1 / -1; color: #68766e; font-size: 11px; border-top: 1px solid var(--border); padding-top: 8px; }
 .team-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; margin-bottom: 16px; }
 .team-editor > section.team-card { display: flex; flex-direction: column; align-items: stretch; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 3px 12px #18372b0a; }
 .team-editor > section.team-card:only-child { grid-column: 1 / -1; }
@@ -63,7 +58,6 @@
 
 @media (max-width: 680px) {
   .team-editor { grid-template-columns: minmax(0, 1fr); }
-  .team-overview { gap: 7px; padding: 12px; }
   .team-editor-actions { align-items: stretch; flex-direction: column-reverse; }
   .team-editor-actions .button { justify-content: center; }
 }
