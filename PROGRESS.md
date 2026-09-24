@@ -14,12 +14,13 @@ Rehacer la UI de Evidencias para consultar anotaciones por estudiante con agilid
 - Botones de evaluación de la página del reto renombrados a «Ev. técnica» y «Ev. transversales».
 - Resumen de estudiantes/equipos retirado del popup «Organizar equipos».
 - Espaciado interior del buscador y de la lista de estudiantes en «Organizar equipos» ampliado.
+- Producción desplegada desde `10c99a6`; copia previa íntegra en `backups/production-20260924-10c99a6` y HTTPS verificado (`/up` correcto, `/login` HTTP 200).
 
 ## Pendiente
-- Construir las imágenes desde el commit, desplegar con copia previa y verificar HTTPS.
+- Sin pasos pendientes.
 
 ## Archivos relevantes
-- `resources/js/pages/Evidence.vue`, `tests/Browser/evidence.spec.ts`.
+- `resources/js/pages/Evidence.vue`, `resources/js/pages/Challenge.vue`, `resources/css/app.css`, `tests/Browser/evidence.spec.ts`.
 - `app/Http/Controllers/ChallengeEvidenceController.php`, `routes/web.php`.
 - `ops/deploy`, `ops/Dockerfile.production`, `compose.production.yml`.
 
@@ -29,4 +30,4 @@ Rehacer la UI de Evidencias para consultar anotaciones por estudiante con agilid
 - Despliegue desde un archivo Git del commit para excluir cambios locales ajenos en rúbricas y documentación.
 
 ## Último error
-Una prueba leyó la URL antes de terminar la navegación de Inertia; corregida esperando la URL del reto y comprobada de nuevo con éxito.
+La primera comprobación HTTPS no resolvió DNS en el entorno aislado; se repitió con acceso de red y `/up` y `/login` respondieron correctamente.
