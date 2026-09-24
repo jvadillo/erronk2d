@@ -135,26 +135,26 @@ test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page
     await route.continue();
   });
   try {
-    await first.fill('7,1234');
+    await first.fill('7,12');
     await first.press('Tab');
-    await second.fill('8,4321');
+    await second.fill('8,43');
     await second.press('Enter');
-    await expect(page.getByText('Cambios guardados', { exact: true })).toBeVisible();
+    await expect(page.getByRole('tabpanel', { name: 'Evaluación', exact: true }).getByText('Cambios guardados', { exact: true })).toBeVisible();
     await page.reload();
-    await expect(first).toHaveValue('7.1234');
-    await expect(second).toHaveValue('8.4321');
-    await page.getByRole('button', { name: 'Transversales del profesorado', exact: true }).click();
+    await expect(first).toHaveValue('7.1200');
+    await expect(second).toHaveValue('8.4300');
+    await page.getByRole('button', { name: 'Ev. transversales', exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Estudiante a evaluar' }).locator('option')).toHaveCount(20);
     await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(4);
     await page.getByRole('button', { name: 'Atrás', exact: true }).click();
-    await page.getByRole('button', { name: 'Configurar reto', exact: true }).click();
-    await expect(page.getByRole('dialog').getByText('Defensas por módulo')).toBeVisible();
-    await page.keyboard.press('Escape');
+    await page.getByRole('tab', { name: 'Configuración', exact: true }).click();
+    await expect(page.getByRole('tabpanel', { name: 'Configuración', exact: true }).getByText('Defensas por módulo')).toBeVisible();
+    await page.getByRole('tab', { name: 'Evaluación', exact: true }).click();
     await page.screenshot({ path: 'test-results/matrix.png', fullPage: true });
   } finally {
-    await first.fill(oldFirst); await first.press('Tab');
-    await second.fill(oldSecond); await second.press('Enter');
-    await expect(page.getByText('Cambios guardados', { exact: true })).toBeVisible();
+    await first.fill(String(Number(oldFirst))); await first.press('Tab');
+    await second.fill(String(Number(oldSecond))); await second.press('Enter');
+    await expect(page.getByRole('tabpanel', { name: 'Evaluación', exact: true }).getByText('Cambios guardados', { exact: true })).toBeVisible();
   }
   await page.goto('/reports');
   await expect(page.getByRole('heading', { name: 'Cada Evaluación cuenta.' })).toBeVisible();
@@ -236,8 +236,8 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   page.on('pageerror', error => errors.push(error.message));
   await login(page);
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Reto vacío para pruebas' }) }).click();
-  await page.getByRole('button', { name: 'Gestionar', exact: true }).click();
-  const dialog = page.getByRole('dialog');
+  await page.getByRole('tab', { name: 'Estudiantes y Equipos', exact: true }).click();
+  const dialog = page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true });
   await expect(dialog.getByText('Este reto no tiene estudiantes.', { exact: false })).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
   await dialog.getByRole('button', { name: 'Incorporar estudiantes del grupo', exact: true }).click();
@@ -273,9 +273,9 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   await secondTeamSearch.fill('ander');
   await secondTeamOptions.filter({ hasText: 'Ander García' }).click();
   await dialog.getByRole('button', { name: 'Guardar equipos', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
+  await expect(dialog.getByRole('status')).toHaveText('Cambios guardados');
   await page.reload();
-  await page.getByRole('button', { name: 'Gestionar', exact: true }).click();
+  await page.getByRole('tab', { name: 'Estudiantes y Equipos', exact: true }).click();
   await expect(dialog.locator('.team-editor > section')).toHaveCount(2);
   await expect(dialog.locator('.team-roster-heading b')).toHaveText(['2/5', '2/5']);
   await expect(dialog.locator('.team-members li')).toHaveCount(4);

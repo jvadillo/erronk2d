@@ -7,6 +7,7 @@ use App\Domain\Grades\ChallengeWriter;
 use App\Domain\Grades\Gradebook;
 use App\Models\AuditEvent;
 use App\Models\Challenge;
+use App\Models\ChallengeEvidence;
 use App\Models\Rubric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -120,7 +121,18 @@ class ChallengeController extends Controller
             return Inertia::render('Student', ['book' => $this->studentBook($request, $challenge, $data)]);
         }
 
-        return Inertia::render('Challenge', ['book' => $data, 'history' => $challenge->publications()->select('id', 'version', 'created_at')->orderByDesc('version')->get(),
+        return Inertia::render('Challenge', ['book' => $data,
+            'evidences' => $challenge->evidences()->with(['student:id,name', 'author:id,name'])->latest('created_at')->latest('id')->get()->map(fn (ChallengeEvidence $evidence): array => [
+                'id' => $evidence->id,
+                'student_id' => $evidence->student_id,
+                'student_name' => $evidence->student->name,
+                'team_name' => collect($data['rows'])->firstWhere('id', $evidence->student_id)['team_name'] ?? null,
+                'author_name' => $evidence->author->name,
+                'note' => $evidence->note,
+                'created_at' => $evidence->created_at->toIso8601String(),
+            ]),
+            'challengeUrl' => route('challenges.show', $challenge),
+            'evidenceStoreUrl' => route('challenges.evidence.store', $challenge), 'history' => $challenge->publications()->select('id', 'version', 'created_at')->orderByDesc('version')->get(),
             'rubricEditorUrls' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $kind])])->all()]);
     }
 

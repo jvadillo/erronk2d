@@ -20,7 +20,7 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
 
 async function openEvidence(page: Page) {
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
-  await page.getByRole('link', { name: 'Evidencias', exact: true }).click();
+  await page.getByRole('tab', { name: 'Evidencias', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Evidencias', exact: true })).toBeVisible();
 }
 
@@ -94,9 +94,15 @@ test('evidencias: modo lectura y acceso restringido al profesorado', async ({ pa
   await expect(page).toHaveURL(/\/challenges\/\d+$/);
   const challengeUrl = page.url();
   await page.goto(`${challengeUrl}/evidence`);
-  await expect(page.getByText('Solo lectura. El reto o el curso académico está cerrado.')).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: 'Evidencias', exact: true }).getByText('Solo lectura. El reto o el curso académico está cerrado.')).toBeVisible();
   await expect(page.locator('.evidence-student-option').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar anotación' })).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Estudiantes y Equipos' }).click();
+  await expect(page.getByRole('button', { name: 'Guardar equipos' })).toBeDisabled();
+  await expect(page.getByRole('textbox', { name: 'Nombre del equipo 1', exact: true })).toBeDisabled();
+  await page.getByRole('tab', { name: 'Configuración', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Guardar configuración' })).toBeDisabled();
+  await expect(page.getByLabel('Descripción', { exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
   await login(page, 'alumno1@erronk2d.test');
   const denied = await page.goto(`${challengeUrl}/evidence`);
@@ -132,4 +138,73 @@ test('evidencias: error de guardado conserva el texto y la ficha se adapta a tab
   await page.getByRole('button', { name: /Aitor Fernández/ }).click();
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(note).toHaveValue('');
+});
+
+
+test('pestañas del reto: vistas, borradores, configuración persistente y navegación accesible', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page);
+  await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
+  const tabs = page.getByRole('tablist', { name: 'Vistas del reto' });
+  await expect(tabs.getByRole('tab')).toHaveText(['Estudiantes y Equipos', 'Evaluación', 'Evidencias', 'Configuración']);
+  await expect(tabs.getByRole('tab', { name: 'Evaluación', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.matrix')).toBeVisible();
+  await expect(page.locator('.workspace-heading').getByRole('link', { name: 'Evidencias' })).toHaveCount(0);
+  await tabs.getByRole('tab', { name: 'Estudiantes y Equipos' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const teams = page.getByRole('tabpanel', { name: 'Estudiantes y Equipos' });
+  const teamName = teams.getByRole('textbox', { name: 'Nombre del equipo 1', exact: true });
+  const originalTeam = await teamName.inputValue();
+  await teamName.fill('Borrador de equipo');
+  await tabs.getByRole('tab', { name: 'Configuración', exact: true }).click();
+  const settings = page.getByRole('tabpanel', { name: 'Configuración', exact: true });
+  const description = settings.getByLabel('Descripción', { exact: true });
+  const originalDescription = await description.inputValue();
+  const updatedDescription = `Descripción de prueba ${Date.now()}`;
+  await description.fill(updatedDescription);
+  await tabs.getByRole('tab', { name: 'Evidencias', exact: true }).click();
+  const note = page.getByLabel('Nueva anotación', { exact: false });
+  await note.fill('Borrador de evidencia entre pestañas');
+  await tabs.getByRole('tab', { name: 'Estudiantes y Equipos' }).click();
+  await expect(teamName).toHaveValue('Borrador de equipo');
+  await teamName.fill(originalTeam);
+  await tabs.getByRole('tab', { name: 'Configuración', exact: true }).click();
+  await expect(description).toHaveValue(updatedDescription);
+  await settings.getByRole('button', { name: 'Guardar configuración' }).click();
+  await expect(settings.getByRole('status')).toHaveText('Cambios guardados');
+  await tabs.getByRole('tab', { name: 'Evidencias', exact: true }).click();
+  await expect(note).toHaveValue('Borrador de evidencia entre pestañas');
+  await page.reload();
+  await expect(tabs.getByRole('tab', { name: 'Evidencias', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(note).toHaveValue('');
+  await tabs.getByRole('tab', { name: 'Configuración', exact: true }).click();
+  await expect(description).toHaveValue(updatedDescription);
+  await description.fill(originalDescription);
+  await settings.getByRole('button', { name: 'Guardar configuración' }).click();
+  await expect(settings.getByRole('status')).toHaveText('Cambios guardados');
+  await tabs.getByRole('tab', { name: 'Evaluación', exact: true }).click();
+  await page.goBack();
+  await expect(tabs.getByRole('tab', { name: 'Configuración', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await tabs.getByRole('tab', { name: 'Configuración', exact: true }).focus();
+  await page.keyboard.press('Home');
+  await expect(tabs.getByRole('tab', { name: 'Estudiantes y Equipos' })).toBeFocused();
+  await expect(teams).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.matrix')).toBeVisible();
+  await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Rúbrica del equipo', exact: true })).toBeVisible();
+  await expect(tabs).toBeVisible();
+  await page.getByRole('button', { name: 'Atrás', exact: true }).click();
+  await page.screenshot({ path: 'test-results/challenge-tabs-desktop.png', fullPage: true });
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const name of ['Estudiantes y Equipos', 'Evaluación', 'Evidencias', 'Configuración']) {
+      await tabs.getByRole('tab', { name, exact: true }).click();
+      await expect(page.getByRole('tabpanel', { name, exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    }
+  }
+  await page.screenshot({ path: 'test-results/challenge-tabs-tablet.png', fullPage: true });
+  expect(errors).toEqual([]);
 });

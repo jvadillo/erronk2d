@@ -1,33 +1,30 @@
 # Estado de la tarea
 
 ## Objetivo
-Rehacer la UI de Evidencias para consultar anotaciones por estudiante con agilidad y desplegarla en producción.
+Reorganizar la página del reto en cuatro pestañas y desplegarla en producción.
 
 ## Completado
-- Vista con lista alfabética, búsqueda sin tildes por nombre/equipo, contadores y filtro «Con anotaciones».
-- Ficha individual con historial, autor y fecha; formulario contextual y borradores independientes por estudiante durante la visita.
-- Diseño adaptado a escritorio, tablet y móvil; navegación móvil entre lista y ficha con foco accesible.
-- Las evidencias de antiguos participantes siguen accesibles en modo lectura.
-- `npm run build` y tres pruebas Playwright específicas pasan: consulta/guardado persistente, borradores, errores de validación, solo lectura y denegación al alumnado.
-- Capturas revisadas y ausencia de desbordamiento comprobada en 390, 768, 820 y 1024 px.
-- Editor de equipos mejorado previamente en `99ecaea`; producción anterior `03a73f0`.
-- Botones de evaluación de la página del reto renombrados a «Ev. técnica» y «Ev. transversales».
-- Resumen de estudiantes/equipos retirado del popup «Organizar equipos».
-- Espaciado interior del buscador y de la lista de estudiantes en «Organizar equipos» ampliado.
-- Producción desplegada desde `10c99a6`; copia previa íntegra en `backups/production-20260924-10c99a6` y HTTPS verificado (`/up` correcto, `/login` HTTP 200).
+- Pestañas Estudiantes y Equipos, Evaluación, Evidencias y Configuración con URL propia y navegación por teclado.
+- Equipos y configuración integrados en la página; evidencias extraídas a un componente reutilizable; enlace antiguo redirigido a su pestaña.
+- Borradores conservados entre pestañas; formularios deshabilitados según permisos y cierre del reto/curso.
+- Compilación frontend correcta y cuatro pruebas PHP (49 aserciones) sobre evidencias, redirecciones y privacidad.
+- Pint aplicado a los archivos PHP cambiados; el contenedor no permite `--dirty` por no disponer de Git.
 
 ## Pendiente
-- Sin pasos pendientes.
+- Completar pruebas de navegador y revisión visual.
+- Commit de implementación, construcción de imágenes desde Git, copia previa, despliegue y comprobación HTTPS.
 
 ## Archivos relevantes
-- `resources/js/pages/Evidence.vue`, `resources/js/pages/Challenge.vue`, `resources/css/app.css`, `tests/Browser/evidence.spec.ts`.
-- `app/Http/Controllers/ChallengeEvidenceController.php`, `routes/web.php`.
+- `resources/js/pages/Challenge.vue`, `resources/js/components/EvidenceWorkspace.vue`.
+- `app/Http/Controllers/ChallengeController.php`, `app/Http/Controllers/ChallengeEvidenceController.php`.
+- `tests/Feature/ChallengeTabsTest.php`, `tests/Browser/evidence.spec.ts`, `tests/Browser/workflows.spec.ts`.
 - `ops/deploy`, `ops/Dockerfile.production`, `compose.production.yml`.
 
 ## Decisiones
-- Seleccionar un estudiante muestra solo su historial; el formulario guarda para esa misma persona.
-- Borradores en memoria, sin guardar anotaciones privadas en el almacenamiento del navegador.
-- Despliegue desde un archivo Git del commit para excluir cambios locales ajenos en rúbricas y documentación.
+- Evaluación sigue siendo la pestaña inicial; las cuatro pestañas permanecen visibles al evaluar rúbricas.
+- Despliegue autorizado por el usuario; producción actual `10c99a6`.
+- Excluir cambios locales previos en RubricAssessment, su prueba y documentación.
+- No están instaladas las skills adicionales de Vue/pruebas mencionadas por AGENTS; se usan las convenciones existentes y documentación oficial de Inertia 3.
 
 ## Último error
-La primera comprobación HTTPS no resolvió DNS en el entorno aislado; se repitió con acceso de red y `/up` y `/login` respondieron correctamente.
+Las nuevas pruebas PHP usaban inicialmente el nombre singular de la tabla de evidencias; corregido y las cuatro pruebas pasan.

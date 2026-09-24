@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { ArrowLeft, ArrowUpRight, Check, ChevronRight, ClipboardList, LockKeyhole, Plus, Search, Users, X } from 'lucide-vue-next';
-import Layout from '../components/Layout.vue';
 
 type Student = { id: number; name: string; team_name: string | null };
 type Evidence = {
@@ -20,7 +19,10 @@ const props = defineProps<{
   students: Student[];
   evidences: Evidence[];
   canAdd: boolean;
+  storeUrl: string;
 }>();
+
+const emit = defineEmits<{ saving: [value: boolean]; teams: [] }>();
 
 const studentsWithHistory = computed(() => {
   const students = new Map(props.students.map(student => [student.id, student]));
@@ -98,29 +100,24 @@ function submit(): void {
   if (studentId === null || !canWrite.value || !note.value.trim() || saving.value) {
     return;
   }
-  router.post(`/challenges/${props.challenge.id}/evidence`, {
+  router.post(props.storeUrl, {
     student_id: studentId,
     note: note.value.trim(),
   }, {
     preserveScroll: true,
-    onStart: () => { saving.value = true; error.value = ''; saved.value = false; },
+    onStart: () => { saving.value = true; emit('saving', true); error.value = ''; saved.value = false; },
     onSuccess: () => { drafts.value[studentId] = ''; saved.value = true; },
     onError: (errors) => { error.value = errors.student_id || errors.note || 'No se ha podido guardar la anotación.'; },
-    onFinish: () => { saving.value = false; },
+    onFinish: () => { saving.value = false; emit('saving', false); },
   });
 }
 </script>
 
 <template>
-  <Layout>
-    <Head title="Evidencias" />
-    <div class="topline evidence-topline">
-      <Link :href="`/challenges/${challenge.id}`" class="evidence-back"><ArrowLeft :size="16" />Volver al reto</Link>
-      <span>{{ challenge.name }}</span>
-    </div>
+  <div>
     <header class="page-heading evidence-heading">
       <div>
-        <h1>Evidencias</h1>
+        <h2>Evidencias</h2>
         <p class="muted">El seguimiento de cada estudiante, en un solo lugar.</p>
       </div>
       <div class="evidence-summary" aria-label="Resumen de evidencias">
@@ -189,8 +186,8 @@ function submit(): void {
         </form>
       </section>
     </div>
-    <div v-else class="evidence-empty-history evidence-no-students"><span><Users :size="26" /></span><h2>No hay estudiantes en este reto</h2><p>Añade participantes desde la gestión de equipos para comenzar su seguimiento.</p><Link :href="`/challenges/${challenge.id}`" class="button">Volver al reto<ArrowUpRight :size="16" /></Link></div>
-  </Layout>
+    <div v-else class="evidence-empty-history evidence-no-students"><span><Users :size="26" /></span><h2>No hay estudiantes en este reto</h2><p>Añade participantes desde la gestión de equipos para comenzar su seguimiento.</p><button type="button" class="button" @click="emit('teams')">Estudiantes y Equipos<ArrowUpRight :size="16" /></button></div>
+  </div>
 </template>
 
 <style scoped>
