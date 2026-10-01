@@ -9,11 +9,13 @@ Permitir crear retos con rúbricas nuevas vacías, orientar su edición y manten
 - Editor muestra tipo, ciclo y curso/nivel bloqueados, usando el contexto histórico del reto. Rúbricas vacías ya no se interpretan como pesos antiguos.
 - Aviso cerrable de módulos sin criterios específicos en edición y evaluación técnica; se actualiza al cambiar la cobertura.
 - Selecciones incompatibles de ambas rúbricas se limpian al cambiar grupo/módulos; error de compatibilidad asociado al campo correcto.
+- Selección de equipo reactiva: tras crear los primeros equipos, volver a Evaluación selecciona un equipo válido sin recargar.
 - 75 pruebas PHP / 732 aserciones correctas: creación, edición, pestañas, cálculos, reparto, publicación e historial. TypeScript/Vite correctos. Pint correcto con rutas explícitas.
+- 2 pruebas Playwright correctas: recorrido de rúbricas vacías, contexto bloqueado, aviso cerrable y actualización de módulos, primeras evaluaciones, persistencia y aviso del alumnado; regresión de creación con plantillas.
+- Servidor y pruebas registrados en `184f8e9`; interfaz y prueba de navegador completadas.
 
 ## Pendiente
-- Terminar prueba Playwright del flujo nuevo y regresión de creación; revisar y hacer commit.
-- Cambios aún sin desplegar.
+- Implementación y verificaciones completadas. Cambios aún sin desplegar en producción.
 
 ## Archivos relevantes
 - `app/Http/Controllers/ChallengeController.php`, `ChallengeRubricController.php`; `app/Domain/Grades/ChallengeWriter.php`.
@@ -27,4 +29,4 @@ Permitir crear retos con rúbricas nuevas vacías, orientar su edición y manten
 - Producción continúa en la versión anterior `495d95c-local-20260929`; no se han modificado datos de producción.
 
 ## Último error
-- Pint no admite `--dirty` porque el contenedor PHP no dispone de Git; formato completado indicando únicamente los cinco archivos PHP modificados.
+- Sin errores pendientes. Pint se ejecutó con rutas explícitas porque el contenedor no tiene Git; selector inicial de Playwright corregido y prueba repetida correctamente.

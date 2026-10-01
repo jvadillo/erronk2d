@@ -4,6 +4,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ArrowUp, ArrowDown, Plus, Save, X } from 'lucide-vue-next';
 import Layout from '../components/Layout.vue';
 import Modal from '../components/Modal.vue';
+import ModuleCriteriaNotice from '../components/ModuleCriteriaNotice.vue';
 import { api } from '../lib';
 import { commonScores, decimal, percentage, percentageWeights, type RubricItem, type RubricModule } from '../rubrics';
 const props = defineProps<{
@@ -13,7 +14,7 @@ const props = defineProps<{
   teachers: { id: number; name: string }[];
   saveUrl: string;
   libraryUrl: string;
-  challengeContext?: { id: number; name: string; kind: 'team' | 'transversal'; revision: number; requiresReason: boolean; previewUrl: string };
+  challengeContext?: { id: number; name: string; kind: 'team' | 'transversal'; cycle: string | null; level: number | null; revision: number; requiresReason: boolean; previewUrl: string };
 
 }>();
 const legacy = ref(!!props.rubric && !commonScores(props.rubric.items));
@@ -94,7 +95,7 @@ function submit() {
 type RubricImpact = { removed_assessments: number; removed_by_kind: Record<string, number>; affected_subjects: string[]; removed_criteria: string[]; changed_team_grades: string[]; invalid_allocations: string[]; changed_results: string[] };
 const impact = ref<RubricImpact | null>(null), submitting = ref(false), changeError = ref('');
 const pendingChange = ref<Record<string, unknown> | null>(null);
-const legacyWeights = computed(() => !!props.challengeContext && initialItems.reduce((sum, item) => sum + decimal(item.weight), 0) !== 100);
+const legacyWeights = computed(() => !!props.challengeContext && initialItems.length > 0 && initialItems.reduce((sum, item) => sum + decimal(item.weight), 0) !== 100);
 const originalRelativeWeights = computed(() => legacyWeights.value && form.items.length === initialItems.length && form.items.every(item => { const original = initialItems.find(candidate => candidate.key === item.key); return original && decimal(item.weight) === decimal(original.weight); }));
 const submitDisabled = computed(() => form.processing || submitting.value || (legacy.value && !props.challengeContext));
 const saveLabel = computed(() => props.challengeContext ? 'Revisar cambios' : 'Guardar rúbrica');
@@ -153,10 +154,13 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
       <fieldset class="rubric-editor-fields" :disabled="submitting">
       <section class="panel rubric-settings">
         <label>Nombre de la rúbrica<input v-model="form.name" required maxlength="150"/><span v-if="form.errors.name" class="field-error">{{ form.errors.name }}</span></label>
-        <label v-if="!challengeContext">Tipo<select v-model="form.kind"><option value="team">Valoración del reto</option><option value="transversal">Competencias transversales</option></select></label>
-        <label v-if="!challengeContext">Ciclo<select v-model="form.cycle_id"><option value="">General</option><option v-for="cycle in cycles" :key="cycle.id" :value="cycle.id">{{ cycle.name }}</option></select><span v-if="form.errors.cycle_id" class="field-error">{{ form.errors.cycle_id }}</span></label>
-        <label v-if="!challengeContext">Curso / nivel<select v-model="form.level"><option value="">General</option><option v-for="n in 4" :key="n" :value="n">{{ n }}.º</option></select></label>
+        <label>Tipo<select v-model="form.kind" :disabled="!!challengeContext"><option value="team">Valoración del reto</option><option value="transversal">Competencias transversales</option></select></label>
+        <label v-if="challengeContext">Ciclo<input :value="challengeContext.cycle || 'General'" disabled/></label>
+        <label v-else>Ciclo<select v-model="form.cycle_id"><option value="">General</option><option v-for="cycle in cycles" :key="cycle.id" :value="cycle.id">{{ cycle.name }}</option></select><span v-if="form.errors.cycle_id" class="field-error">{{ form.errors.cycle_id }}</span></label>
+        <label v-if="challengeContext">Curso / nivel<input :value="challengeContext.level ? `${challengeContext.level}.º` : 'General'" disabled/></label>
+        <label v-else>Curso / nivel<select v-model="form.level"><option value="">General</option><option v-for="n in 4" :key="n" :value="n">{{ n }}.º</option></select></label>
       </section>
+      <ModuleCriteriaNotice v-if="challengeContext && form.kind === 'team'" :items="form.items" :modules="availableModules"/>
       <div v-if="legacy && !challengeContext" class="notice warning"><p>Esta plantilla tiene niveles diferentes entre criterios. Revisa las notas de las columnas y unifica los niveles para editarla en tabla. Las evaluaciones de retos anteriores se conservan.</p><button class="button" type="button" @click="unifyLegacy">Unificar niveles de la plantilla</button></div>
       <p v-if="challengeContext && legacy" class="notice">Esta rúbrica tiene niveles distintos entre criterios. Se conservan sus notas originales; puedes editarlas en cada celda.</p>
       <p v-if="legacyWeights" class="notice">Esta rúbrica usa pesos relativos anteriores. Puedes conservarlos. Si añades o eliminas criterios o cambias sus pesos, ajusta el total al 100 %.</p>

@@ -4,6 +4,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, Search, SlidersHorizontal, Check, Users, BookOpen, GraduationCap, AlertCircle, Upload, Download, History, X, ChevronRight } from 'lucide-vue-next';
 import EvidenceWorkspace from '../components/EvidenceWorkspace.vue';
 import RubricAssessment from '../components/RubricAssessment.vue';
+import ModuleCriteriaNotice from '../components/ModuleCriteriaNotice.vue';
 import Layout from '../components/Layout.vue'; import Modal from '../components/Modal.vue'; import GradeInput from '../components/GradeInput.vue';
 import { api, grade, permission, type Auth } from '../lib';
 const props=defineProps<{book:any;history:any[];rubricEditorUrls:Record<string,string>;evidences:any[];challengeUrl:string;evidenceStoreUrl:string}>();const book=ref(props.book);const auth=usePage().props.auth as Auth;
@@ -87,7 +88,7 @@ const disabledCriteria=computed(()=>rubricKind.value==='team'?rubric.value.items
 function changeSubject(by:number){const index=subjects.value.findIndex((subject:any)=>subject.id===Number(evaluationSubject.value));const target=subjects.value[index+by];if(target)evaluationSubject.value=target.id}
 const rubric=computed(()=>rubricKind.value==='team'?book.value.challenge.team_rubric:book.value.challenge.transversal_rubric);
 const subjects=computed(()=>rubricKind.value==='team'?book.value.teams:book.value.rows);
-if(evaluating.value&&!subjects.value.some((subject:any)=>subject.id===evaluationSubject.value))evaluationSubject.value=subjects.value[0]?.id??null;
+watch(subjects,available=>{if(!available.some((subject:any)=>subject.id===evaluationSubject.value))evaluationSubject.value=available[0]?.id??null},{immediate:true});
 function selected(subject:number,key:string){return book.value.assessments.find((a:any)=>a.kind===rubricKind.value&&a.subject_id===subject&&a.criterion===key)?.level}
 function initializeSettings(){settings.value=JSON.parse(JSON.stringify({...book.value.challenge,defenses:Object.fromEntries(modules.value.map((m:any)=>[m.id,m.defense_enabled])),reason:''}))}
 async function history(){error.value='';try{historyData.value=await api(`/challenges/${book.value.challenge.id}/history`);modal.value='history'}catch(e){error.value=(e as Error).message}}
@@ -119,9 +120,11 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 <section v-else class="rubric-evaluation">
   <div v-if="error" class="notice error" role="alert">{{error}}<button @click="router.reload()">Actualizar datos</button></div>
   <p v-if="closed" class="notice info">Solo lectura. El reto o el curso académico está cerrado.</p>
-  <div class="rubric-evaluation-toolbar"><h1 ref="evaluationHeading" tabindex="-1">{{rubricKind==='team'?'Rúbrica del equipo':'Transversales del profesorado'}}</h1><label>{{rubricKind==='team'?'Equipo a evaluar':'Estudiante a evaluar'}}<select v-model="evaluationSubject" :disabled="busy"><option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{subject.name}}</option></select></label><div class="actions"><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[0]?.id" @click="changeSubject(-1)">Anterior</button><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[subjects.length-1]?.id" @click="changeSubject(1)">Siguiente</button></div><button v-if="writable('manage_challenges')" class="button" :disabled="busy" @click="editRubric">Editar rúbrica</button><span class="save-status" role="status">{{message}}</span></div>
-  <RubricAssessment v-if="currentSubject" :rubric="rubric" :subject="currentSubject.name" :selections="evaluationSelections" :show-modules="rubricKind==='team'" :modules="modules" :disabled="busy||!writable(rubricKind==='team'?'evaluate_team':'evaluate_transversal')" :disabled-criteria="disabledCriteria" @select="(key,level)=>save({action:'assess',kind:rubricKind,entries:[{subject_id:Number(evaluationSubject),criterion:key,level}]})"/>
-  <p v-else class="empty-state">{{rubricKind==='team'?'Crea los equipos del reto para poder evaluarlos.':'No hay estudiantes en este reto.'}}</p>
+  <div class="rubric-evaluation-toolbar"><h1 ref="evaluationHeading" tabindex="-1">{{rubricKind==='team'?'Rúbrica del equipo':'Transversales del profesorado'}}</h1><label>{{rubricKind==='team'?'Equipo a evaluar':'Estudiante a evaluar'}}<select v-model="evaluationSubject" :disabled="busy"><option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{subject.name}}</option></select></label><div class="actions"><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[0]?.id" @click="changeSubject(-1)">Anterior</button><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[subjects.length-1]?.id" @click="changeSubject(1)">Siguiente</button></div><button v-if="rubric.items.length&&writable('manage_challenges')" class="button" :disabled="busy" @click="editRubric">Editar rúbrica</button><span class="save-status" role="status">{{message}}</span></div>
+  <div v-if="!rubric.items.length" class="notice warning" role="alert"><p>La rúbrica no contiene todavía criterios.</p><button v-if="writable('manage_challenges')" class="button" :disabled="busy" @click="editRubric">Editar rúbrica</button><p v-else>El profesorado con permiso para gestionar el reto debe completar la rúbrica antes de evaluar.</p></div>
+  <ModuleCriteriaNotice v-if="rubricKind==='team'&&rubric.items.length" :items="rubric.items" :modules="modules"/>
+  <RubricAssessment v-if="rubric.items.length&&currentSubject" :rubric="rubric" :subject="currentSubject.name" :selections="evaluationSelections" :show-modules="rubricKind==='team'" :modules="modules" :disabled="busy||!writable(rubricKind==='team'?'evaluate_team':'evaluate_transversal')" :disabled-criteria="disabledCriteria" @select="(key,level)=>save({action:'assess',kind:rubricKind,entries:[{subject_id:Number(evaluationSubject),criterion:key,level}]})"/>
+  <p v-else-if="rubric.items.length" class="empty-state">{{rubricKind==='team'?'Crea los equipos del reto para poder evaluarlos.':'No hay estudiantes en este reto.'}}</p>
 </section>
 
 </section>
