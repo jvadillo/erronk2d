@@ -98,6 +98,83 @@ class ChallengeRubricEditingTest extends TestCase
         }
     }
 
+    public static function rubricKinds(): array
+    {
+        return ['technical' => ['team', 'team_rubric'], 'transversal' => ['transversal', 'transversal_rubric']];
+    }
+
+    #[DataProvider('rubricKinds')]
+    public function test_empty_rubric_can_receive_first_criteria_with_frozen_challenge_context(string $kind, string $field): void
+    {
+        $input = $this->payload($kind);
+        foreach ($input['rubric']['items'] as &$item) {
+            foreach ($item['levels'] as &$level) {
+                $level['source_index'] = null;
+            }
+            unset($level);
+        }
+        unset($item);
+        $this->challenge->update([$field => ['name' => 'Nueva rúbrica', 'items' => []], 'catalog_snapshot' => ['cycle' => 'Ciclo del reto', 'level' => 2]]);
+        $this->challenge->classroom->update(['cycle_name' => 'Nombre posterior', 'level' => 1]);
+        $otherField = $kind === 'team' ? 'transversal_rubric' : 'team_rubric';
+        $otherRubric = $this->challenge->$otherField;
+
+        $this->get(route('challenges.rubrics.edit', [$this->challenge, $kind]))->assertInertia(fn (Assert $page) => $page
+            ->component('RubricEditor')->where('rubric.items', [])->where('rubric.kind', $kind)
+            ->where('challengeContext.cycle', 'Ciclo del reto')->where('challengeContext.level', 2));
+        $token = $this->preview($input)->assertOk()->assertJsonPath('impact.removed_assessments', 0)->json('token');
+        $response = $this->save($input, $token)->assertOk()->assertJsonPath('book.complete', false);
+
+        $this->assertCount(2, $this->challenge->fresh()->$field['items']);
+        $this->assertSame($otherRubric, $this->challenge->fresh()->$otherField);
+        $this->assertDatabaseCount('assessments', 0);
+        $this->assertNull($response->json($kind === 'team' ? 'book.teams.0.grade' : 'book.rows.0.transversal'));
+        $this->assertDatabaseHas('audit_events', ['challenge_id' => $this->challenge->id, 'action' => 'rubric']);
+    }
+
+    public static function assessmentKinds(): array
+    {
+        return ['team' => ['team'], 'teacher' => ['teacher'], 'self' => ['self'], 'peer' => ['peer']];
+    }
+
+    #[DataProvider('assessmentKinds')]
+    public function test_empty_rubric_rejects_assessments_without_writes(string $kind): void
+    {
+        $this->challenge->update(['team_rubric' => ['name' => 'Nueva', 'items' => []], 'transversal_rubric' => ['name' => 'Nueva', 'items' => []]]);
+        $actor = in_array($kind, ['self', 'peer'], true) ? $this->students[0] : $this->teacher;
+        $subject = $kind === 'team' ? $this->teams[0]->id : ($kind === 'peer' ? $this->students[1]->id : $this->students[0]->id);
+
+        $this->actingAs($actor)->postJson(route('challenges.update', $this->challenge), [
+            'revision' => 1, 'action' => 'assess', 'kind' => $kind,
+            'entries' => [['subject_id' => $subject, 'criterion' => 'quality', 'level' => 0]],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['entries' => 'La rúbrica no contiene todavía criterios. Debe completarse antes de evaluar.']);
+
+        $this->assertSame(1, $this->challenge->fresh()->revision);
+        $this->assertDatabaseCount('assessments', 0);
+        $this->assertDatabaseCount('audit_events', 0);
+    }
+
+    public function test_empty_rubrics_keep_results_pending_and_block_allocation_finish_and_publish(): void
+    {
+        $this->challenge->update(['team_rubric' => ['name' => 'Nueva', 'items' => []], 'transversal_rubric' => ['name' => 'Nueva', 'items' => []]]);
+        $this->get(route('challenges.show', $this->challenge))->assertInertia(fn (Assert $page) => $page
+            ->where('book.complete', false)->where('book.teams.0.grade', null)->where('book.teams.0.points', null)
+            ->where('book.teams.0.distribution_valid', false)->where('book.rows.0.transversal', null)->where('book.rows.0.challenge_final', null));
+        $this->postJson(route('challenges.update', $this->challenge), [
+            'revision' => 1, 'action' => 'allocation', 'team_id' => $this->teams[0]->id,
+            'allocations' => [$this->students[0]->id => '0', $this->students[1]->id => '0'],
+        ])->assertUnprocessable()->assertJsonValidationErrors('allocations');
+        $this->postJson(route('challenges.update', $this->challenge), ['revision' => 1, 'action' => 'status', 'status' => 'finished'])
+            ->assertUnprocessable()->assertJsonValidationErrors('status');
+        $this->postJson(route('challenges.update', $this->challenge), ['revision' => 1, 'action' => 'publish'])
+            ->assertUnprocessable()->assertJsonValidationErrors('action');
+        $this->assertSame(1, $this->challenge->fresh()->revision);
+        $this->assertSame('evaluating', $this->challenge->fresh()->status);
+        $this->assertDatabaseCount('publications', 0);
+        $this->assertDatabaseCount('audit_events', 0);
+        $this->assertSame('10.0000', $this->teams[0]->memberships()->first()->allocation);
+    }
+
     public function test_rubric_scores_reject_more_than_two_decimal_places(): void
     {
         $input = $this->payload();

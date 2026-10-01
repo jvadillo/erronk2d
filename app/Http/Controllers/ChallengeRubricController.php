@@ -35,7 +35,7 @@ class ChallengeRubricController extends Controller
             'modules' => $challenge->modules->map(fn ($module) => ['id' => $module->id, 'name' => $challenge->catalog_snapshot['modules'][$module->id]['name'] ?? $module->name, 'code' => $challenge->catalog_snapshot['modules'][$module->id]['code'] ?? $module->code]),
             'saveUrl' => route('challenges.update', $challenge),
             'libraryUrl' => route('challenges.show', ['challenge' => $challenge, 'evaluation' => $evaluation, 'subject' => $request->integer('subject') ?: null]),
-            'challengeContext' => ['id' => $challenge->id, 'name' => $challenge->name, 'kind' => $kind, 'revision' => $challenge->revision, 'requiresReason' => $challenge->publications()->exists(), 'previewUrl' => route('challenges.rubrics.preview', ['challenge' => $challenge, 'kind' => $kind])],
+            'challengeContext' => ['id' => $challenge->id, 'name' => $challenge->name, 'kind' => $kind, 'cycle' => $challenge->catalog_snapshot['cycle'] ?? $challenge->classroom->cycle_name, 'level' => $challenge->catalog_snapshot['level'] ?? $challenge->classroom->level, 'revision' => $challenge->revision, 'requiresReason' => $challenge->publications()->exists(), 'previewUrl' => route('challenges.rubrics.preview', ['challenge' => $challenge, 'kind' => $kind])],
         ]);
     }
 

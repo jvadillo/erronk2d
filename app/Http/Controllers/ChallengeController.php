@@ -55,7 +55,7 @@ class ChallengeController extends Controller
     {
         abort_unless($request->user()->allows('manage_challenges'), 403);
         $this->context->requireWritable($request);
-        $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'team_rubric_id' => ['required', Rule::exists('rubrics', 'id')->where('kind', 'team')], 'transversal_rubric_id' => ['required', Rule::exists('rubrics', 'id')->where('kind', 'transversal')], 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean'], [
+        $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'team_rubric_id' => ['present', 'nullable', 'integer', Rule::exists('rubrics', 'id')->where('kind', 'team')], 'transversal_rubric_id' => ['present', 'nullable', 'integer', Rule::exists('rubrics', 'id')->where('kind', 'transversal')], 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean'], [
             'team_rubric_id.exists' => 'Selecciona una rúbrica de equipo válida.',
             'transversal_rubric_id.exists' => 'Selecciona una rúbrica transversal válida.',
         ]);
@@ -67,14 +67,16 @@ class ChallengeController extends Controller
             if (collect($data['module_ids'])->diff($class->modules->pluck('id'))->isNotEmpty()) {
                 throw ValidationException::withMessages(['module_ids' => 'Los módulos deben pertenecer al grupo seleccionado.']);
             }
-            $team = Rubric::availableTo($request->user())->where('kind', 'team')->findOrFail($data['team_rubric_id']);
-            $transversal = Rubric::availableTo($request->user())->where('kind', 'transversal')->findOrFail($data['transversal_rubric_id']);
-            foreach ([$team, $transversal] as $rubric) {
-                if ($rubric->cycle_id && ($rubric->cycle_id !== $class->cycle_id || $rubric->level !== $class->level)) {
-                    throw ValidationException::withMessages(['team_rubric_id' => 'La rúbrica debe corresponder al ciclo y nivel del grupo.']);
+            $rubrics = [];
+            foreach (['team' => 'Rúbrica técnica', 'transversal' => 'Rúbrica transversal'] as $kind => $name) {
+                $field = $kind.'_rubric_id';
+                $rubric = $data[$field] === null ? null : Rubric::availableTo($request->user())->where('kind', $kind)->findOrFail($data[$field]);
+                if ($rubric?->cycle_id && ($rubric->cycle_id !== $class->cycle_id || $rubric->level !== $class->level)) {
+                    throw ValidationException::withMessages([$field => 'La rúbrica debe corresponder al ciclo y nivel del grupo.']);
                 }
+                $rubrics[$kind.'_rubric'] = ['name' => $rubric?->name ?? $name, 'items' => $rubric?->items ?? []];
             }
-            foreach ($team->items as $item) {
+            foreach ($rubrics['team_rubric']['items'] as $item) {
                 if (! empty($item['module_id'])) {
                     if (! in_array((int) $item['module_id'], array_map('intval', $data['module_ids']), true)) {
                         throw ValidationException::withMessages(['team_rubric_id' => 'La rúbrica incluye criterios de módulos que no participan. Selecciona todos sus módulos o elige otra rúbrica.']);
@@ -84,7 +86,7 @@ class ChallengeController extends Controller
             $ch = Challenge::create([...collect($data)->only(['name', 'description', 'classroom_id', 'period_id', 'weight', 'distribution_enabled'])->all(),
                 'catalog_snapshot' => ['classroom' => $class->name, 'cycle' => $class->cycle_name, 'level' => $class->level, 'year' => $class->academicYear->name, 'period' => $class->periods->firstWhere('id', (int) $data['period_id'])->name, 'modules' => $class->modules->whereIn('id', $data['module_ids'])->mapWithKeys(fn ($module) => [$module->id => ['name' => $module->pivot->name, 'code' => $module->pivot->code]])->all()],
                 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30],
-                'team_rubric' => ['name' => $team->name, 'items' => $team->items], 'transversal_rubric' => ['name' => $transversal->name, 'items' => $transversal->items]]);
+                ...$rubrics]);
             $ch->modules()->sync($data['module_ids']);
             $ch->students()->sync($class->students()->where('active', true)->pluck('users.id'));
             AuditEvent::create(['user_id' => $request->user()->id, 'challenge_id' => $ch->id, 'action' => 'create', 'after' => $ch->toArray()]);

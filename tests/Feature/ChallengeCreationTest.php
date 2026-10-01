@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AcademicYear;
 use App\Models\Classroom;
+use App\Models\Cycle;
 use App\Models\Module;
 use App\Models\Rubric;
 use App\Models\User;
@@ -90,6 +91,52 @@ class ChallengeCreationTest extends TestCase
         $this->assertSame([$student->id], $challenge->students()->pluck('users.id')->all());
         $this->assertSame($items, $challenge->team_rubric['items']);
         $this->assertDatabaseHas('audit_events', ['challenge_id' => $challenge->id, 'action' => 'create']);
+    }
+
+    public static function newRubricChoices(): array
+    {
+        return ['both new' => [true, true], 'new technical' => [true, false], 'new transversal' => [false, true]];
+    }
+
+    #[DataProvider('newRubricChoices')]
+    public function test_creates_independent_empty_rubrics_without_library_entries(bool $newTeam, bool $newTransversal): void
+    {
+        ['admin' => $admin, 'classroom' => $classroom, 'data' => $data] = $this->scenario();
+        $data['team_rubric_id'] = $newTeam ? null : $data['team_rubric_id'];
+        $data['transversal_rubric_id'] = $newTransversal ? null : $data['transversal_rubric_id'];
+
+        $response = $this->actingAs($admin)->post('/challenges', $data);
+
+        $challenge = $classroom->challenges()->sole();
+        $response->assertRedirect('/challenges/'.$challenge->id);
+        $this->assertCount($newTeam ? 0 : 1, $challenge->team_rubric['items']);
+        $this->assertCount($newTransversal ? 0 : 1, $challenge->transversal_rubric['items']);
+        $this->assertNotEmpty($challenge->team_rubric['name']);
+        $this->assertNotEmpty($challenge->transversal_rubric['name']);
+        $this->assertDatabaseCount('rubrics', 2);
+        $this->assertDatabaseHas('audit_events', ['challenge_id' => $challenge->id, 'action' => 'create']);
+    }
+
+    public function test_new_rubric_does_not_bypass_compatibility_of_the_other_rubric(): void
+    {
+        ['admin' => $admin, 'data' => $data] = $this->scenario();
+        $data['team_rubric_id'] = null;
+        Rubric::findOrFail($data['transversal_rubric_id'])->update(['cycle_id' => Cycle::factory()->create()->id, 'level' => 2]);
+
+        $this->actingAs($admin)->postJson('/challenges', $data)->assertUnprocessable()
+            ->assertJsonValidationErrors(['transversal_rubric_id' => 'La rúbrica debe corresponder al ciclo y nivel del grupo.']);
+        $this->assertDatabaseCount('challenges', 0);
+        $this->assertDatabaseCount('audit_events', 0);
+    }
+
+    public function test_missing_rubric_choices_are_not_silently_treated_as_new(): void
+    {
+        ['admin' => $admin, 'data' => $data] = $this->scenario();
+        unset($data['team_rubric_id'], $data['transversal_rubric_id']);
+
+        $this->actingAs($admin)->postJson('/challenges', $data)->assertUnprocessable()
+            ->assertJsonValidationErrors(['team_rubric_id', 'transversal_rubric_id']);
+        $this->assertDatabaseCount('challenges', 0);
     }
 
     public function test_student_cannot_create_challenges(): void

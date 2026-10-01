@@ -1,32 +1,30 @@
 # Estado de la tarea
 
 ## Objetivo
-Reorganizar la página del reto en cuatro pestañas y desplegarla en producción.
+Permitir crear retos con rúbricas nuevas vacías, orientar su edición y mantener coherentes evaluaciones y resultados.
 
 ## Completado
-- Pestañas Estudiantes y Equipos, Evaluación, Evidencias y Configuración con URL propia y navegación por teclado.
-- Equipos y configuración integrados en la página; evidencias extraídas a un componente reutilizable; enlace antiguo redirigido a su pestaña.
-- Borradores conservados entre pestañas; formularios deshabilitados según permisos y cierre del reto/curso.
-- Compilación frontend correcta y cuatro pruebas PHP (49 aserciones) sobre evidencias, redirecciones y privacidad.
-- Seis pruebas Playwright afectadas pasan: evidencias, pestañas/borradores/configuración, matriz y equipos. Revisión visual de escritorio/tablet y ausencia de desbordamiento en móvil/tablet.
-- Producción desplegada desde `219d3b8`; copia previa validada en `backups/production-20260924-219d3b8`.
-- HTTPS comprobado: `/up`, `/login` y el archivo JS de la nueva página responden HTTP 200.
-- Pint aplicado a los archivos PHP cambiados; el contenedor no permite `--dirty` por no disponer de Git.
+- Opción «Crear nueva rúbrica» independiente para técnica y transversal; crea copias propias del reto sin añadir plantillas a la biblioteca.
+- Aviso de rúbrica vacía y botón de edición para docentes; aviso sin edición para alumnado. API rechaza valoraciones sin criterios.
+- Editor muestra tipo, ciclo y curso/nivel bloqueados, usando el contexto histórico del reto. Rúbricas vacías ya no se interpretan como pesos antiguos.
+- Aviso cerrable de módulos sin criterios específicos en edición y evaluación técnica; se actualiza al cambiar la cobertura.
+- Selecciones incompatibles de ambas rúbricas se limpian al cambiar grupo/módulos; error de compatibilidad asociado al campo correcto.
+- 75 pruebas PHP / 732 aserciones correctas: creación, edición, pestañas, cálculos, reparto, publicación e historial. TypeScript/Vite correctos. Pint correcto con rutas explícitas.
 
 ## Pendiente
-- Sin pasos pendientes.
+- Terminar prueba Playwright del flujo nuevo y regresión de creación; revisar y hacer commit.
+- Cambios aún sin desplegar.
 
 ## Archivos relevantes
-- `resources/js/pages/Challenge.vue`, `resources/js/components/EvidenceWorkspace.vue`.
-- `app/Http/Controllers/ChallengeController.php`, `app/Http/Controllers/ChallengeEvidenceController.php`.
-- `tests/Feature/ChallengeTabsTest.php`, `tests/Browser/evidence.spec.ts`, `tests/Browser/workflows.spec.ts`.
-- `ops/deploy`, `ops/Dockerfile.production`, `compose.production.yml`.
+- `app/Http/Controllers/ChallengeController.php`, `ChallengeRubricController.php`; `app/Domain/Grades/ChallengeWriter.php`.
+- `resources/js/pages/Dashboard.vue`, `Challenge.vue`, `RubricEditor.vue`, `Student.vue`; `resources/js/components/ModuleCriteriaNotice.vue`.
+- `tests/Feature/ChallengeCreationTest.php`, `ChallengeRubricEditingTest.php`; `tests/Browser/empty-rubrics.spec.ts`.
 
 ## Decisiones
-- Evaluación sigue siendo la pestaña inicial; las cuatro pestañas permanecen visibles al evaluar rúbricas.
-- Despliegue autorizado por el usuario; producción actual `219d3b8`, anterior `10c99a6`.
-- Excluir cambios locales previos en RubricAssessment, su prueba y documentación.
-- No están instaladas las skills adicionales de Vue/pruebas mencionadas por AGENTS; se usan las convenciones existentes y documentación oficial de Inertia 3.
+- Una rúbrica vacía mantiene notas pendientes y bloquea finalizar/publicar; no permite reparto ni valoraciones ficticias. Edición conserva el mecanismo de revisión, concurrencia e historial existente.
+- Falta de criterios específicos por módulo es informativa: los criterios GENERAL no cuentan como específicos y el aviso no bloquea evaluar.
+- Conservar cambios locales previos en `CLAUDE.md`, `docs/PROGRESS.md`, `LARAVEL_BOOST_GUIDELINES.md`, `RubricAssessment.vue` y `tests/Browser/rubrics.spec.ts` fuera de los commits de esta tarea.
+- Producción continúa en la versión anterior `495d95c-local-20260929`; no se han modificado datos de producción.
 
 ## Último error
-El entorno aislado no resolvió DNS al comprobar `/login` y el archivo JS de producción. Repetidas las comprobaciones con acceso de red: ambas responden HTTP 200.
+- Pint no admite `--dirty` porque el contenedor PHP no dispone de Git; formato completado indicando únicamente los cinco archivos PHP modificados.

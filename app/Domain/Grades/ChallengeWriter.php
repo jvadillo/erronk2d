@@ -223,6 +223,9 @@ final class ChallengeWriter
             abort_unless(in_array($ch->status, ['active', 'evaluating'], true), 422, 'La evaluación del alumnado no está abierta.');
         }
         $items = collect(($kind === 'team' ? $ch->team_rubric : $ch->transversal_rubric)['items'] ?? [])->keyBy('key');
+        if ($items->isEmpty()) {
+            throw ValidationException::withMessages(['entries' => 'La rúbrica no contiene todavía criterios. Debe completarse antes de evaluar.']);
+        }
         $scope = in_array($kind, ['self', 'peer'], true) ? $actor->id : 0;
         foreach ($input['entries'] as $entry) {
             $item = $items->get($entry['criterion']);
