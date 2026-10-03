@@ -12,10 +12,10 @@ Permitir crear retos con rúbricas nuevas vacías, orientar su edición y manten
 - Selección de equipo reactiva: tras crear los primeros equipos, volver a Evaluación selecciona un equipo válido sin recargar.
 - 75 pruebas PHP / 732 aserciones correctas: creación, edición, pestañas, cálculos, reparto, publicación e historial. TypeScript/Vite correctos. Pint correcto con rutas explícitas.
 - 2 pruebas Playwright correctas: recorrido de rúbricas vacías, contexto bloqueado, aviso cerrable y actualización de módulos, primeras evaluaciones, persistencia y aviso del alumnado; regresión de creación con plantillas.
-- Servidor y pruebas registrados en `184f8e9`; interfaz y prueba de navegador completadas.
+- Servidor y pruebas registrados en `184f8e9`; interfaz y prueba de navegador en `062956e`; despliegue y copia registrados en esta actualización.
 
 ## Pendiente
-- Implementación y verificaciones completadas. Cambios aún sin desplegar en producción.
+- Implementación, verificaciones y despliegue completados.
 
 ## Archivos relevantes
 - `app/Http/Controllers/ChallengeController.php`, `ChallengeRubricController.php`; `app/Domain/Grades/ChallengeWriter.php`.
@@ -26,7 +26,7 @@ Permitir crear retos con rúbricas nuevas vacías, orientar su edición y manten
 - Una rúbrica vacía mantiene notas pendientes y bloquea finalizar/publicar; no permite reparto ni valoraciones ficticias. Edición conserva el mecanismo de revisión, concurrencia e historial existente.
 - Falta de criterios específicos por módulo es informativa: los criterios GENERAL no cuentan como específicos y el aviso no bloquea evaluar.
 - Conservar cambios locales previos en `CLAUDE.md`, `docs/PROGRESS.md`, `LARAVEL_BOOST_GUIDELINES.md`, `RubricAssessment.vue` y `tests/Browser/rubrics.spec.ts` fuera de los commits de esta tarea.
-- Producción continúa en la versión anterior `495d95c-local-20260929`; no se han modificado datos de producción.
+- La imagen mantiene el ajuste previo de anchura uniforme en `RubricAssessment.vue`, que ya estaba incluido en la versión anterior de producción.
 
 ## Último error
-- Sin errores pendientes. Pint se ejecutó con rutas explícitas porque el contenedor no tiene Git; selector inicial de Playwright corregido y prueba repetida correctamente.
+- Ninguno pendiente. El healthcheck `/up` devuelve la página HTML normal de Laravel con HTTP 200; se comprobó el servicio público por HTTPS.
