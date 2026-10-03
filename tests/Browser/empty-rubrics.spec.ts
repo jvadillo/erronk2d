@@ -63,6 +63,8 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await page.getByRole('button', { name: 'Guardar equipos', exact: true }).click();
   await expect(page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true }).getByRole('status')).toHaveText('Cambios guardados');
   await page.getByRole('tab', { name: 'Evaluación', exact: true }).click();
+  await expect(page.locator('.matrix')).toBeVisible();
+  await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
   await page.getByRole('button', { name: 'Equipo 1, Primera solución: 8. Solución de nivel 3', exact: true }).click();
   await expect(page.locator('.rubric-evaluation-toolbar').getByRole('status')).toHaveText('Cambios guardados');
   await page.reload();
