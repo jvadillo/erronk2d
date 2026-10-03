@@ -8,10 +8,12 @@ Corregir la navegación de Evaluación para volver fácilmente a la tabla genera
 - Pulsar «Evaluación», tanto en la propia pestaña como desde otra, restablece la tabla general conservando filtros y datos guardados.
 - El retorno limpia los parámetros de rúbrica y estudiante de los enlaces directos para que la recarga mantenga la tabla general.
 - Compilación TypeScript/Vue y Vite correcta; capturas de ordenador y móvil revisadas.
+- Commit `b175c40` desplegado como `b175c40-local-20261003`; copia previa `backups/production-20261003-b175c40` comprobada, sin migraciones pendientes.
+- HTTPS: `/up`, `/login` y el archivo de navegación nuevos responden HTTP 200; JavaScript idéntico al comprobado. App/web activos y web/PostgreSQL saludables.
 - Cuatro pruebas Playwright correctas: regreso desde ambas rúbricas en ordenador/móvil, teclado, filtros, enlaces directos y recarga; pestañas con borradores; creación de equipos con rúbricas nuevas.
 
 ## Pendiente
-- Construir imágenes, aplicar la versión y comprobar HTTPS.
+- Implementación, pruebas y despliegue completados.
 
 ## Archivos relevantes
 - `resources/js/pages/Challenge.vue`.
