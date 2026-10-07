@@ -1,14 +1,15 @@
 # Estado de la tarea
 
 ## Objetivo
-Dejar los cambios actuales guardados en Git para continuar el trabajo desde un clon local.
+Publicar el repositorio en GitHub para continuar el trabajo desde un clon local.
 
 ## Completado
-- Cambios locales sobre `RubricAssessment.vue` y su prueba de navegador preparados para comitear junto con los archivos de documentación presentes en el árbol de trabajo.
-- Los cambios de navegación anteriores ya están en `b175c40`; el registro del despliegue está en `f429cef`.
+- Todos los cambios locales quedaron guardados en `b5c507f`.
+- Se confirmó que `jvadillo/erronk2d` existe y está vacío, listo para recibir la rama `main`.
+- Los cambios de navegación anteriores están en `b175c40`; su registro de despliegue está en `f429cef`.
 
 ## Pendiente
-- Configurar un remoto Git y publicar `main` para poder clonar desde el equipo local.
+- Publicar `main` en GitHub y verificar que el árbol local siga limpio.
 
 ## Archivos relevantes
 - `resources/js/components/RubricAssessment.vue`.
@@ -16,8 +17,8 @@ Dejar los cambios actuales guardados en Git para continuar el trabajo desde un c
 - `CLAUDE.md`, `LARAVEL_BOOST_GUIDELINES.md`, `docs/PROGRESS.md`.
 
 ## Decisiones
-- Se incluirán en un commit los cambios pendientes que ya estaban en el árbol de trabajo.
-- El repositorio no tiene remoto configurado; hace falta su URL para publicar `main` y clonar desde otro equipo.
+- Usar SSH para `origin`, autenticado como `jvadillo`.
+- Mantener el repositorio clonado mediante `git clone git@github.com:jvadillo/erronk2d.git`.
 
 ## Último error
 - No aplica.
