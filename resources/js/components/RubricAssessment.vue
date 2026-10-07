@@ -31,7 +31,7 @@ function toggleDescription(key: string): void {
     <div class="rubric-table-scroll" tabindex="0" role="region" :aria-label="`Tabla de evaluación de ${subject}`">
       <table class="rubric-table rubric-assessment-table">
         <caption class="sr-only">{{ rubric.name }} · {{ subject }}. Selecciona un nivel por criterio.</caption>
-        <colgroup><col class="rubric-name-col"/><col v-for="n in count" :key="n" class="rubric-level-col"/></colgroup>
+        <colgroup><col class="rubric-level-col"/><col v-for="n in count" :key="n" class="rubric-level-col"/></colgroup>
         <thead><tr><th scope="col">Nombre</th><th v-for="n in count" :key="n" scope="col"><span>Nivel {{ n }}</span><strong v-if="shared">{{ percentage(decimal(rubric.items[0].levels[n - 1].score)) }} puntos</strong></th></tr></thead>
         <tbody><tr v-for="item in rubric.items" :key="item.key" class="student-rubric">
           <th scope="row"><div class="rubric-criterion-name"><div class="rubric-criterion-meta"><span v-if="showModules" class="module-chip">{{ moduleName(item.module_id) }}</span><span class="rubric-weight">{{ percentage(total ? decimal(item.weight) / total * 100 : 0) }} %</span></div><strong>{{ item.name }}</strong></div><button v-if="item.description" type="button" class="rubric-description-toggle" :aria-expanded="expandedCriteria.has(item.key)" :aria-label="`${expandedCriteria.has(item.key) ? 'Contraer' : 'Expandir'} descripción de ${item.name}`" @click="toggleDescription(item.key)"><span class="rubric-description" :class="{ expanded: expandedCriteria.has(item.key) }">{{ item.description }}</span></button><small v-if="disabledCriteria.includes(item.key)">Solo el responsable del módulo puede evaluar este criterio.</small></th>

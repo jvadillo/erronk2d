@@ -1,29 +1,23 @@
 # Estado de la tarea
 
 ## Objetivo
-Corregir la navegación de Evaluación para volver fácilmente a la tabla general desde las rúbricas técnica y transversal.
+Dejar los cambios actuales guardados en Git para continuar el trabajo desde un clon local.
 
 ## Completado
-- Botón «Volver a todas las evaluaciones» junto a la rúbrica; el botón superior «Atrás» utiliza el mismo retorno y enfoca el encabezado de la tabla.
-- Pulsar «Evaluación», tanto en la propia pestaña como desde otra, restablece la tabla general conservando filtros y datos guardados.
-- El retorno limpia los parámetros de rúbrica y estudiante de los enlaces directos para que la recarga mantenga la tabla general.
-- Compilación TypeScript/Vue y Vite correcta; capturas de ordenador y móvil revisadas.
-- Commit `b175c40` desplegado como `b175c40-local-20261003`; copia previa `backups/production-20261003-b175c40` comprobada, sin migraciones pendientes.
-- HTTPS: `/up`, `/login` y el archivo de navegación nuevos responden HTTP 200; JavaScript idéntico al comprobado. App/web activos y web/PostgreSQL saludables.
-- Cuatro pruebas Playwright correctas: regreso desde ambas rúbricas en ordenador/móvil, teclado, filtros, enlaces directos y recarga; pestañas con borradores; creación de equipos con rúbricas nuevas.
+- Cambios locales sobre `RubricAssessment.vue` y su prueba de navegador preparados para comitear junto con los archivos de documentación presentes en el árbol de trabajo.
+- Los cambios de navegación anteriores ya están en `b175c40`; el registro del despliegue está en `f429cef`.
 
 ## Pendiente
-- Implementación, pruebas y despliegue completados.
+- Configurar un remoto Git y publicar `main` para poder clonar desde el equipo local.
 
 ## Archivos relevantes
-- `resources/js/pages/Challenge.vue`.
-- `tests/Browser/evidence.spec.ts`, `tests/Browser/empty-rubrics.spec.ts`.
-- `ops/Dockerfile.production`, `ops/deploy`, `compose.production.yml`.
+- `resources/js/components/RubricAssessment.vue`.
+- `tests/Browser/rubrics.spec.ts`.
+- `CLAUDE.md`, `LARAVEL_BOOST_GUIDELINES.md`, `docs/PROGRESS.md`.
 
 ## Decisiones
-- Las pestañas siguen conservando los borradores de equipos, configuración y evidencias; entrar en Evaluación muestra su vista general.
-- Conservar cambios locales previos en `CLAUDE.md`, `docs/PROGRESS.md`, `LARAVEL_BOOST_GUIDELINES.md`, `RubricAssessment.vue` y `tests/Browser/rubrics.spec.ts` fuera de los commits de esta tarea.
-- Mantener en las imágenes el ajuste previo de anchura uniforme de `RubricAssessment.vue`, ya presente en producción.
+- Se incluirán en un commit los cambios pendientes que ya estaban en el árbol de trabajo.
+- El repositorio no tiene remoto configurado; hace falta su URL para publicar `main` y clonar desde otro equipo.
 
 ## Último error
-- Ninguno pendiente.
+- No aplica.

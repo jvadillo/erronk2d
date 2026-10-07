@@ -162,6 +162,10 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await expect(page.getByRole('columnheader', { name: 'Módulo', exact: true })).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Estudiante a evaluar' }).locator('option')).toHaveCount(20);
   await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(4);
+  const transversalColumns = page.locator('.rubric-assessment-table col');
+  await expect(transversalColumns.first()).toHaveClass('rubric-level-col');
+  const transversalColumnWidths = await transversalColumns.evaluateAll(columns => columns.map(column => Math.round(column.getBoundingClientRect().width)));
+  expect(transversalColumnWidths.every(width => width === transversalColumnWidths[0])).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
   await assertNoOverflow(page);
   await page.screenshot({ path: 'test-results/rubric-assessment-mobile.png', fullPage: true });
