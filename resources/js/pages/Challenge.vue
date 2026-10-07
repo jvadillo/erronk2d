@@ -206,10 +206,10 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 </Layout></template>
 
 <style scoped>
-.challenge-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 24px; padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: #edf1e8; }
-.challenge-tabs button { flex: 1; padding: 12px 18px; border-radius: 7px; color: #65755e; font-size: 13px; font-weight: 500; white-space: normal; }
-.challenge-tabs button:hover { background: #e4eadc; }
-.challenge-tabs button[aria-selected=true] { color: var(--green); background: #fff; box-shadow: 0 2px 6px #193b3210; font-weight: 600; }
+.challenge-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 24px; padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: #f1e8ef; }
+.challenge-tabs button { flex: 1; padding: 12px 18px; border-radius: 7px; color: #72616d; font-size: 13px; font-weight: 500; white-space: normal; }
+.challenge-tabs button:hover { background: #eddee9; }
+.challenge-tabs button[aria-selected=true] { color: var(--green); background: #fff; box-shadow: 0 2px 6px #331d2d10; font-weight: 600; }
 .challenge-form-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
 .challenge-settings { max-width: 940px; padding: 24px; background: #fff; border: 1px solid var(--border); border-radius: 12px; }
 .challenge-settings fieldset { min-width: 0; }

@@ -17,5 +17,5 @@ createInertiaApp({
   title: title => `${title} · Erronk2D`,
   resolve: async name => (await pages[`./pages/${name}.vue`]()).default,
   setup({ el, App, props, plugin }) { createApp({ render: () => h(App, props) }).use(plugin).mount(el); },
-  progress: { color: '#427a5b' },
+  progress: { color: '#82005e' },
 });

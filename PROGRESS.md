@@ -1,25 +1,26 @@
 # Estado de la tarea
 
 ## Objetivo
-Publicar el repositorio en GitHub para continuar el trabajo desde un clon local.
+Cambiar la paleta de la UI de verde a morado, siguiendo `docs/retos_morado.png`.
 
 ## Completado
-- Todos los cambios locales quedaron guardados en `b5c507f`.
-- Se confirmó que `jvadillo/erronk2d` existe y está vacío, listo para recibir la rama `main`.
-- `origin` apunta a `git@github.com:jvadillo/erronk2d.git`; `main` ya está publicada y sigue `origin/main`.
-- Los cambios de navegación anteriores están en `b175c40`; su registro de despliegue está en `f429cef`.
+- Color principal `#82005e` (`--green` en `resources/css/app.css`, lateral, favicon, `theme-color`, barra de progreso de Inertia).
+- Morado oscuro `#6f0050` en botón principal y hover del lateral; tintes rosas claros (`#f7e4f0`) para elemento activo, marca y estado "En evaluación"; "En curso" en morado sólido.
+- Grises verdosos convertidos a grises neutros con leve tinte morado; fondo `#f6f4f5`, texto `#2b1f28`.
+- Se mantienen verdes/azules semánticos: `.notice.success`, `.badge.published`, `.badge.finished`.
+- Revisado visualmente con una vista previa estática del dashboard.
 
 ## Pendiente
-- Nada.
+- Revisar en la app real (no hay `node_modules`/`vendor` en este clon): `npm install && npm run build`.
 
 ## Archivos relevantes
-- `resources/js/components/RubricAssessment.vue`.
-- `tests/Browser/rubrics.spec.ts`.
-- `CLAUDE.md`, `LARAVEL_BOOST_GUIDELINES.md`, `docs/PROGRESS.md`.
+- `resources/css/app.css`, `resources/css/sidebar.css`, `resources/css/rubrics.css`.
+- `resources/js/components/EvidenceWorkspace.vue`, `resources/js/pages/Challenge.vue`, `resources/js/app.ts`.
+- `resources/views/app.blade.php`, `public/favicon.svg`.
 
 ## Decisiones
-- Usar SSH para `origin`, autenticado como `jvadillo`.
-- Mantener el repositorio clonado mediante `git clone git@github.com:jvadillo/erronk2d.git`.
+- El nombre de variable `--green` se conserva para no tocar todas las referencias; ahora contiene el morado principal.
+- Conversión de tono automática (verde → morado, HSL) con ajustes manuales en lateral y estados.
 
 ## Último error
-- Una consulta adicional con `git ls-remote` no pudo leer la configuración SSH del sistema; `git push -u origin main` terminó correctamente y `main` sigue `origin/main`.
+- Ninguno.
