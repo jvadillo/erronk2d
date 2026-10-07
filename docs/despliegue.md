@@ -1,6 +1,13 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 8df6f23; verificación cerrada el 22 de septiembre de 2026.** La evaluación de rúbricas permite seleccionar el nivel desde toda la celda y expandir el texto solo con «+ Leer más».
+**Producción en 1c60762; desplegada el 7 de octubre de 2026.** Nueva paleta morada de la interfaz (`#82005e`, `#6f0050`, rosas claros y grises neutros).
+
+Imágenes construidas en el VPS desde `git archive 1c60762`; build TypeScript/Vite correcto. `ops/deploy` completado con copia privada `backups/production-20261007-1c60762` (700) de `b175c40-local-20261003`; sin migraciones pendientes; datos de demo preparados. App/web ejecutan 1c60762, web y PostgreSQL saludables, mantenimiento retirado. `/up` y `/login` HTTP 200 por HTTPS; el CSS servido y `theme-color` usan el morado.
+
+- `erronk2d-app:1c60762`: `sha256:6dcf8691bf13fda66d350d93950ec60c0cb7a8ba0abbfa07b65dbc0b7fd48a4b`.
+- `erronk2d-web:1c60762`: `sha256:7ba1e8c92ab86e3ef4ba7a12297a99ee8cf60978a5ed7725d8b98dcb6d6dc66d`.
+
+**Producción anterior en 8df6f23; verificación cerrada el 22 de septiembre de 2026.** La evaluación de rúbricas permite seleccionar el nivel desde toda la celda y expandir el texto solo con «+ Leer más».
 
 Imágenes construidas desde `git archive 8df6f23`, excluyendo cambios ajenos. `npm run build` (TypeScript/Vite) correcto. `ops/deploy` completado con copia privada `backups/production-20260922-8df6f23`; índice PostgreSQL y gzip del almacenamiento comprobados, sin migraciones pendientes. Se prepararon los datos de demo prescritos. App/web usan `8df6f23`, app/web/PostgreSQL activos y web saludable; mantenimiento retirado. `/up` y `/login` verificados por HTTPS; login HTTP 200. No se repitieron pruebas funcionales ni escrituras académicas.
 

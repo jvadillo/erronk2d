@@ -10,8 +10,10 @@ Cambiar la paleta de la UI de verde a morado, siguiendo `docs/retos_morado.png`.
 - Se mantienen verdes/azules semánticos: `.notice.success`, `.badge.published`, `.badge.finished`.
 - Revisado visualmente con una vista previa estática del dashboard.
 
+- Desplegado en producción (`1c60762`) el 7/10/2026 con `ops/deploy`; copia `backups/production-20261007-1c60762`; HTTPS verificado. Detalle en `docs/despliegue.md`.
+
 ## Pendiente
-- Revisar en la app real (no hay `node_modules`/`vendor` en este clon): `npm install && npm run build`.
+- Nada.
 
 ## Archivos relevantes
 - `resources/css/app.css`, `resources/css/sidebar.css`, `resources/css/rubrics.css`.
