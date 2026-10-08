@@ -65,6 +65,9 @@ test('evidencias: búsqueda, historial individual, borradores y guardado persist
   await search.fill('fernandez');
   await options.first().click();
   await expect(page.locator('.evidence-entry').first()).toContainText(observation);
+  await expect(options.first().locator('.evidence-student-count')).toHaveCount(1);
+  await expect(options.first().locator('.evidence-student-count.positive')).toHaveText('1');
+  await expect(options.first().locator('.evidence-avatar')).toHaveCount(0);
   await page.getByRole('button', { name: 'Limpiar búsqueda' }).click();
   await page.getByRole('button', { name: /Con anotaciones/ }).click();
   await expect(options.filter({ hasText: 'Aitor Fernández' })).toBeVisible();

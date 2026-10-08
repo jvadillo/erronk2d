@@ -51,6 +51,26 @@ const evidenceByStudent = computed(() => {
   }
   return groups;
 });
+const sentimentCounts = computed(() => {
+  const counts = new Map<number, Record<Sentiment, number>>();
+  for (const evidence of props.evidences) {
+    const entry = counts.get(evidence.student_id) ?? { positive: 0, neutral: 0, negative: 0 };
+    entry[evidence.sentiment] += 1;
+    counts.set(evidence.student_id, entry);
+  }
+  return counts;
+});
+const sentimentPlurals: Record<Sentiment, [string, string]> = { positive: ['positiva', 'positivas'], neutral: ['neutra', 'neutras'], negative: ['negativa', 'negativas'] };
+function countsLabel(studentId: number): string {
+  const counts = sentimentCounts.value.get(studentId);
+  if (!counts) {
+    return 'Sin anotaciones';
+  }
+  return sentiments
+    .filter(option => counts[option.value])
+    .map(option => `${counts[option.value]} ${sentimentPlurals[option.value][counts[option.value] === 1 ? 0 : 1]}`)
+    .join(', ');
+}
 const search = ref('');
 const onlyWithNotes = ref(false);
 const selectedStudentId = ref<number | null>(studentsWithHistory.value[0]?.id ?? null);
@@ -166,9 +186,10 @@ function moveSentiment(event: KeyboardEvent): void {
         <ul v-if="filteredStudents.length" class="evidence-students">
           <li v-for="student in filteredStudents" :key="student.id">
             <button :id="`evidence-student-${student.id}`" type="button" class="evidence-student-option" :aria-pressed="selectedStudentId === student.id" :disabled="saving" @click="selectStudent(student)">
-              <span class="evidence-avatar" aria-hidden="true">{{ initials(student.name) }}</span>
               <span class="evidence-student-name"><strong>{{ student.name }}</strong><small>{{ student.team_name || 'Sin equipo' }}</small></span>
-              <span class="evidence-student-count" :class="{ 'has-notes': evidenceByStudent.has(student.id) }" :aria-label="`${evidenceByStudent.get(student.id)?.length ?? 0} anotaciones`">{{ evidenceByStudent.get(student.id)?.length ?? 0 }}</span>
+              <span v-if="sentimentCounts.has(student.id)" class="evidence-student-counts" role="img" :aria-label="countsLabel(student.id)">
+                <template v-for="option in sentiments" :key="option.value"><span v-if="sentimentCounts.get(student.id)![option.value]" class="evidence-student-count" :class="option.value" :title="option.label">{{ sentimentCounts.get(student.id)![option.value] }}</span></template>
+              </span>
               <ChevronRight :size="15" class="evidence-student-arrow" aria-hidden="true" />
             </button>
           </li>
@@ -248,12 +269,14 @@ function moveSentiment(event: KeyboardEvent): void {
 .evidence-student-option:hover { background: #f8f3f7; }
 .evidence-student-option[aria-pressed=true] { background: #f4e6f0; border-color: #e4ccdd; }
 .evidence-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border: 1px solid #ebe0e8; border-radius: 50%; background: #f6f0f4; color: #705d6b; font-size: 11px; font-weight: 600; }
-.evidence-student-option[aria-pressed=true] .evidence-avatar { background: #fff; border-color: #e4ccdd; color: #5a334f; }
 .evidence-student-name { flex: 1; min-width: 0; }
 .evidence-student-name strong { display: block; color: #4a2a41; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
 .evidence-student-name small { display: block; margin-top: 3px; color: #867e84; font-size: 11px; overflow-wrap: anywhere; }
 .evidence-student-count { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 5px; flex-shrink: 0; border-radius: 6px; color: #948e93; font-size: 11px; font-variant-numeric: tabular-nums; }
-.evidence-student-count.has-notes { background: #f0deeb; color: #871667; font-weight: 600; }
+.evidence-student-counts { display: flex; flex-shrink: 0; gap: 4px; }
+.evidence-student-count.positive { background: #e3f1e6; color: #2f7347; font-weight: 600; }
+.evidence-student-count.neutral { background: #efeaee; color: #5d4f59; font-weight: 600; }
+.evidence-student-count.negative { background: #fbe6e3; color: #ad3a31; font-weight: 600; }
 .evidence-student-arrow { flex-shrink: 0; color: #9f8e9a; }
 .evidence-no-matches { display: grid; justify-items: center; gap: 12px; padding: 36px 22px; color: #7e727b; text-align: center; font-size: 12px; }
 .evidence-no-matches button { color: var(--green); text-decoration: underline; }
