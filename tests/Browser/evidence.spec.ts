@@ -259,9 +259,7 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
   await page.getByRole('link', { name: 'Gestionar equipos', exact: true }).click();
   await expect(page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true })).toBeVisible();
   await back.click();
-  const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Exportar CSV', exact: true }).click();
-  expect((await download).suggestedFilename()).toBe('erronk2d-reto.csv');
+  await expect(page.getByRole('button', { name: 'Exportar CSV', exact: true })).toHaveCount(0);
 
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 });
