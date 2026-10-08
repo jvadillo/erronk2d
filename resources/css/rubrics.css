@@ -58,7 +58,7 @@
 .rubric-choice:disabled { opacity: 1; }
 .rubric-weight { font-variant-numeric: tabular-nums; }
 .rubric-evaluation-toolbar { display: flex; align-items: end; gap: 14px; flex-wrap: wrap; margin: 12px 0 14px; }
-.rubric-evaluation-toolbar h1 { flex: 1 1 240px; margin: 0; font-size: 22px; }
+.rubric-evaluation-toolbar h1 { flex: 1 1 240px; margin: 0; }
 .rubric-evaluation-toolbar label { flex: 1 1 230px; min-width: 0; max-width: 100%; margin: 0; }
 .rubric-evaluation-toolbar .actions { flex-wrap: wrap; }
 .rubric-evaluation-toolbar .save-status { margin-left: auto; }

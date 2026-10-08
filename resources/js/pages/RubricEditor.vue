@@ -148,7 +148,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
     <Head :title="rubric ? 'Editar rúbrica' : 'Crear rúbrica'"/>
     <div class="topline"><Link :href="libraryUrl" class="back-link"><ArrowLeft :size="16"/>{{ challengeContext ? 'Volver a la evaluación' : 'Biblioteca de rúbricas' }}</Link></div>
     <form class="rubric-workspace" @submit.prevent="submit">
-      <header class="page-heading"><div><p class="eyebrow">{{ challengeContext ? challengeContext.name : 'BIBLIOTECA DE RÚBRICAS' }}</p><h1>{{ rubric ? 'Editar rúbrica' : 'Crear rúbrica' }}</h1><p class="muted">Un criterio por fila. Una nota común por columna.</p></div><button class="button primary" type="submit" :disabled="submitDisabled"><Save :size="17"/>{{ form.processing || submitting ? 'Procesando…' : saveLabel }}</button></header>
+      <header class="page-heading"><div><h1>{{ rubric ? 'Editar rúbrica' : 'Crear rúbrica' }}</h1><p class="muted">Un criterio por fila. Una nota común por columna.</p></div><button class="button primary" type="submit" :disabled="submitDisabled"><Save :size="17"/>{{ form.processing || submitting ? 'Procesando…' : saveLabel }}</button></header>
       <div v-if="challengeContext" class="notice warning">Estás editando la rúbrica de este reto para todos sus equipos o estudiantes. Al guardar, se eliminarán solo las valoraciones de criterios o niveles retirados. Los cambios de pesos o puntuaciones pueden modificar notas y repartos. Revisa también las valoraciones si cambias el significado de un criterio.</div>
       <div v-if="changeError" class="notice error" role="alert">{{ changeError }}</div>
       <fieldset class="rubric-editor-fields" :disabled="submitting">

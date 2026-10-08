@@ -12,7 +12,7 @@ function submit() {
     <Head title="Acceso"/>
     <section class="login-story">
       <div class="brand"><span class="brand-mark">E<span>2</span></span>ERRONK2D</div>
-      <div><p class="eyebrow">EVALUACIÓN COLABORATIVA</p><h1>Cada reto,<br>una oportunidad<br>para crecer<span>.</span></h1><p>Todo el proceso de evaluación en un mismo lugar.<br>Más tiempo para acompañar a tus estudiantes.</p></div>
+      <div><h1>Cada reto,<br>una oportunidad<br>para crecer<span>.</span></h1><p>Todo el proceso de evaluación en un mismo lugar.<br>Más tiempo para acompañar a tus estudiantes.</p></div>
       <span class="story-footer">EQUIPO → PERSONA → APRENDIZAJE</span>
     </section>
     <section class="login-form">

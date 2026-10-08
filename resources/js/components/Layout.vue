@@ -70,7 +70,6 @@ function isCurrent(url:string): boolean {
           </ul>
         </div>
       </nav>
-      <div class="sidebar-note"><span class="tiny-orbit">↗</span><p>Aprender en equipo.<br><strong>Crecer individualmente.</strong></p></div>
       <div class="profile"><span class="avatar" :title="auth.name">{{auth.name.split(' ').slice(0,2).map(n=>n[0]).join('')}}</span><div class="profile-info"><strong>{{auth.name}}</strong><small>{{auth.role==='admin'?'Administración':auth.role==='teacher'?'Profesorado':'Estudiante'}}</small></div><Link href="/logout" method="post" as="button" aria-label="Cerrar sesión" title="Cerrar sesión"><LogOut :size="17"/></Link></div>
     </aside>
     <main class="main"><div v-if="academic?.year&&!academic.year.is_open" class="notice warning" role="status">{{academic.year.name}} · Curso cerrado. Solo lectura.</div><div v-if="academic&&!academic.year" class="notice" role="status">{{auth.role==='admin'?'Configura el primer curso académico, los ciclos y los módulos en Organización.':auth.role==='student'?'Todavía no tienes matrícula. Estás a la espera de asignación administrativa.':'No hay cursos académicos disponibles. Estás a la espera de asignación administrativa.'}}</div><slot/></main>
