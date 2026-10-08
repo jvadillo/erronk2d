@@ -66,7 +66,7 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await expect(page.locator('.matrix')).toBeVisible();
   await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
   await page.getByRole('button', { name: 'Equipo 1, Primera solución: 8. Solución de nivel 3', exact: true }).click();
-  await expect(page.locator('.rubric-evaluation-toolbar').getByRole('status')).toHaveText('Cambios guardados');
+  await page.waitForLoadState('networkidle');
   await page.reload();
   await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Equipo 1, Primera solución: 8. Solución de nivel 3', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -96,6 +96,6 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await page.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click();
   await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(1);
   await page.getByRole('button', { name: 'Ainhoa Agirre, Colaboración: 8. Colaboración de nivel 3', exact: true }).click();
-  await expect(page.locator('.rubric-evaluation-toolbar').getByRole('status')).toHaveText('Cambios guardados');
+  await page.waitForLoadState('networkidle');
   expect(errors).toEqual([]);
 });

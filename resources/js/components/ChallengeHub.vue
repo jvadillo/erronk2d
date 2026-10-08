@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { ArrowUpRight, ChevronRight, ClipboardCheck, FilePenLine, ListChecks, NotebookPen, Settings2, Table2, UserPlus, Users, UsersRound } from 'lucide-vue-next';
+import { ArrowUpRight, ChevronRight, ClipboardCheck, FilePenLine, Frown, ListChecks, Meh, Smile, NotebookPen, Settings2, Table2, UserPlus, Users, UsersRound } from 'lucide-vue-next';
 
 type Section = 'teams' | 'evaluation' | 'evidence' | 'settings';
 type Shortcut = { id: string; label: string; hint: string; href?: string };
 
 const props = defineProps<{
   book: any;
-  evidences: { student_id: number; student_name: string; author_name: string; note: string; created_at: string }[];
+  evidences: { student_id: number; student_name: string; author_name: string; note: string; sentiment: 'positive' | 'neutral' | 'negative'; created_at: string }[];
   challengeUrl: string;
   canManageTeams: boolean;
   canEditRubrics: boolean;
@@ -159,7 +159,7 @@ function runEvaluationShortcut(id: string): void {
       </div>
       <ol v-if="recentEvidences.length" class="hub-notes" aria-label="Últimas anotaciones">
         <li v-for="(evidence, index) in recentEvidences" :key="index">
-          <p><strong>{{ evidence.student_name }}</strong><time :datetime="evidence.created_at">{{ formatRelative(evidence.created_at) }}</time></p>
+          <p><span class="hub-note-student"><Smile v-if="evidence.sentiment === 'positive'" class="positive" :size="15" aria-label="Positiva" role="img" /><Frown v-else-if="evidence.sentiment === 'negative'" class="negative" :size="15" aria-label="Negativa" role="img" /><Meh v-else class="neutral" :size="15" aria-label="Neutra" role="img" /><strong>{{ evidence.student_name }}</strong></span><time :datetime="evidence.created_at">{{ formatRelative(evidence.created_at) }}</time></p>
           <blockquote>{{ evidence.note }}</blockquote>
           <small>Anotada por {{ evidence.author_name }}</small>
         </li>
@@ -234,6 +234,11 @@ function runEvaluationShortcut(id: string): void {
 .hub-notes li:first-child { border-left-color: #82005e; }
 .hub-notes p { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 1.4; }
 .hub-notes strong { overflow: hidden; color: #2b1f28; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.hub-note-student { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.hub-note-student svg { flex-shrink: 0; }
+.hub-note-student .positive { color: #2f7347; }
+.hub-note-student .neutral { color: #8f7f8a; }
+.hub-note-student .negative { color: #ad3a31; }
 .hub-notes time { flex-shrink: 0; color: var(--muted); font-size: 11px; }
 .hub-notes blockquote { display: -webkit-box; margin: 4px 0 2px; overflow: hidden; color: #4d3a47; font-size: 12px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
 .hub-notes small { color: var(--muted); font-size: 11px; }

@@ -9,7 +9,16 @@ class ChallengeEvidence extends Model
 {
     protected $table = 'challenge_evidences';
 
-    protected $fillable = ['challenge_id', 'student_id', 'author_id', 'note'];
+    /**
+     * Valoraciones admitidas para una anotación, de la más favorable a la menos.
+     *
+     * @var list<string>
+     */
+    public const SENTIMENTS = ['positive', 'neutral', 'negative'];
+
+    protected $fillable = ['challenge_id', 'student_id', 'author_id', 'note', 'sentiment'];
+
+    protected $attributes = ['sentiment' => 'neutral'];
 
     public function challenge(): BelongsTo
     {

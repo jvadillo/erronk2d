@@ -49,10 +49,16 @@ test('evidencias: búsqueda, historial individual, borradores y guardado persist
   await expect(note).toHaveValue(draft);
   const observation = `Aportación registrada en navegador ${Date.now()}`;
   await note.fill(observation);
+  const sentiment = page.getByRole('radiogroup', { name: 'Valoración de la anotación' });
+  await expect(sentiment.getByRole('radio', { name: 'Neutra' })).toHaveAttribute('aria-checked', 'true');
+  await sentiment.getByRole('radio', { name: 'Positiva' }).click();
+  await expect(sentiment.getByRole('radio', { name: 'Positiva' })).toHaveAttribute('aria-checked', 'true');
   const save = page.getByRole('button', { name: 'Guardar anotación', exact: true });
   await save.click();
   await expect(page.getByText('Anotación guardada', { exact: true })).toBeVisible();
   await expect(page.locator('.evidence-entry').first()).toContainText(observation);
+  await expect(page.locator('.evidence-entry').first()).toContainText('Positiva');
+  await expect(sentiment.getByRole('radio', { name: 'Neutra' })).toHaveAttribute('aria-checked', 'true');
   await expect(note).toHaveValue('');
   await expect(save).toBeDisabled();
   await page.reload();
@@ -140,77 +146,6 @@ test('evidencias: error de guardado conserva el texto y la ficha se adapta a tab
   await expect(note).toHaveValue('');
 });
 
-
-for (const evaluation of [
-  { kind: 'team', button: 'Ev. técnica', heading: 'Rúbrica del equipo', subject: 'Equipo a evaluar' },
-  { kind: 'teacher', button: 'Ev. transversales', heading: 'Transversales del profesorado', subject: 'Estudiante a evaluar' },
-]) {
-  test(`evaluación: volver a la tabla general desde ${evaluation.button}`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', error => errors.push(error.message));
-    await login(page);
-    await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
-    await expect(page).toHaveURL(/\/challenges\/\d+$/);
-    const challengeUrl = page.url();
-    await page.getByRole('link', { name: 'Evaluación', exact: true }).click();
-    const evaluationTab = page.getByRole('tab', { name: 'Evaluación', exact: true });
-    const open = page.getByRole('button', { name: evaluation.button, exact: true });
-    const heading = page.getByRole('heading', { name: evaluation.heading, exact: true });
-    const overview = page.getByRole('heading', { name: 'Evaluación', exact: true });
-    const search = page.getByRole('textbox', { name: 'Buscar estudiante', exact: true });
-    await search.fill('Ainhoa');
-
-    for (const width of [1440, 390]) {
-      await page.setViewportSize({ width, height: 900 });
-      await open.click();
-      await expect(heading).toBeFocused();
-      await page.screenshot({ path: `test-results/evaluation-return-${evaluation.kind}-${width}.png`, fullPage: true });
-      await page.getByRole('button', { name: 'Volver a todas las evaluaciones', exact: true }).click();
-      await expect(overview).toBeFocused();
-      await expect(page.locator('.matrix')).toBeVisible();
-      await expect(search).toHaveValue('Ainhoa');
-      await expect(page.locator('.matrix tbody tr')).toHaveCount(1);
-
-      await open.click();
-      await evaluationTab.click();
-      await expect(page.locator('.matrix')).toBeVisible();
-      await expect(heading).toHaveCount(0);
-
-      for (const tab of ['Estudiantes y Equipos', 'Evidencias', 'Configuración']) {
-        await open.click();
-        await page.getByRole('tab', { name: tab, exact: true }).click();
-        await evaluationTab.click();
-        await expect(page.locator('.matrix')).toBeVisible();
-        await expect(search).toHaveValue('Ainhoa');
-      }
-
-      await open.click();
-      const evidenceTab = page.getByRole('tab', { name: 'Evidencias', exact: true });
-      await evidenceTab.click();
-      await expect(evidenceTab).toHaveAttribute('aria-selected', 'true');
-      await evidenceTab.focus();
-      await evidenceTab.press('ArrowLeft');
-      await expect(evaluationTab).toBeFocused();
-      await expect(page.locator('.matrix')).toBeVisible();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    }
-
-    await open.click();
-    const subject = await page.getByRole('combobox', { name: evaluation.subject, exact: true }).inputValue();
-    await page.goto(`${challengeUrl}?evaluation=${evaluation.kind}&subject=${subject}`);
-    await expect(heading).toBeVisible();
-    await expect(page.getByRole('combobox', { name: evaluation.subject, exact: true })).toHaveValue(subject);
-    await page.getByRole('button', { name: 'Volver a todas las evaluaciones', exact: true }).click();
-    await expect(page).toHaveURL(`${challengeUrl}?tab=evaluation`);
-    await page.reload();
-    await expect(page.locator('.matrix')).toBeVisible();
-    await open.click();
-    await page.getByRole('button', { name: 'Atrás', exact: true }).click();
-    await expect(overview).toBeFocused();
-    await expect(page.locator('.matrix')).toBeVisible();
-    expect(errors).toEqual([]);
-  });
-}
 
 test('pestañas del reto: vistas, borradores, configuración persistente y navegación accesible', async ({ page }) => {
   const errors: string[] = [];

@@ -131,6 +131,7 @@ class ChallengeController extends Controller
                 'team_name' => collect($data['rows'])->firstWhere('id', $evidence->student_id)['team_name'] ?? null,
                 'author_name' => $evidence->author->name,
                 'note' => $evidence->note,
+                'sentiment' => $evidence->sentiment,
                 'created_at' => $evidence->created_at->toIso8601String(),
             ]),
             'challengeUrl' => route('challenges.show', $challenge),

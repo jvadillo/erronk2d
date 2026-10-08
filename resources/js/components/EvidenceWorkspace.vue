@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowUpRight, Check, ChevronRight, ClipboardList, LockKeyhole, Plus, Search, Users, X } from 'lucide-vue-next';
+import { ArrowLeft, ArrowUpRight, Check, ChevronRight, ClipboardList, Frown, LockKeyhole, Meh, Plus, Search, Smile, Users, X } from 'lucide-vue-next';
 
 type Student = { id: number; name: string; team_name: string | null };
+type Sentiment = 'positive' | 'neutral' | 'negative';
 type Evidence = {
   id: number;
   student_id: number;
@@ -11,8 +12,16 @@ type Evidence = {
   team_name: string | null;
   author_name: string;
   note: string;
+  sentiment: Sentiment;
   created_at: string;
 };
+
+const sentiments: { value: Sentiment; label: string; icon: typeof Smile }[] = [
+  { value: 'positive', label: 'Positiva', icon: Smile },
+  { value: 'neutral', label: 'Neutra', icon: Meh },
+  { value: 'negative', label: 'Negativa', icon: Frown },
+];
+const sentimentOf = (value: Sentiment) => sentiments.find(option => option.value === value) ?? sentiments[1];
 
 const props = defineProps<{
   challenge: { id: number; name: string };
@@ -50,6 +59,7 @@ const drafts = ref<Record<number, string>>({});
 const saving = ref(false);
 const error = ref('');
 const saved = ref(false);
+const sentiment = ref<Sentiment>('neutral');
 const noteInput = ref<HTMLTextAreaElement | null>(null);
 const detailHeading = ref<HTMLHeadingElement | null>(null);
 const selectedStudent = computed(() => studentsWithHistory.value.find(student => student.id === selectedStudentId.value));
@@ -85,6 +95,7 @@ async function selectStudent(student: Student): Promise<void> {
   mobileDetail.value = true;
   error.value = '';
   saved.value = false;
+  sentiment.value = 'neutral';
   await nextTick();
   if (window.matchMedia('(max-width: 1000px)').matches) {
     detailHeading.value?.focus();
@@ -103,13 +114,24 @@ function submit(): void {
   router.post(props.storeUrl, {
     student_id: studentId,
     note: note.value.trim(),
+    sentiment: sentiment.value,
   }, {
     preserveScroll: true,
     onStart: () => { saving.value = true; emit('saving', true); error.value = ''; saved.value = false; },
-    onSuccess: () => { drafts.value[studentId] = ''; saved.value = true; },
-    onError: (errors) => { error.value = errors.student_id || errors.note || 'No se ha podido guardar la anotación.'; },
+    onSuccess: () => { drafts.value[studentId] = ''; sentiment.value = 'neutral'; saved.value = true; },
+    onError: (errors) => { error.value = errors.student_id || errors.note || errors.sentiment || 'No se ha podido guardar la anotación.'; },
     onFinish: () => { saving.value = false; emit('saving', false); },
   });
+}
+function moveSentiment(event: KeyboardEvent): void {
+  const step = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 0;
+  if (!step) {
+    return;
+  }
+  event.preventDefault();
+  const index = sentiments.findIndex(option => option.value === sentiment.value);
+  sentiment.value = sentiments[(index + step + sentiments.length) % sentiments.length].value;
+  nextTick(() => document.getElementById(`evidence-sentiment-${sentiment.value}`)?.focus());
 }
 </script>
 
@@ -167,7 +189,7 @@ function submit(): void {
           <ol v-if="selectedEvidences.length" class="evidence-timeline" aria-label="Anotaciones del estudiante">
             <li v-for="evidence in selectedEvidences" :key="evidence.id">
               <article class="evidence-entry">
-                <header><strong>{{ evidence.author_name }}</strong><time :datetime="evidence.created_at">{{ formattedDate(evidence.created_at) }}</time></header>
+                <header><strong>{{ evidence.author_name }}</strong><span class="evidence-sentiment-tag" :class="evidence.sentiment"><component :is="sentimentOf(evidence.sentiment).icon" :size="14" aria-hidden="true" />{{ sentimentOf(evidence.sentiment).label }}</span><time :datetime="evidence.created_at">{{ formattedDate(evidence.created_at) }}</time></header>
                 <p>{{ evidence.note }}</p>
               </article>
             </li>
@@ -181,7 +203,12 @@ function submit(): void {
           <p v-if="error" id="evidence-error" class="notice error" role="alert">{{ error }}</p>
           <div class="evidence-composer-footer">
             <p id="evidence-note-hint"><span v-if="saved" class="evidence-saved" role="status"><Check :size="14" />Anotación guardada</span><span v-else>Visible solo para el profesorado</span><small>{{ note.length }} / 2000</small></p>
-            <button class="button primary" type="submit" :disabled="saving || !note.trim()"><ArrowUpRight :size="16" />{{ saving ? 'Guardando…' : 'Guardar anotación' }}</button>
+            <div class="evidence-composer-actions">
+              <div class="evidence-sentiment" role="radiogroup" aria-label="Valoración de la anotación" @keydown="moveSentiment">
+                <button v-for="option in sentiments" :id="`evidence-sentiment-${option.value}`" :key="option.value" type="button" role="radio" :class="option.value" :aria-checked="sentiment === option.value" :tabindex="sentiment === option.value ? 0 : -1" :aria-label="option.label" :title="option.label" :disabled="saving" @click="sentiment = option.value"><component :is="option.icon" :size="20" aria-hidden="true" /></button>
+              </div>
+              <button class="button primary" type="submit" :disabled="saving || !note.trim()"><ArrowUpRight :size="16" />{{ saving ? 'Guardando…' : 'Guardar anotación' }}</button>
+            </div>
           </div>
         </form>
       </section>
@@ -237,6 +264,17 @@ function submit(): void {
 .evidence-detail-identity h2 { font-size: 21px; overflow-wrap: anywhere; }
 .evidence-detail-identity p { margin-top: 4px; color: #81747d; font-size: 12px; overflow-wrap: anywhere; }
 .evidence-add { flex-shrink: 0; }
+.evidence-composer-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.evidence-sentiment { display: flex; gap: 2px; padding: 3px; border: 1px solid #e8dde5; border-radius: 10px; background: #fff; }
+.evidence-sentiment button { display: grid; place-items: center; width: 36px; height: 34px; border-radius: 7px; color: #a8979f; transition: background .15s, color .15s; }
+.evidence-sentiment button:hover:not(:disabled) { background: #f6f0f4; color: #4d3a47; }
+.evidence-sentiment button.positive[aria-checked=true] { background: #e3f1e6; color: #2f7347; }
+.evidence-sentiment button.neutral[aria-checked=true] { background: #efeaee; color: #5d4f59; }
+.evidence-sentiment button.negative[aria-checked=true] { background: #fbe6e3; color: #ad3a31; }
+.evidence-sentiment-tag { display: inline-flex; align-items: center; gap: 4px; margin-right: auto; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+.evidence-sentiment-tag.positive { background: #e3f1e6; color: #2f7347; }
+.evidence-sentiment-tag.neutral { background: #efeaee; color: #5d4f59; }
+.evidence-sentiment-tag.negative { background: #fbe6e3; color: #ad3a31; }
 .evidence-history { padding: 24px 28px; }
 .evidence-history-count { display: inline-block; margin-left: 5px; color: #826d7c; font-size: 12px; font-weight: 400; }
 .evidence-timeline { list-style: none; margin: 22px 0 0; padding: 0 0 0 20px; border-left: 1px solid #ecdfe8; }
@@ -272,6 +310,7 @@ function submit(): void {
   .evidence-add { padding: 8px 10px; }
   .evidence-composer-footer { align-items: flex-start; flex-direction: column; }
   .evidence-composer-footer .button { align-self: flex-end; }
+  .evidence-composer-actions { align-self: stretch; justify-content: space-between; }
 }
 @media (max-width: 1000px) {
   .evidence-workspace { grid-template-columns: minmax(0, 1fr); }
@@ -289,6 +328,6 @@ function submit(): void {
   .evidence-timeline { padding-left: 15px; }
   .evidence-timeline > li::before { left: -20px; }
   .evidence-entry { padding: 14px; }
-  .evidence-composer-footer .button { width: 100%; }
+  .evidence-composer-footer .button { flex: 1; }
 }
 </style>

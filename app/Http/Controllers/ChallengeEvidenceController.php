@@ -31,9 +31,11 @@ class ChallengeEvidenceController extends Controller
                 Rule::exists('challenge_student', 'user_id')->where('challenge_id', $challenge->id),
             ],
             'note' => ['required', 'string', 'max:2000'],
+            'sentiment' => ['sometimes', 'string', Rule::in(ChallengeEvidence::SENTIMENTS)],
         ], [
             'student_id.exists' => 'Selecciona un estudiante participante en este reto.',
             'note.required' => 'Escribe una anotación antes de guardarla.',
+            'sentiment.in' => 'Elige si la anotación es positiva, neutra o negativa.',
         ]);
 
         ChallengeEvidence::create([
@@ -41,6 +43,7 @@ class ChallengeEvidenceController extends Controller
             'student_id' => $data['student_id'],
             'author_id' => $request->user()->id,
             'note' => trim($data['note']),
+            'sentiment' => $data['sentiment'] ?? 'neutral',
         ]);
 
         return redirect()->route('challenges.show', ['challenge' => $challenge, 'tab' => 'evidence'])->with('success', 'Evidencia guardada.');

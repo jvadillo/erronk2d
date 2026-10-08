@@ -37,6 +37,7 @@ class ChallengeTabsTest extends TestCase
         $this->post(route('challenges.evidence.store', $this->challenge), [
             'student_id' => $this->student->id,
             'note' => 'Observación del profesorado.',
+            'sentiment' => 'positive',
         ])->assertRedirect($tab);
         $this->get($tab)->assertInertia(fn (Assert $page) => $page
             ->component('Challenge')
@@ -44,7 +45,24 @@ class ChallengeTabsTest extends TestCase
             ->has('evidences', 1)
             ->where('evidences.0.student_id', $this->student->id)
             ->where('evidences.0.note', 'Observación del profesorado.')
+            ->where('evidences.0.sentiment', 'positive')
             ->where('evidences.0.author_name', $this->teacher->name));
+    }
+
+    public function test_evidence_sentiment_defaults_to_neutral_and_rejects_unknown_values(): void
+    {
+        $this->actingAs($this->teacher)->post(route('challenges.evidence.store', $this->challenge), [
+            'student_id' => $this->student->id,
+            'note' => 'Sin valoración explícita.',
+        ])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('challenge_evidences', ['note' => 'Sin valoración explícita.', 'sentiment' => 'neutral']);
+
+        $this->post(route('challenges.evidence.store', $this->challenge), [
+            'student_id' => $this->student->id,
+            'note' => 'Valoración desconocida.',
+            'sentiment' => 'excelente',
+        ])->assertSessionHasErrors('sentiment');
+        $this->assertDatabaseMissing('challenge_evidences', ['note' => 'Valoración desconocida.']);
     }
 
     public function test_student_view_never_receives_teacher_evidence(): void
