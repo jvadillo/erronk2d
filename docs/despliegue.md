@@ -1,6 +1,13 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 1c60762; desplegada el 7 de octubre de 2026.** Nueva paleta morada de la interfaz (`#82005e`, `#6f0050`, rosas claros y grises neutros).
+**Producción en f3f2a9e; desplegada el 8 de octubre de 2026, sin ejecutar tests por indicación del usuario.** Inicio del reto con cuatro cajas, avisos flotantes (toasts), tablas de evaluación y rúbricas a pantalla completa, títulos h1 unificados (`clamp(24px,2vw,32px)`) sin etiqueta superior y sin nota del lateral.
+
+Imágenes construidas en el VPS desde `git archive f3f2a9e`; build TypeScript/Vite correcto. `ops/deploy` completado con copia privada `backups/production-20261008-f3f2a9e` de `1c60762`; sin migraciones pendientes; datos de demo preparados. App/web ejecutan f3f2a9e, web y PostgreSQL saludables, mantenimiento retirado. `/up` y `/login` HTTP 200 por HTTPS; CSS servido con el nuevo tamaño de título.
+
+- `erronk2d-app:f3f2a9e`: `sha256:1ad23a3d19c032a0f35691a42a31ec01f1323089769b90828939c4b8a203b51f`.
+- `erronk2d-web:f3f2a9e`: `sha256:da411641cebec0ef76c79d87b6449226cd615a396c4587ef6542c03cafc57d6e`.
+
+**Producción anterior en 1c60762; desplegada el 7 de octubre de 2026.** Nueva paleta morada de la interfaz (`#82005e`, `#6f0050`, rosas claros y grises neutros).
 
 Imágenes construidas en el VPS desde `git archive 1c60762`; build TypeScript/Vite correcto. `ops/deploy` completado con copia privada `backups/production-20261007-1c60762` (700) de `b175c40-local-20261003`; sin migraciones pendientes; datos de demo preparados. App/web ejecutan 1c60762, web y PostgreSQL saludables, mantenimiento retirado. `/up` y `/login` HTTP 200 por HTTPS; el CSS servido y `theme-color` usan el morado.
 

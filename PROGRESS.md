@@ -4,7 +4,8 @@
 Sustituir las pestañas del reto por una página de inicio con cuatro cajas (Estudiantes y Equipos, Evaluación, Evidencias, Configuración) con accesos directos, y quitar la cabecera del reto en cada sección para ganar espacio vertical.
 
 ## Completado
-- Rama `reto-inicio` (sin fusionar ni desplegar).
+- Rama `reto-inicio` fusionada en `main` y desplegada en producción (`f3f2a9e`, 8/10/2026) sin tests, por indicación del usuario; copia `backups/production-20261008-f3f2a9e`. Entorno de pruebas del VPS en `main`.
+- Eliminados `sidebar-note`, «Volver a todas las evaluaciones» y `save-status` de las rúbricas, y los `p.eyebrow` sobre los h1; h1 unificado a `clamp(24px,2vw,32px)` (salvo la portada de acceso).
 - `resources/js/components/ChallengeHub.vue`: inicio del reto con las cuatro cajas; Evaluación destacada en morado con Tabla general, Ev. técnica y Ev. transversales; Equipos con integrantes; Evidencias con las dos últimas anotaciones; Configuración con reparto de pesos y edición de rúbricas.
 - `Challenge.vue`: `/challenges/{id}` sin `tab` muestra el inicio; `?tab=…` y `?evaluation=…` abren la sección. En las secciones solo hay una barra fija con regreso al inicio y selector compacto (`tablist` «Vistas del reto», solo iconos por debajo de 1250 px).
 - Tests de navegador adaptados y nuevo test «inicio del reto». `evidence.spec.ts` completo correcto (7/7) en el entorno de pruebas del VPS.
@@ -17,7 +18,6 @@ Sustituir las pestañas del reto por una página de inicio con cuatro cajas (Est
 
 ## Pendiente
 - Actualizar y pasar los tests de navegador (los avisos ya no están en línea: `tabpanel … getByRole('status')`/`notice error` pueden cambiar).
-- Revisión del usuario; después fusionar en `main` y desplegar con `ops/deploy`.
 - Fallos de navegador previos, también presentes en `main`: `rubrics.spec.ts` (botones antiguos «Rúbrica del equipo» y combo «Tipo» del editor) y cinco de `workflows.spec.ts` (enlaces «Profesor»/«Estudiante» de Organización).
 
 ## Archivos relevantes
