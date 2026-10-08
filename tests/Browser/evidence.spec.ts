@@ -20,7 +20,7 @@ async function login(page: Page, email = 'admin@erronk2d.test') {
 
 async function openEvidence(page: Page) {
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
-  await page.getByRole('tab', { name: 'Evidencias', exact: true }).click();
+  await page.getByRole('link', { name: 'Evidencias', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Evidencias', exact: true })).toBeVisible();
 }
 
@@ -152,6 +152,7 @@ for (const evaluation of [
     await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
     await expect(page).toHaveURL(/\/challenges\/\d+$/);
     const challengeUrl = page.url();
+    await page.getByRole('link', { name: 'Evaluación', exact: true }).click();
     const evaluationTab = page.getByRole('tab', { name: 'Evaluación', exact: true });
     const open = page.getByRole('button', { name: evaluation.button, exact: true });
     const heading = page.getByRole('heading', { name: evaluation.heading, exact: true });
@@ -217,6 +218,8 @@ test('pestañas del reto: vistas, borradores, configuración persistente y naveg
   await login(page);
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
   const tabs = page.getByRole('tablist', { name: 'Vistas del reto' });
+  await expect(tabs).toHaveCount(0);
+  await page.getByRole('link', { name: 'Evaluación', exact: true }).click();
   await expect(tabs.getByRole('tab')).toHaveText(['Estudiantes y Equipos', 'Evaluación', 'Evidencias', 'Configuración']);
   await expect(tabs.getByRole('tab', { name: 'Evaluación', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.matrix')).toBeVisible();
@@ -276,5 +279,63 @@ test('pestañas del reto: vistas, borradores, configuración persistente y naveg
     }
   }
   await page.screenshot({ path: 'test-results/challenge-tabs-tablet.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabecera del reto', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page);
+  await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
+  await expect(page).toHaveURL(/\/challenges\/\d+$/);
+  const challengeUrl = page.url();
+  const title = page.getByRole('heading', { level: 1, name: 'Una web para nuestra comunidad', exact: true });
+  const back = page.getByRole('link', { name: /^Volver al inicio del reto/ });
+  await expect(title).toBeVisible();
+  for (const name of ['Estudiantes y Equipos', 'Evaluación', 'Evidencias', 'Configuración']) {
+    await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole('tablist', { name: 'Vistas del reto' })).toHaveCount(0);
+  await expect(page.locator('.matrix')).toBeHidden();
+  await page.screenshot({ path: 'test-results/challenge-hub-desktop.png', fullPage: true });
+
+  await page.getByRole('link', { name: 'Ev. técnica', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Rúbrica del equipo', exact: true })).toBeVisible();
+  await expect(title).toHaveCount(0);
+  await expect(page.locator('.challenge-hub-heading')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Atrás', exact: true }).click();
+  await expect(page.locator('.matrix')).toBeVisible();
+  await page.screenshot({ path: 'test-results/challenge-section-evaluation.png' });
+  await back.click();
+  await expect(page).toHaveURL(challengeUrl);
+  await expect(title).toBeVisible();
+
+  await page.getByRole('link', { name: 'Ev. transversales', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Transversales del profesorado', exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(title).toBeVisible();
+
+  await page.getByRole('link', { name: 'Tabla general', exact: true }).click();
+  await expect(page).toHaveURL(`${challengeUrl}?tab=evaluation`);
+  await expect(page.locator('.matrix')).toBeVisible();
+  await back.click();
+  await page.getByRole('link', { name: 'Gestionar equipos', exact: true }).click();
+  await expect(page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true })).toBeVisible();
+  await back.click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Exportar CSV', exact: true }).click();
+  expect((await download).suggestedFilename()).toBe('erronk2d-reto.csv');
+
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(title).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: `test-results/challenge-hub-${width}.png`, fullPage: true });
+    await page.getByRole('link', { name: 'Configuración', exact: true }).click();
+    await expect(page.getByRole('tab', { name: 'Configuración', exact: true })).toHaveAttribute('aria-selected', 'true');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: `test-results/challenge-section-${width}.png` });
+    await back.click();
+  }
   expect(errors).toEqual([]);
 });

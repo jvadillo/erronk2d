@@ -125,12 +125,13 @@ test('profesorado: matriz, teclado, configuración y seguimiento', async ({ page
   await login(page);
   await page.screenshot({ path: 'test-results/dashboard.png', fullPage: true });
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
+  await page.getByRole('link', { name: 'Evaluación', exact: true }).click();
   await expect(page.locator('.matrix tbody tr')).toHaveCount(20);
   await expect(page.getByLabel('Progreso por tipo de evaluación')).toHaveCount(0);
   const first = page.getByLabel('Examen PROG de Ainhoa Agirre', { exact: true });
   const second = page.getByLabel('Examen DWEC de Ainhoa Agirre', { exact: true });
   const oldFirst = await first.inputValue(), oldSecond = await second.inputValue();
-  await page.route(page.url(), async route => {
+  await page.route(page.url().split('?')[0], async route => {
     if (route.request().method() === 'POST') await new Promise(resolve => setTimeout(resolve, 350));
     await route.continue();
   });
@@ -236,7 +237,7 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   page.on('pageerror', error => errors.push(error.message));
   await login(page);
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Reto vacío para pruebas' }) }).click();
-  await page.getByRole('tab', { name: 'Estudiantes y Equipos', exact: true }).click();
+  await page.getByRole('link', { name: 'Estudiantes y Equipos', exact: true }).click();
   const dialog = page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true });
   await expect(dialog.getByText('Este reto no tiene estudiantes.', { exact: false })).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();

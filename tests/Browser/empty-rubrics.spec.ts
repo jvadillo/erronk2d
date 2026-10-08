@@ -30,7 +30,7 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await dialog.getByRole('button', { name: 'Crear reto', exact: true }).click();
   await expect(page).toHaveURL(/\/challenges\/\d+$/);
   const challengeUrl = page.url();
-  await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
+  await page.getByRole('link', { name: 'Ev. técnica', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('La rúbrica no contiene todavía criterios.');
   await expect(page.locator('.rubric-assessment')).toHaveCount(0);
   await page.getByRole('button', { name: 'Editar rúbrica', exact: true }).click();

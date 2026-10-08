@@ -103,14 +103,15 @@ test('rúbrica: evaluación docente por filas, selección persistente y permisos
   await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
   await expect(page).toHaveURL(/\/challenges\/\d+$/);
   const challengeUrl = page.url();
+  await page.getByRole('link', { name: 'Evaluación', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Histórico', exact: true })).toHaveCount(0);
   await expect(page.locator('.formula-note, .evaluation-progress')).toHaveCount(0);
   await expect(page.locator('.workspace-heading .bottom-actions')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Evaluación', exact: true })).toBeVisible();
   await expect(page.getByText('Una única nota de reto. Todos los módulos conectados.', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Rúbrica del equipo', exact: true }).click();
+  await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page).toHaveURL(challengeUrl);
+  await expect(page).toHaveURL(`${challengeUrl}?tab=evaluation`);
   await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(5);
   await expect(page.getByRole('button', { name: 'Atrás', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Todos los retos', exact: true })).toHaveCount(0);
@@ -199,7 +200,7 @@ for (const kind of ['team', 'transversal'] as const) {
     await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad', exact: true }) }).click();
     await expect(page).toHaveURL(/\/challenges\/\d+$/);
     const challengeUrl = page.url();
-    await page.getByRole('button', { name: kind === 'team' ? 'Rúbrica del equipo' : 'Transversales del profesorado', exact: true }).click();
+    await page.getByRole('link', { name: kind === 'team' ? 'Ev. técnica' : 'Ev. transversales', exact: true }).click();
     const selector = page.getByRole('combobox', { name: kind === 'team' ? 'Equipo a evaluar' : 'Estudiante a evaluar' });
     await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
     const subject = await selector.inputValue();

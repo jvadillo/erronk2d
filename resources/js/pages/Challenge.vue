@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Search, SlidersHorizontal, Check, Users, BookOpen, GraduationCap, AlertCircle, Upload, Download, History, X, ChevronRight } from 'lucide-vue-next';
+import { ArrowLeft, Search, SlidersHorizontal, Check, GraduationCap, AlertCircle, Upload, Download, History, X, ChevronRight, UsersRound, ClipboardCheck, NotebookPen, Settings2 } from 'lucide-vue-next';
+import ChallengeHub from '../components/ChallengeHub.vue';
 import EvidenceWorkspace from '../components/EvidenceWorkspace.vue';
 import RubricAssessment from '../components/RubricAssessment.vue';
 import ModuleCriteriaNotice from '../components/ModuleCriteriaNotice.vue';
@@ -10,13 +11,18 @@ import { api, grade, permission, type Auth } from '../lib';
 const props=defineProps<{book:any;history:any[];rubricEditorUrls:Record<string,string>;evidences:any[];challengeUrl:string;evidenceStoreUrl:string}>();const book=ref(props.book);const auth=usePage().props.auth as Auth;
 const page=usePage();
 const evidenceSaving=ref(false);
-const tabs=[{id:'teams',label:'Estudiantes y Equipos'},{id:'evaluation',label:'Evaluación'},{id:'evidence',label:'Evidencias'},{id:'settings',label:'Configuración'}];
-const activeTab=computed(()=>{const tab=new URLSearchParams(page.url.split('?')[1]??'').get('tab');return tabs.some(item=>item.id===tab)?tab:'evaluation'});
+const tabs=[{id:'teams',label:'Estudiantes y Equipos',icon:UsersRound},{id:'evaluation',label:'Evaluación',icon:ClipboardCheck},{id:'evidence',label:'Evidencias',icon:NotebookPen},{id:'settings',label:'Configuración',icon:Settings2}];
+const statusLabel:Record<string,string>={draft:'Borrador',active:'En curso',evaluating:'En evaluación',published:'Publicado',finished:'Finalizado'};
+const activeTab=computed(()=>{const query=new URLSearchParams(page.url.split('?')[1]??'');const tab=query.get('tab');if(tabs.some(item=>item.id===tab))return tab;return query.has('evaluation')?'evaluation':'home'});
 function selectTab(tab:string):void{
   if(busy.value||evidenceSaving.value)return;
   if(tab==='evaluation')evaluating.value=false;
-  router.push({url:`${props.challengeUrl}?tab=${tab}`,props:current=>({...current,book:book.value}),preserveState:true,preserveScroll:true});
+  router.push({url:tab==='home'?props.challengeUrl:`${props.challengeUrl}?tab=${tab}`,props:current=>({...current,book:book.value}),preserveState:true,preserveScroll:tab!=='home'});
+  if(tab==='home')window.scrollTo({top:0});
 }
+function openEvaluation(kind:string):void{if(busy.value||evidenceSaving.value)return;selectTab('evaluation');openRubric(kind)}
+function editRubricFromHub(kind:string):void{if(busy.value||closed.value)return;router.visit(props.rubricEditorUrls[kind])}
+function openBatch():void{batch.value={module_id:modules.value.find((m:any)=>moduleWritable('enter_exams',m)||moduleWritable('enter_defenses',m))?.id??0,field:'exam',text:''};modal.value='batch'}
 function navigateTabs(event:KeyboardEvent):void{
   const keys=['ArrowLeft','ArrowRight','Home','End'];
   if(!keys.includes(event.key)||busy.value||evidenceSaving.value)return;
@@ -108,16 +114,23 @@ const defenseDetail=ref<any>({});function openDefense(row:any,m:any){defenseDeta
 async function submitDefense(){const d=defenseDetail.value;if(await save({action:'grades',field:'defense',module_id:d.module.id,entries:[{student_id:d.student_id,value:d.value===''?null:String(d.value).replace(',','.'),date:d.date,notes:d.notes}]}))modal.value=''}
 </script>
 <template><Layout><Head :title="book.challenge.name"/>
-<div class="topline"><button v-if="activeTab==='evaluation'&&evaluating" class="back-link" :disabled="busy" @click="closeRubric"><ArrowLeft :size="16"/>Atrás</button><Link v-else href="/" class="back-link"><ArrowLeft :size="16"/>Todos los retos</Link><span>{{book.year}} / {{book.classroom}} / {{book.period}}</span></div>
-<header class="page-heading compact"><div><h1>{{book.challenge.name}}</h1><p class="muted">{{book.description||book.challenge.description||'Una visión completa del aprendizaje de tu grupo.'}}</p></div><div class="actions"><button v-if="false" class="button" @click="history"><History :size="17"/>Histórico</button><button v-if="permission('publish_results')&&!closed" :disabled="busy||evidenceSaving" class="button primary" @click="modal='publish'"><Upload :size="17"/>Publicar</button><button v-if="permission('publish_results')&&closed" :disabled="busy||evidenceSaving" class="button" @click="reopenReason='';modal='reopen'">Reabrir</button></div></header>
-<section class="challenge-summary"><div><Users :size="20"/><strong>{{book.rows.length}}</strong><span>estudiantes</span></div><div><strong>{{book.teams.length}}</strong><span>equipos</span></div><div><button type="button" class="teacher-stat" :aria-label="`Ver ${participatingTeachers.length} ${participatingTeachers.length===1?'profesor participante':'profesores participantes'}`" @click="modal='teachers'"><GraduationCap :size="20"/><strong>{{participatingTeachers.length}}</strong><span>{{participatingTeachers.length===1?'profesor':'profesores'}}</span></button></div><div><BookOpen :size="20"/><strong>{{modules.length}}</strong><span>módulos</span></div><div class="progress-summary"><span><strong>{{complete}} / {{book.rows.length}}</strong> evaluaciones completas</span><div class="progress-track"><i :style="{width:`${book.rows.length?complete/book.rows.length*100:0}%`}"/></div></div></section>
-<div class="challenge-tabs" role="tablist" aria-label="Vistas del reto" @keydown="navigateTabs">
-  <button v-for="tab in tabs" :id="`challenge-tab-${tab.id}`" :key="tab.id" type="button" role="tab" :aria-selected="activeTab===tab.id" :aria-controls="`challenge-panel-${tab.id}`" :tabindex="activeTab===tab.id?0:-1" :disabled="busy||evidenceSaving" @click="selectTab(tab.id)">{{tab.label}}</button>
-</div>
+<template v-if="activeTab==='home'">
+<div class="topline"><Link href="/" class="back-link"><ArrowLeft :size="16"/>Todos los retos</Link><span>{{book.year}} / {{book.classroom}} / {{book.period}}</span></div>
+<header class="page-heading challenge-hub-heading"><div><h1>{{book.challenge.name}}</h1><p class="muted">{{book.description||book.challenge.description||'Una visión completa del aprendizaje de tu grupo.'}}</p><div class="challenge-meta"><span class="badge" :class="book.challenge.status">{{statusLabel[book.challenge.status]??book.challenge.status}}</span><span class="module-chips"><span v-for="m in modules" :key="m.id" :title="m.name">{{m.code}}</span></span><button type="button" class="teacher-stat" :aria-label="`Ver ${participatingTeachers.length} ${participatingTeachers.length===1?'profesor participante':'profesores participantes'}`" @click="modal='teachers'"><GraduationCap :size="16"/>{{participatingTeachers.length}} {{participatingTeachers.length===1?'profesor':'profesores'}}</button></div></div><div class="actions"><button v-if="false" class="button" @click="history"><History :size="17"/>Histórico</button><button v-if="permission('publish_results')&&!closed" :disabled="busy||evidenceSaving" class="button primary" @click="modal='publish'"><Upload :size="17"/>Publicar</button><button v-if="permission('publish_results')&&closed" :disabled="busy||evidenceSaving" class="button" @click="reopenReason='';modal='reopen'">Reabrir</button></div></header>
+<div v-if="error" class="notice error" role="alert">{{error}}<button @click="router.reload()">Actualizar datos</button></div>
+<ChallengeHub :book="book" :evidences="evidences" :challenge-url="challengeUrl" :can-manage-teams="writable('manage_teams')" :can-batch="writable('enter_exams')||writable('enter_defenses')" :can-edit-rubrics="writable('manage_challenges')" @open="selectTab" @rubric="openEvaluation" @batch="openBatch" @export="exportCsv" @participants="save({action:'participants'}).then(ok=>{if(ok)initializeTeams()})" @edit-rubric="editRubricFromHub"/>
+</template>
+<nav v-else class="section-bar" aria-label="Navegación del reto">
+  <button v-if="activeTab==='evaluation'&&evaluating" type="button" class="section-back" :disabled="busy" @click="closeRubric"><ArrowLeft :size="16"/><span>Atrás</span></button>
+  <a v-else :href="challengeUrl" class="section-back" :title="book.challenge.name" @click.prevent="selectTab('home')"><ArrowLeft :size="16"/><span class="sr-only">Volver al inicio del reto: </span><span class="section-back-name">{{book.challenge.name}}</span></a>
+  <div class="section-switcher" role="tablist" aria-label="Vistas del reto" @keydown="navigateTabs">
+    <button v-for="tab in tabs" :id="`challenge-tab-${tab.id}`" :key="tab.id" type="button" role="tab" :aria-selected="activeTab===tab.id" :aria-controls="`challenge-panel-${tab.id}`" :tabindex="activeTab===tab.id?0:-1" :disabled="busy||evidenceSaving" :title="tab.label" @click="selectTab(tab.id)"><component :is="tab.icon" :size="16" aria-hidden="true"/><span>{{tab.label}}</span></button>
+  </div>
+</nav>
 <section v-show="activeTab==='evaluation'" id="challenge-panel-evaluation" role="tabpanel" aria-labelledby="challenge-tab-evaluation" tabindex="0">
 <template v-if="!evaluating">
 <div v-if="book.issues.length" class="notice warning"><AlertCircle :size="18"/><div v-for="issue in book.issues">{{issue}}</div></div>
-<div class="workspace-heading"><div><h2 ref="evaluationOverviewHeading" tabindex="-1">Evaluación <span class="live-dot"/></h2></div><div class="bottom-actions"><div class="save-status" aria-live="polite"><Check v-if="message==='Cambios guardados'" :size="15"/>{{message}}</div><button class="button" @click="openRubric('team')">Ev. técnica <ChevronRight :size="16"/></button><button class="button" @click="openRubric('teacher')">Ev. transversales <ChevronRight :size="16"/></button><button v-if="writable('enter_exams')||writable('enter_defenses')" class="button" @click="batch={module_id:modules.find((m:any)=>moduleWritable('enter_exams',m)||moduleWritable('enter_defenses',m))?.id??0,field:'exam',text:''};modal='batch'">Introducción masiva</button><select v-if="writable('manage_challenges')" :value="book.challenge.status" aria-label="Estado del reto" :disabled="busy" @change="save({action:'status',status:($event.target as HTMLSelectElement).value})"><option value="draft">Borrador</option><option value="active">En curso</option><option value="evaluating">En evaluación</option><option value="finished">Finalizado</option></select></div></div>
+<div class="workspace-heading"><div><h2 ref="evaluationOverviewHeading" tabindex="-1">Evaluación <span class="live-dot"/></h2></div><div class="bottom-actions"><div class="save-status" aria-live="polite"><Check v-if="message==='Cambios guardados'" :size="15"/>{{message}}</div><button class="button" @click="openRubric('team')">Ev. técnica <ChevronRight :size="16"/></button><button class="button" @click="openRubric('teacher')">Ev. transversales <ChevronRight :size="16"/></button><button v-if="writable('enter_exams')||writable('enter_defenses')" class="button" @click="openBatch">Introducción masiva</button><select v-if="writable('manage_challenges')" :value="book.challenge.status" aria-label="Estado del reto" :disabled="busy" @change="save({action:'status',status:($event.target as HTMLSelectElement).value})"><option value="draft">Borrador</option><option value="active">En curso</option><option value="evaluating">En evaluación</option><option value="finished">Finalizado</option></select></div></div>
 <div v-if="error" class="notice error" role="alert">{{error}}<button @click="router.reload()">Actualizar datos</button></div>
 <div class="matrix-toolbar"><div class="search-box"><Search :size="16"/><input v-model="search" aria-label="Buscar estudiante" placeholder="Buscar estudiante…"/></div><select v-model="teamFilter" aria-label="Filtrar equipo"><option value="">Todos los equipos</option><option v-for="t in book.teams" :value="t.id">{{t.name}}</option></select><select v-model="sort" aria-label="Ordenar estudiantes"><option value="name">Nombre A–Z</option><option value="team">Por equipo</option></select><label class="check"><input type="checkbox" v-model="onlyPending"/>Solo pendientes</label><div class="toolbar-spacer"/><button class="icon-button" aria-label="Mostrar u ocultar columnas" @click="showColumns=!showColumns"><SlidersHorizontal :size="18"/></button><button class="icon-button" aria-label="Exportar matriz CSV" @click="exportCsv"><Download :size="18"/></button></div>
 <div v-if="showColumns" class="column-options"><label class="check"><input type="checkbox" v-model="visible.transversal"/>Transversales</label><label class="check"><input type="checkbox" v-model="visible.team"/>Nota de equipo y reparto</label><label class="check"><input type="checkbox" v-model="visible.defenses"/>Defensas por módulo</label></div>
@@ -206,21 +219,44 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 </Layout></template>
 
 <style scoped>
-.challenge-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 24px; padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: #f1e8ef; }
-.challenge-tabs button { flex: 1; padding: 12px 18px; border-radius: 7px; color: #72616d; font-size: 13px; font-weight: 500; white-space: normal; }
-.challenge-tabs button:hover { background: #eddee9; }
-.challenge-tabs button[aria-selected=true] { color: var(--green); background: #fff; box-shadow: 0 2px 6px #331d2d10; font-weight: 600; }
+.challenge-hub-heading { align-items: flex-start; margin: 30px 0 28px; }
+.challenge-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 16px; }
+.challenge-meta .badge { padding: 5px 9px; font-size: 10px; }
+.challenge-meta .module-chips { margin: 0; }
+.challenge-meta .module-chips span { padding: 4px 8px; font-size: 10px; }
+.teacher-stat { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; margin-left: -4px; border-radius: 6px; color: #6d5f69; font-size: 12px; }
+.teacher-stat:hover { background: #f1e8ef; color: var(--green); }
+.section-bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -26px -42px 4px; padding: 12px 42px; border-bottom: 1px solid var(--border); background: #f6f4f5eb; backdrop-filter: blur(8px); }
+.section-back { display: inline-flex; align-items: center; gap: 8px; min-width: 0; min-height: 38px; margin-left: -8px; padding: 6px 12px 6px 8px; border-radius: 8px; color: #4d3a47; font-size: 13px; font-weight: 600; }
+.section-back:hover:not(:disabled) { background: #efe5ec; color: var(--green); }
+.section-back svg { flex-shrink: 0; }
+.section-back-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.section-switcher { display: flex; flex-shrink: 0; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.section-switcher button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 6px 12px; border-radius: 7px; color: #7a6b76; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.section-switcher button:hover:not(:disabled) { background: #f6eff4; color: #4d3a47; }
+.section-switcher button[aria-selected=true] { background: #82005e; color: #fff; }
 .challenge-form-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
 .challenge-settings { max-width: 940px; padding: 24px; background: #fff; border: 1px solid var(--border); border-radius: 12px; }
 .challenge-settings fieldset { min-width: 0; }
 .challenge-settings .form-grid > label { min-width: 0; }
 .topline > span { overflow-wrap: anywhere; text-align: right; }
-@media (max-width: 1100px) {
-  .challenge-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1600px) {
+  .section-bar { margin: -30px -55px 4px; padding: 12px 55px; }
+}
+@media (max-width: 1250px) {
+  .section-bar { margin: -25px -25px 4px; padding: 12px 25px; }
+  .section-switcher button { padding: 6px 10px; }
+  .section-switcher button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media (max-width: 900px) {
+  .section-bar { margin: -22px -22px 4px; padding: 10px 22px; }
+}
+@media (max-width: 650px) {
+  .section-bar { margin: -18px -16px 4px; padding: 10px 16px; }
+  .challenge-hub-heading { margin-top: 24px; }
 }
 @media (max-width: 680px) {
-  .challenge-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
-  .challenge-tabs button { padding: 12px 5px; font-size: 11px; white-space: normal; }
   .challenge-settings { padding: 16px; }
 }
 </style>
