@@ -2,12 +2,14 @@
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { LayoutGrid, Settings2, ChartNoAxesCombined, LogOut, ArrowUpRight, PanelLeftClose, PanelLeftOpen, ChevronDown, CalendarDays, School, ContactRound, GraduationCap, BookOpen, ListChecks, UserRoundPlus } from 'lucide-vue-next';
-import type { Auth } from '../lib';
+import { notify, type Auth } from '../lib';
+import Toasts from './Toasts.vue';
 
 type SetupLink = {section:string;label:string;url:string};
 const page = usePage();
 const academic = computed(() => page.props.academic as any);
-const switching = ref(false), contextError = ref('');
+const switching = ref(false);
+watch(() => (page.props.flash as any)?.success, (message) => {if(message&&typeof window!=='undefined')notify(message,'success')}, {immediate:true});
 watch(() => academic.value?.year?.id, (id) => {if(typeof document!=='undefined')document.documentElement.dataset.academicYear=String(id??'')}, {immediate:true});
 function switchYear(event:Event) {
   const academicYearId=Number((event.target as HTMLSelectElement).value);
@@ -15,7 +17,7 @@ function switchYear(event:Event) {
   switching.value=true;
   router.post(academic.value.switch_url,{academic_year_id:academicYearId},{preserveState:false,onFinish:()=>switching.value=false});
 }
-function showContextError(event:Event){contextError.value=(event as CustomEvent).detail}
+function showContextError(event:Event){notify((event as CustomEvent).detail,'error',{duration:null,action:{label:'Volver al curso activo',run:()=>router.visit('/')}})}
 onMounted(()=>window.addEventListener('academic-context-error',showContextError));
 onUnmounted(()=>window.removeEventListener('academic-context-error',showContextError));
 const auth = computed(() => page.props.auth as Auth);
@@ -71,6 +73,7 @@ function isCurrent(url:string): boolean {
       <div class="sidebar-note"><span class="tiny-orbit">↗</span><p>Aprender en equipo.<br><strong>Crecer individualmente.</strong></p></div>
       <div class="profile"><span class="avatar" :title="auth.name">{{auth.name.split(' ').slice(0,2).map(n=>n[0]).join('')}}</span><div class="profile-info"><strong>{{auth.name}}</strong><small>{{auth.role==='admin'?'Administración':auth.role==='teacher'?'Profesorado':'Estudiante'}}</small></div><Link href="/logout" method="post" as="button" aria-label="Cerrar sesión" title="Cerrar sesión"><LogOut :size="17"/></Link></div>
     </aside>
-    <main class="main"><div v-if="contextError" class="notice error" role="alert">{{contextError}} <Link href="/">Volver al curso activo</Link></div><div v-if="academic?.year&&!academic.year.is_open" class="notice warning" role="status">{{academic.year.name}} · Curso cerrado. Solo lectura.</div><div v-if="academic&&!academic.year" class="notice" role="status">{{auth.role==='admin'?'Configura el primer curso académico, los ciclos y los módulos en Organización.':auth.role==='student'?'Todavía no tienes matrícula. Estás a la espera de asignación administrativa.':'No hay cursos académicos disponibles. Estás a la espera de asignación administrativa.'}}</div><div v-if="(page.props.flash as any)?.success" class="notice success" role="status">{{(page.props.flash as any).success}}</div><slot/></main>
+    <main class="main"><div v-if="academic?.year&&!academic.year.is_open" class="notice warning" role="status">{{academic.year.name}} · Curso cerrado. Solo lectura.</div><div v-if="academic&&!academic.year" class="notice" role="status">{{auth.role==='admin'?'Configura el primer curso académico, los ciclos y los módulos en Organización.':auth.role==='student'?'Todavía no tienes matrícula. Estás a la espera de asignación administrativa.':'No hay cursos académicos disponibles. Estás a la espera de asignación administrativa.'}}</div><slot/></main>
+    <Toasts/>
   </div>
 </template>
