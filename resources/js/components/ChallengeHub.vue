@@ -287,6 +287,12 @@ function runEvaluationShortcut(id: string): void {
   .hub-grid { grid-template-columns: minmax(0, 1fr); }
   .hub-teams { flex: none; height: auto; max-height: 176px; }
 }
+@media (max-height: 860px) and (min-width: 1001px) {
+  .hub-card-header p { display: none; }
+  .hub-card-header { align-items: center; }
+  .hub-links a, .hub-links button { min-height: 38px; padding: 3px 10px; }
+  .hub-figures, .hub-progress, .hub-weights { margin-top: 10px; }
+}
 @media (max-width: 650px) {
   .hub-card { padding: 20px 18px 10px; }
   .hub-figures strong, .hub-progress strong { font-size: 21px; }

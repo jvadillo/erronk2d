@@ -248,6 +248,7 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 .matrix-stage.is-fullscreen, .rubric-stage.is-fullscreen { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; padding: 16px 22px 18px; background: #f6f4f5; }
 .matrix-stage.is-fullscreen .matrix-scroll { flex: 1; max-height: none; }
 .rubric-stage.is-fullscreen { overflow-y: auto; }
+.rubric-stage.is-fullscreen :deep(.rubric-table-scroll) { max-height: none; }
 .rubric-stage.is-fullscreen .rubric-evaluation-toolbar { position: sticky; top: -16px; z-index: 2; margin: -16px -22px 14px; padding: 14px 22px; border-bottom: 1px solid var(--border); background: #f6f4f5; }
 .fullscreen-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
 .fullscreen-bar > div { flex: 1; min-width: 0; }
@@ -260,6 +261,11 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
 .challenge-settings fieldset { min-width: 0; }
 .challenge-settings .form-grid > label { min-width: 0; }
 .topline > span { overflow-wrap: anywhere; text-align: right; }
+@media (max-height: 860px) and (min-width: 1001px) {
+  .challenge-hub-heading { margin: 14px 0 14px; }
+  .challenge-hub-heading h1 { font-size: 32px; }
+  .challenge-meta { margin-top: 10px; }
+}
 @media (min-width: 1600px) {
   .section-bar { margin: -30px -55px 4px; padding: 12px 55px; }
 }
