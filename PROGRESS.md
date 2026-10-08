@@ -5,7 +5,7 @@ Sustituir las pestañas del reto por una página de inicio con cuatro cajas (Est
 
 ## Completado
 - Rama `reto-inicio` (sin fusionar ni desplegar).
-- `resources/js/components/ChallengeHub.vue`: inicio del reto con las cuatro cajas; Evaluación destacada en morado con Tabla general, Ev. técnica, Ev. transversales, Introducción masiva y Exportar CSV; Equipos con integrantes; Evidencias con las tres últimas anotaciones; Configuración con reparto de pesos y edición de rúbricas.
+- `resources/js/components/ChallengeHub.vue`: inicio del reto con las cuatro cajas; Evaluación destacada en morado con Tabla general, Ev. técnica y Ev. transversales; Equipos con integrantes; Evidencias con las dos últimas anotaciones; Configuración con reparto de pesos y edición de rúbricas.
 - `Challenge.vue`: `/challenges/{id}` sin `tab` muestra el inicio; `?tab=…` y `?evaluation=…` abren la sección. En las secciones solo hay una barra fija con regreso al inicio y selector compacto (`tablist` «Vistas del reto», solo iconos por debajo de 1250 px).
 - Tests de navegador adaptados y nuevo test «inicio del reto». `evidence.spec.ts` completo correcto (7/7) en el entorno de pruebas del VPS.
 - Avisos flotantes (`Toasts.vue`, `notify()` en `lib.ts`): arriba a la derecha, X para cerrar, se desvanecen a los `TOAST_DURATION_MS` (5000 ms, configurable en `lib.ts` o por llamada; `duration: null` los mantiene). Pausa al pasar el ratón. Flash de éxito, error de contexto académico y errores de guardado del reto ya no ocupan espacio.
