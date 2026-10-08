@@ -1,6 +1,13 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en f3f2a9e; desplegada el 8 de octubre de 2026, sin ejecutar tests por indicación del usuario.** Inicio del reto con cuatro cajas, avisos flotantes (toasts), tablas de evaluación y rúbricas a pantalla completa, títulos h1 unificados (`clamp(24px,2vw,32px)`) sin etiqueta superior y sin nota del lateral.
+**Producción en 3f780ff; desplegada el 8 de octubre de 2026.** Las anotaciones de evidencias tienen valoración positiva, neutra o negativa (selector de caras junto a «Guardar anotación», neutra por defecto). Migración `add_sentiment_to_challenge_evidences` aplicada: las 3 anotaciones existentes quedan como neutras.
+
+Validación previa: 218 pruebas PHP / 1.941 aserciones en PostgreSQL y 16 pruebas de navegador correctas tras eliminar las obsoletas. Imágenes construidas desde `git archive 3f780ff`; `ops/deploy` completado con copia privada `backups/production-20261008-3f780ff` de `f3f2a9e`. App/web ejecutan 3f780ff, web y PostgreSQL saludables, mantenimiento retirado; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:3f780ff`: `sha256:b0730e1c84636cec2c3ec1a76185ca0737f6a619c6c4a711c136a96a0f8698e2`.
+- `erronk2d-web:3f780ff`: `sha256:661f6c9c3b9ff0411218fa5a1bf5f4236dbafd5f1fab6ae262d820f9ab14ed44`.
+
+**Producción anterior en f3f2a9e; desplegada el 8 de octubre de 2026, sin ejecutar tests por indicación del usuario.** Inicio del reto con cuatro cajas, avisos flotantes (toasts), tablas de evaluación y rúbricas a pantalla completa, títulos h1 unificados (`clamp(24px,2vw,32px)`) sin etiqueta superior y sin nota del lateral.
 
 Imágenes construidas en el VPS desde `git archive f3f2a9e`; build TypeScript/Vite correcto. `ops/deploy` completado con copia privada `backups/production-20261008-f3f2a9e` de `1c60762`; sin migraciones pendientes; datos de demo preparados. App/web ejecutan f3f2a9e, web y PostgreSQL saludables, mantenimiento retirado. `/up` y `/login` HTTP 200 por HTTPS; CSS servido con el nuevo tamaño de título.
 
