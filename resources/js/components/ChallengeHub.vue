@@ -27,9 +27,18 @@ const students = computed(() => props.book.rows.length);
 const complete = computed(() => props.book.rows.filter((row: any) => row.pending.length === 0).length);
 const progress = computed(() => (students.value ? Math.round((complete.value / students.value) * 100) : 0));
 const unassigned = computed(() => props.book.rows.filter((row: any) => !row.team_id).length);
-const visibleTeams = computed(() => props.book.teams.slice(0, 6));
+const studentNames = computed(() => new Map<number, string>(props.book.rows.map((row: any) => [row.id, row.name])));
+const visibleTeams = computed(() => props.book.teams.slice(0, 5).map((team: any) => ({
+  id: team.id,
+  name: team.name,
+  members: team.members.map((member: any) => studentNames.value.get(member.student_id) ?? '').filter(Boolean),
+})));
 const notedStudents = computed(() => new Set(props.evidences.map(evidence => evidence.student_id)).size);
-const latestEvidence = computed(() => props.evidences[0] ?? null);
+const recentEvidences = computed(() => props.evidences.slice(0, 3));
+
+function initials(name: string): string {
+  return name.split(' ').slice(0, 2).map(part => part[0]).join('');
+}
 const weights = computed(() => [
   { key: 'transversal', label: 'Transversales', value: Number(props.book.challenge.component_weights.transversal) },
   { key: 'challenge', label: 'Reto', value: Number(props.book.challenge.component_weights.challenge) },
@@ -90,8 +99,12 @@ function runEvaluationShortcut(id: string): void {
         <p v-if="students" :class="unassigned ? 'hub-flag warning' : 'hub-flag'">{{ unassigned ? `${unassigned} sin equipo` : 'Todos con equipo' }}</p>
       </div>
       <ul v-if="visibleTeams.length" class="hub-teams" aria-label="Equipos del reto">
-        <li v-for="team in visibleTeams" :key="team.id"><span>{{ team.name }}</span><b>{{ team.members.length }}</b></li>
-        <li v-if="book.teams.length > visibleTeams.length" class="hub-more">+{{ book.teams.length - visibleTeams.length }}</li>
+        <li v-for="team in visibleTeams" :key="team.id">
+          <span class="hub-team-name">{{ team.name }}</span>
+          <span class="hub-avatars" :aria-label="team.members.join(', ')" role="img"><i v-for="member in team.members" :key="member" :title="member">{{ initials(member) }}</i></span>
+          <b>{{ team.members.length }}</b>
+        </li>
+        <li v-if="book.teams.length > visibleTeams.length" class="hub-more">y {{ book.teams.length - visibleTeams.length }} {{ book.teams.length - visibleTeams.length === 1 ? 'equipo más' : 'equipos más' }}</li>
       </ul>
       <p v-else class="hub-empty">Todavía no hay equipos en este reto.</p>
       <ul class="hub-links">
@@ -137,10 +150,13 @@ function runEvaluationShortcut(id: string): void {
         <p><strong>{{ evidences.length }}</strong> {{ evidences.length === 1 ? 'anotación' : 'anotaciones' }}</p>
         <p><strong>{{ notedStudents }}</strong> de {{ students }} estudiantes con seguimiento</p>
       </div>
-      <figure v-if="latestEvidence" class="hub-quote">
-        <blockquote>{{ latestEvidence.note }}</blockquote>
-        <figcaption>{{ latestEvidence.student_name }}, por {{ latestEvidence.author_name }} el {{ formatRelative(latestEvidence.created_at) }}</figcaption>
-      </figure>
+      <ol v-if="recentEvidences.length" class="hub-notes" aria-label="Últimas anotaciones">
+        <li v-for="(evidence, index) in recentEvidences" :key="index">
+          <p><strong>{{ evidence.student_name }}</strong><time :datetime="evidence.created_at">{{ formatRelative(evidence.created_at) }}</time></p>
+          <blockquote>{{ evidence.note }}</blockquote>
+          <small>Anotada por {{ evidence.author_name }}</small>
+        </li>
+      </ol>
       <p v-else class="hub-empty">Aún no hay anotaciones. La primera aparecerá aquí.</p>
       <ul class="hub-links">
         <li><a :href="url('tab=evidence')" @click.prevent="emit('open', 'evidence')" aria-describedby="hub-hint-abrir-el-historial"><NotebookPen :size="17" /><span>Abrir el historial<small id="hub-hint-abrir-el-historial" aria-hidden="true">Busca y anota por estudiante</small></span><ChevronRight :size="16" /></a></li>
@@ -192,16 +208,27 @@ function runEvaluationShortcut(id: string): void {
 .hub-figures strong { margin-right: 3px; color: #2b1f28; font-size: 24px; font-weight: 600; letter-spacing: -.6px; }
 .hub-flag { padding: 3px 9px; border-radius: 99px; background: #eef4ef; color: #376c49; font-size: 11px; font-weight: 500; }
 .hub-flag.warning { background: #faf3df; color: #8a6620; }
-.hub-teams { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; padding: 0; list-style: none; }
-.hub-teams li { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 5px 6px 5px 10px; border: 1px solid #ece4ea; border-radius: 7px; background: #faf7f9; color: #4d3a47; font-size: 11px; }
-.hub-teams span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hub-teams b { min-width: 20px; padding: 1px 5px; border-radius: 4px; background: #fff; color: var(--green); font-size: 10px; text-align: center; }
-.hub-teams .hub-more { padding-right: 10px; color: var(--muted); }
+.hub-teams { margin: 0 0 18px; padding: 0; list-style: none; }
+.hub-teams li { display: grid; grid-template-columns: minmax(0, 1fr) auto 26px; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed #efe7ed; color: #3b2a36; font-size: 13px; }
+.hub-teams li:last-child { border-bottom: 0; }
+.hub-team-name { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.hub-avatars { display: flex; }
+.hub-avatars i { display: grid; place-items: center; width: 26px; height: 26px; margin-left: -6px; border: 2px solid #fff; border-radius: 50%; background: #f3e5ef; color: #82005e; font-size: 9px; font-style: normal; font-weight: 600; }
+.hub-avatars i:first-child { margin-left: 0; }
+.hub-avatars i:nth-child(2n) { background: #ead2e3; }
+.hub-teams b { color: var(--muted); font-size: 12px; font-weight: 500; text-align: right; }
+.hub-teams .hub-more { display: block; color: var(--muted); font-size: 12px; }
 .hub-empty { margin: 18px 0 16px; color: var(--muted); font-size: 12px; }
 
-.hub-quote { margin: 0 0 16px; padding: 12px 14px; border-left: 3px solid #e3bfd8; border-radius: 0 8px 8px 0; background: #faf7f9; }
-.hub-quote blockquote { display: -webkit-box; margin: 0; overflow: hidden; color: #3b2a36; font-size: 12px; line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.hub-quote figcaption { margin-top: 6px; color: var(--muted); font-size: 11px; }
+.hub-notes { margin: 0 0 18px; padding: 0; list-style: none; }
+.hub-notes li { padding: 10px 0 10px 14px; border-left: 2px solid #ecdbe7; }
+.hub-notes li + li { margin-top: 2px; }
+.hub-notes li:first-child { border-left-color: #82005e; }
+.hub-notes p { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 1.4; }
+.hub-notes strong { overflow: hidden; color: #2b1f28; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.hub-notes time { flex-shrink: 0; color: var(--muted); font-size: 11px; }
+.hub-notes blockquote { display: -webkit-box; margin: 4px 0 2px; overflow: hidden; color: #4d3a47; font-size: 12px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.hub-notes small { color: var(--muted); font-size: 11px; }
 
 .hub-weights { margin: 22px 0 16px; }
 .hub-weights > p { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 9px; color: #4d3a47; font-size: 12px; font-weight: 500; }
