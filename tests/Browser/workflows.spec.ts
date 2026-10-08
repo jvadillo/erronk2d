@@ -285,7 +285,7 @@ test('curso académico: primer acceso, grupo propio, cambio entre pestañas y pr
 test('curso cerrado: histórico del estudiante y bloqueo de edición del profesorado', async ({ page }) => {
   await login(page);
   await page.goto('/setup/courses');
-  await page.getByRole('button', { name: 'Editar curso', exact: true }).first().click();
+  await page.locator('.setup-grid > section').filter({ has: page.getByRole('heading', { name: '2026-2027', exact: true }) }).getByRole('button', { name: 'Editar curso', exact: true }).click();
   const course = page.getByRole('dialog');
   await course.getByLabel('Nombre', { exact: true }).fill('Curso revisado en navegador');
   await course.getByRole('button', { name: 'Guardar', exact: true }).click();
