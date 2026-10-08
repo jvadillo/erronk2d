@@ -1,28 +1,27 @@
 # Estado de la tarea
 
 ## Objetivo
-Cambiar la paleta de la UI de verde a morado, siguiendo `docs/retos_morado.png`.
+Sustituir las pestañas del reto por una página de inicio con cuatro cajas (Estudiantes y Equipos, Evaluación, Evidencias, Configuración) con accesos directos, y quitar la cabecera del reto en cada sección para ganar espacio vertical.
 
 ## Completado
-- Color principal `#82005e` (`--green` en `resources/css/app.css`, lateral, favicon, `theme-color`, barra de progreso de Inertia).
-- Morado oscuro `#6f0050` en botón principal y hover del lateral; tintes rosas claros (`#f7e4f0`) para elemento activo, marca y estado "En evaluación"; "En curso" en morado sólido.
-- Grises verdosos convertidos a grises neutros con leve tinte morado; fondo `#f6f4f5`, texto `#2b1f28`.
-- Se mantienen verdes/azules semánticos: `.notice.success`, `.badge.published`, `.badge.finished`.
-- Revisado visualmente con una vista previa estática del dashboard.
-
-- Desplegado en producción (`1c60762`) el 7/10/2026 con `ops/deploy`; copia `backups/production-20261007-1c60762`; HTTPS verificado. Detalle en `docs/despliegue.md`.
+- Rama `reto-inicio` (sin fusionar ni desplegar).
+- `resources/js/components/ChallengeHub.vue`: inicio del reto con las cuatro cajas; Evaluación destacada en morado con Tabla general, Ev. técnica, Ev. transversales, Introducción masiva y Exportar CSV; Equipos con integrantes; Evidencias con las tres últimas anotaciones; Configuración con reparto de pesos y edición de rúbricas.
+- `Challenge.vue`: `/challenges/{id}` sin `tab` muestra el inicio; `?tab=…` y `?evaluation=…` abren la sección. En las secciones solo hay una barra fija con regreso al inicio y selector compacto (`tablist` «Vistas del reto», solo iconos por debajo de 1250 px).
+- Tests de navegador adaptados y nuevo test «inicio del reto». `evidence.spec.ts` completo correcto (7/7) en el entorno de pruebas del VPS.
+- Paleta morada desplegada antes en producción (`1c60762`).
 
 ## Pendiente
-- Nada.
+- Revisión del usuario; después fusionar en `main` y desplegar con `ops/deploy`.
+- Fallos de navegador previos, también presentes en `main`: `rubrics.spec.ts` (botones antiguos «Rúbrica del equipo» y combo «Tipo» del editor) y cinco de `workflows.spec.ts` (enlaces «Profesor»/«Estudiante» de Organización).
 
 ## Archivos relevantes
-- `resources/css/app.css`, `resources/css/sidebar.css`, `resources/css/rubrics.css`.
-- `resources/js/components/EvidenceWorkspace.vue`, `resources/js/pages/Challenge.vue`, `resources/js/app.ts`.
-- `resources/views/app.blade.php`, `public/favicon.svg`.
+- `resources/js/components/ChallengeHub.vue`, `resources/js/pages/Challenge.vue`.
+- `tests/Browser/evidence.spec.ts`, `rubrics.spec.ts`, `workflows.spec.ts`, `empty-rubrics.spec.ts`.
 
 ## Decisiones
-- El nombre de variable `--green` se conserva para no tocar todas las referencias; ahora contiene el morado principal.
-- Conversión de tono automática (verde → morado, HSL) con ajustes manuales en lateral y estados.
+- La navegación entre secciones sigue siendo cliente (`router.push` con `preserveState`) para conservar borradores.
+- Publicar/Reabrir solo en el inicio del reto; el selector de estado sigue en Evaluación.
+- Pruebas de navegador: el VPS cambia temporalmente a la rama, `npm run build`, `migrate:fresh --seed` en `erronk2d-test` y vuelve a `main`.
 
 ## Último error
-- Ninguno.
+- Dos carreras en la prueba de pestañas (volver atrás/recargar antes de completar la visita); corregidas esperando la URL.
