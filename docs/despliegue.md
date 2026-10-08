@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 3f780ff; desplegada el 8 de octubre de 2026.** Las anotaciones de evidencias tienen valoración positiva, neutra o negativa (selector de caras junto a «Guardar anotación», neutra por defecto). Migración `add_sentiment_to_challenge_evidences` aplicada: las 3 anotaciones existentes quedan como neutras.
+**Producción en fdd6a55; desplegada el 8 de octubre de 2026.** La lista de estudiantes de Evidencias muestra un recuento por valoración (verde/gris/rojo) en lugar del total y sin avatares. `evidence.spec.ts` 5/5 antes de desplegar. Imágenes desde `git archive fdd6a55`; `ops/deploy` con copia privada `backups/production-20261008-fdd6a55` de `3f780ff`; sin migraciones. App/web ejecutan fdd6a55, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:fdd6a55`: `sha256:5334c59daee600d994d7d8a50f25bc24f74c51ea2cbfe125ddf919cc04f230f1`.
+- `erronk2d-web:fdd6a55`: `sha256:ba3bd063847fa7e1dd704ea71b713cd8479b1a25f14eb851746e8ebb61faa7ac`.
+
+**Producción anterior en 3f780ff; desplegada el 8 de octubre de 2026.** Las anotaciones de evidencias tienen valoración positiva, neutra o negativa (selector de caras junto a «Guardar anotación», neutra por defecto). Migración `add_sentiment_to_challenge_evidences` aplicada: las 3 anotaciones existentes quedan como neutras.
 
 Validación previa: 218 pruebas PHP / 1.941 aserciones en PostgreSQL y 16 pruebas de navegador correctas tras eliminar las obsoletas. Imágenes construidas desde `git archive 3f780ff`; `ops/deploy` completado con copia privada `backups/production-20261008-3f780ff` de `f3f2a9e`. App/web ejecutan 3f780ff, web y PostgreSQL saludables, mantenimiento retirado; `/up` y `/login` HTTP 200 por HTTPS.
 
