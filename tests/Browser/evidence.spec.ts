@@ -257,6 +257,7 @@ test('pestañas del reto: vistas, borradores, configuración persistente y naveg
   await settings.getByRole('button', { name: 'Guardar configuración' }).click();
   await expect(settings.getByRole('status')).toHaveText('Cambios guardados');
   await tabs.getByRole('tab', { name: 'Evaluación', exact: true }).click();
+  await expect(page).toHaveURL(/\?tab=evaluation$/);
   await page.goBack();
   await expect(tabs.getByRole('tab', { name: 'Configuración', exact: true })).toHaveAttribute('aria-selected', 'true');
   await tabs.getByRole('tab', { name: 'Configuración', exact: true }).focus();
