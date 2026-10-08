@@ -248,6 +248,7 @@ test('pestañas del reto: vistas, borradores, configuración persistente y naveg
   await expect(settings.getByRole('status')).toHaveText('Cambios guardados');
   await tabs.getByRole('tab', { name: 'Evidencias', exact: true }).click();
   await expect(note).toHaveValue('Borrador de evidencia entre pestañas');
+  await expect(page).toHaveURL(/\?tab=evidence$/);
   await page.reload();
   await expect(tabs.getByRole('tab', { name: 'Evidencias', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect(note).toHaveValue('');
