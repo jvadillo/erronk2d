@@ -552,7 +552,7 @@ File rules:
 - Accept `.csv` and `.xlsx`, at most 2 MiB; at most 1,000 data rows plus one header. The row limit is checked before ignoring blank rows.
 - For XLSX, read the first worksheet only. Reject invalid workbooks and archives whose total uncompressed entries exceed 20 MiB. Require scalar text-compatible cells; do not silently turn structured/date objects into account fields.
 - For CSV, choose semicolon if the first line contains more semicolons than commas; otherwise comma. Honor quoted cells. Normalize headers to lowercase, strip BOM and surrounding whitespace.
-- People require `name,email`; modules require `name,code`. Headers must be unique after normalization. Additional unique columns may be present but do not change roles, credentials or other account fields.
+- Students require `nombre,email` and teachers `name,email`; modules require `name,code`. Headers must be unique after normalization. Additional unique columns may be present but do not change roles, credentials or other account fields.
 - Ignore fully empty rows. Every nonempty row must have exactly the header's column count. Trim values; preserve names/accents; lowercase email. A truly empty data file is an error.
 - Name max 150; email valid/max 255; module code required/max 30. Report source row numbers starting at 2.
 - Reject duplicates within a file by case-insensitive email/code. Reject an existing teacher email for teacher import. Student import may reuse only an existing active student; reject another role or inactive account. Module import rejects an existing case-insensitive code in destination cycle/level.

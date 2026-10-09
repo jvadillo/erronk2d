@@ -14,7 +14,7 @@ const props = defineProps<{
   teachers: { id: number; name: string }[];
   saveUrl: string;
   libraryUrl: string;
-  challengeContext?: { id: number; name: string; kind: 'team' | 'transversal'; cycle: string | null; level: number | null; revision: number; requiresReason: boolean; previewUrl: string };
+  challengeContext?: { id: number; name: string; kind: 'team' | 'transversal'; cycle: string | null; level: number | null; revision: number; requiresReason: boolean; savesToLibrary: boolean; previewUrl: string };
 
 }>();
 const legacy = ref(!!props.rubric && !commonScores(props.rubric.items));
@@ -182,7 +182,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
       <div class="rubric-toolbar"><button type="button" class="button" :disabled="form.items.length >= 40 || (legacy && !challengeContext)" @click="form.items.push(makeItem(form.scores))"><Plus :size="16"/>Añadir criterio</button><span class="helper">{{ form.items.length }} criterios · {{ form.scores.length }} niveles. Desplaza la tabla para ver todas las columnas.</span></div>
       <details v-if="!challengeContext" class="panel rubric-sharing"><summary>Compartir para usar y copiar · {{ form.shared_user_ids.length }} personas</summary><div class="rubric-sharing-list"><label v-for="teacher in teachers" :key="teacher.id" class="check"><input v-model="form.shared_user_ids" type="checkbox" :value="teacher.id"/>{{ teacher.name }}</label></div></details>
       </fieldset>
-      <footer class="rubric-toolbar"><p class="helper">{{ challengeContext ? 'Los cambios se aplicarán únicamente a este reto. Se conservará la evidencia anterior en el historial.' : 'Editar esta plantilla no modifica las rúbricas que ya están asignadas a retos.' }}</p><div class="actions"><Link :href="libraryUrl" class="button">Cancelar</Link><button class="button primary" type="submit" :disabled="submitDisabled">{{ saveLabel }}</button></div></footer>
+      <footer class="rubric-toolbar"><p class="helper">{{ challengeContext ? (challengeContext.savesToLibrary ? 'Los cambios se aplicarán a este reto y a su copia en tu biblioteca de rúbricas. Se conservará la evidencia anterior en el historial.' : 'Los cambios se aplicarán únicamente a este reto. Se conservará la evidencia anterior en el historial.') : 'Editar esta plantilla no modifica las rúbricas que ya están asignadas a retos.' }}</p><div class="actions"><Link :href="libraryUrl" class="button">Cancelar</Link><button class="button primary" type="submit" :disabled="submitDisabled">{{ saveLabel }}</button></div></footer>
     </form>
     <Modal v-if="impact" title="Confirmar cambios de la rúbrica" @close="!submitting && (impact = null)">
       <p><strong>{{ impact.removed_assessments }} valoraciones se eliminarán.</strong> Las restantes se conservarán.</p>

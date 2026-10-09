@@ -75,9 +75,11 @@ class ImportController extends Controller
         }
         $headerRow = array_shift($rows) ?? [];
         abort_if(collect($headerRow)->contains(fn ($value) => ! is_scalar($value) && $value !== null), 422, 'Las cabeceras deben contener texto.');
-        $header = array_map(fn ($v) => strtolower(trim((string) $v, "\xEF\xBB\xBF \t\n\r\0\x0B")), $headerRow);
-        $required = $r->kind === 'module' ? ['name', 'code'] : ['name', 'email'];
-        abort_if(array_diff($required, $header) || count($header) !== count(array_unique($header)), 422, 'Cabeceras requeridas: '.implode(', ', $required));
+        $header = array_map(fn ($v) => mb_strtolower(trim((string) $v, "\xEF\xBB\xBF \t\n\r\0\x0B")), $headerRow);
+        $required = ['student' => ['nombre', 'email'], 'teacher' => ['name', 'email'], 'module' => ['name', 'code']][$r->kind];
+        $missing = array_diff($required, $header);
+        $header = array_map(fn (string $column) => $column === 'nombre' ? 'name' : $column, $header);
+        abort_if($missing || count($header) !== count(array_unique($header)), 422, 'La primera fila debe contener las cabeceras: '.implode(', ', $required).'.');
         $valid = [];
         $errors = [];
         $seen = [];

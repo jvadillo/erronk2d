@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Grades\ChallengeRubricEditor;
 use App\Models\Assessment;
 use App\Models\AuditEvent;
 use App\Models\Challenge;
@@ -130,6 +131,35 @@ class ChallengeRubricEditingTest extends TestCase
         $this->assertDatabaseCount('assessments', 0);
         $this->assertNull($response->json($kind === 'team' ? 'book.teams.0.grade' : 'book.rows.0.transversal'));
         $this->assertDatabaseHas('audit_events', ['challenge_id' => $this->challenge->id, 'action' => 'rubric']);
+    }
+
+    public function test_rubric_created_with_the_challenge_is_kept_in_its_author_library(): void
+    {
+        $items = $this->challenge->team_rubric['items'];
+        $this->challenge->update(['team_rubric' => ['name' => ChallengeRubricEditor::DEFAULT_NAMES['team'], 'items' => []]]);
+        $this->get(route('challenges.rubrics.edit', [$this->challenge, 'team']))->assertInertia(fn (Assert $page) => $page->where('challengeContext.savesToLibrary', true));
+        $input = $this->payload();
+        $input['rubric']['items'] = array_map(fn (array $item) => [...$item, 'levels' => array_map(fn (array $level) => [...$level, 'source_index' => null], $item['levels'])], $items);
+
+        $this->save($input, $this->preview($input)->json('token'))->assertOk();
+
+        $library = Rubric::sole();
+        $this->assertSame([$this->teacher->id, 'team', 'Rúbrica técnica · '.$this->challenge->name, $items], [$library->owner_id, $library->kind, $library->name, $library->items]);
+        $this->assertSame($library->id, $this->challenge->fresh()->team_rubric_id);
+
+        $input = $this->payload();
+        $input['rubric']['items'][0]['name'] = 'Calidad revisada';
+        $this->save($input, $this->preview($input)->json('token'))->assertOk();
+        $this->assertSame('Calidad revisada', Rubric::sole()->items[0]['name']);
+
+        $colleague = User::factory()->create(['role' => 'teacher']);
+        $this->challenge->classroom->users()->attach($colleague);
+        $this->actingAs($colleague);
+        $input = $this->payload();
+        $input['rubric']['items'][0]['name'] = 'Cambio de otra persona';
+        $this->save($input, $this->preview($input)->json('token'))->assertOk();
+        $this->assertSame('Cambio de otra persona', $this->challenge->fresh()->team_rubric['items'][0]['name']);
+        $this->assertSame('Calidad revisada', Rubric::sole()->items[0]['name']);
     }
 
     public static function assessmentKinds(): array
@@ -368,6 +398,8 @@ class ChallengeRubricEditingTest extends TestCase
         $this->assertSame($rubric['items'], $this->challenge->fresh()->team_rubric['items']);
         $this->assertSame($rubric['items'], $library->fresh()->items);
         $this->assertSame($rubric, $other->fresh()->team_rubric);
+        $this->assertDatabaseCount('rubrics', 1);
+        $this->assertNull($this->challenge->fresh()->team_rubric_id);
     }
 
     public static function invalidChanges(): array

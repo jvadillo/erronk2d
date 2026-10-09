@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\AcademicContext;
+use App\Domain\Grades\ChallengeRubricEditor;
 use App\Domain\Grades\ChallengeWriter;
 use App\Domain\Grades\Gradebook;
 use App\Models\AuditEvent;
@@ -68,7 +69,7 @@ class ChallengeController extends Controller
                 throw ValidationException::withMessages(['module_ids' => 'Los módulos deben pertenecer al grupo seleccionado.']);
             }
             $rubrics = [];
-            foreach (['team' => 'Rúbrica técnica', 'transversal' => 'Rúbrica transversal'] as $kind => $name) {
+            foreach (ChallengeRubricEditor::DEFAULT_NAMES as $kind => $name) {
                 $field = $kind.'_rubric_id';
                 $rubric = $data[$field] === null ? null : Rubric::availableTo($request->user())->where('kind', $kind)->findOrFail($data[$field]);
                 if ($rubric?->cycle_id && ($rubric->cycle_id !== $class->cycle_id || $rubric->level !== $class->level)) {

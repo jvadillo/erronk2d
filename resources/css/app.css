@@ -61,3 +61,8 @@
   .team-editor-actions { align-items: stretch; flex-direction: column-reverse; }
   .team-editor-actions .button { justify-content: center; }
 }
+
+.import-format { display: block; }
+.import-format table { margin-top: 10px; border: 1px solid #e8d3e2; border-radius: 6px; background: #fff; color: #2b1f28; }
+.import-format th, .import-format td { padding: 8px 12px; }
+.import-format thead th { font-size: 11px; text-transform: none; letter-spacing: 0; }

@@ -185,7 +185,7 @@ class AcademicWorkflowTest extends TestCase
         $password = $student->password;
         $this->select($class->owner, $class->academicYear);
 
-        $this->post('/imports', ['kind' => 'student', 'commit' => true, 'classroom_id' => $class->id, 'file' => UploadedFile::fake()->createWithContent('students.csv', "name,email\nOtro nombre,reused@example.test\n")])->assertJsonPath('committed', true);
+        $this->post('/imports', ['kind' => 'student', 'commit' => true, 'classroom_id' => $class->id, 'file' => UploadedFile::fake()->createWithContent('students.csv', "nombre,email\nOtro nombre,reused@example.test\n")])->assertJsonPath('committed', true);
 
         $this->assertSame($password, $student->fresh()->password);
         $this->assertSame($student->name, $student->fresh()->name);

@@ -3,6 +3,7 @@
 namespace App\Domain\Grades;
 
 use App\Models\Challenge;
+use App\Models\Rubric;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -10,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 final class ChallengeRubricEditor
 {
+    public const DEFAULT_NAMES = ['team' => 'Rúbrica técnica', 'transversal' => 'Rúbrica transversal'];
+
     public function __construct(private Gradebook $book, private Calculator $calc) {}
 
     public function authorize(User $actor, Challenge $challenge): void
@@ -136,6 +139,35 @@ final class ChallengeRubricEditor
         foreach ($change['updates'] as $id => $level) {
             DB::table('assessments')->where('challenge_id', $challenge->id)->where('id', $id)->update(['level' => $level]);
         }
+        $library = $this->libraryRubric($actor, $challenge, $change['field']);
         $challenge->{$change['field']} = $change['rubric'];
+        if ($library) {
+            $library->fill(['name' => $this->libraryName($challenge, $change['rubric']['name']), 'items' => $change['rubric']['items']])->save();
+            $challenge->{$change['field'].'_id'} = $library->id;
+        }
+    }
+
+    /**
+     * A rubric created empty with the challenge is also kept in its author's library.
+     * Rubrics copied from the library stay independent so the template is not altered.
+     */
+    public function libraryRubric(User $actor, Challenge $challenge, string $field): ?Rubric
+    {
+        $linked = Rubric::find($challenge->{$field.'_id'});
+        if ($linked) {
+            return $linked->owner_id === $actor->id || $actor->role === 'admin' ? $linked : null;
+        }
+        if ($challenge->$field['items'] !== []) {
+            return null;
+        }
+        $class = $challenge->classroom;
+        $catalog = $class->cycle_id && $class->level;
+
+        return new Rubric(['owner_id' => $actor->id, 'kind' => $field === 'team_rubric' ? 'team' : 'transversal', 'cycle_id' => $catalog ? $class->cycle_id : null, 'level' => $catalog ? $class->level : null]);
+    }
+
+    private function libraryName(Challenge $challenge, string $name): string
+    {
+        return in_array($name, self::DEFAULT_NAMES, true) ? mb_substr($name.' · '.$challenge->name, 0, 150) : $name;
     }
 }

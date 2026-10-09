@@ -1,30 +1,29 @@
 # Estado de la tarea
 
 ## Objetivo
-Simplificar los estados del reto, volver al inicio del reto tras guardar equipos con un aviso y renombrar «Revisar cambios» a «Guardar cambios» en el editor de rúbricas del reto.
+Importar estudiantes con las cabeceras `nombre` y `email` y guardar en la biblioteca las rúbricas creadas desde un reto.
 
 ## Completado
-- Estados: se elimina `draft`. Un reto nuevo nace `active` («En curso»): el profesorado edita y evalúa, el alumnado no se evalúa. `evaluating` («En evaluación») abre la autoevaluación y la coevaluación. Finalizado y Publicado sin cambios.
-- Migración `2026_10_09_100000_simplify_challenge_statuses`: `active`→`evaluating` (conserva el acceso del alumnado), `draft`→`active`, valor por defecto `active`.
-- `ChallengeWriter`: estados permitidos `active,evaluating,finished`; el alumnado solo evalúa en `evaluating`. Seeder adaptado.
-- `Challenge.vue`: botones «Pasar a evaluación» / «Volver a En curso» en la cabecera (permiso `manage_challenges`) con aviso; «Guardar equipos» vuelve al inicio del reto y muestra un aviso de éxito.
-- `RubricEditor.vue`: «Guardar cambios» en contexto de reto. `Student.vue` y `lib.ts` adaptados.
-- Pruebas: `GradebookTest` (evaluación del alumnado según estado, `draft` rechazado), `ChallengeCreationTest` (nace `active`), navegador `empty-rubrics` y `workflows` actualizadas.
-- Validado en local: `vue-tsc` y `vite build` correctos; `php -l` correcto.
+- Importación de estudiantes: cabeceras `nombre, email` sin distinguir mayúsculas; `name` ya no se acepta para estudiantes. Profesorado (`name, email`) y módulos (`name, code`) sin cambios. Mensaje de error: «La primera fila debe contener las cabeceras: …».
+- Ventana de importación (`Setup.vue`): bloque «Estructura del archivo» con las cabeceras y una fila de ejemplo según el tipo.
+- Rúbricas: migración `2026_10_09_120000_link_challenge_rubrics_to_library` (`team_rubric_id`, `transversal_rubric_id` en `challenges`, `nullOnDelete`). Al guardar una rúbrica que nació vacía en el reto se crea una rúbrica en la biblioteca de quien la edita (ciclo/nivel del grupo); los guardados siguientes la actualizan si quien edita es su propietario o admin. Las rúbricas copiadas de la biblioteca siguen independientes.
+- Nombre por defecto («Rúbrica técnica»/«Rúbrica transversal») se guarda en la biblioteca como «… · nombre del reto». El editor avisa en el pie cuando el guardado también actualiza la biblioteca (`savesToLibrary`).
+- Pruebas: `ImportTest` (cabeceras nuevas y rechazo de `name`), `AcademicWorkflowTest`, `ChallengeRubricEditingTest` (creación, actualización, otra persona no altera la biblioteca, plantilla no se duplica).
+- Validado en local: `vue-tsc`, `vite build` y `php -l` correctos.
 
 ## Pendiente
-- Ejecutar PHPUnit, Pint y Playwright en el VPS (en local no hay `vendor` ni Docker activo; PHP local 8.1).
-- Desplegar con copia previa; la migración cambia estados de retos existentes.
+- Ejecutar PHPUnit, Pint y Playwright en el VPS (en local no hay `vendor`; PHP local 8.1). Incluye lo pendiente del bloque anterior (estados del reto).
+- Desplegar con copia previa; hay dos migraciones nuevas (estados del reto y enlace de rúbricas).
+- Las rúbricas creadas desde retos antes de este cambio no tienen enlace y no aparecen en la biblioteca.
 
 ## Archivos relevantes
-- `database/migrations/2026_10_09_100000_simplify_challenge_statuses.php`, `app/Domain/Grades/ChallengeWriter.php`, `database/seeders/DatabaseSeeder.php`.
-- `resources/js/pages/Challenge.vue`, `resources/js/pages/RubricEditor.vue`, `resources/js/pages/Student.vue`, `resources/js/lib.ts`.
-- `tests/Feature/GradebookTest.php`, `tests/Feature/ChallengeCreationTest.php`, `tests/Browser/empty-rubrics.spec.ts`, `tests/Browser/workflows.spec.ts`.
+- `app/Http/Controllers/ImportController.php`, `resources/js/pages/Setup.vue`, `resources/css/app.css`.
+- `app/Domain/Grades/ChallengeRubricEditor.php`, `app/Http/Controllers/ChallengeRubricController.php`, `app/Http/Controllers/ChallengeController.php`, `resources/js/pages/RubricEditor.vue`.
+- `tests/Feature/ImportTest.php`, `tests/Feature/AcademicWorkflowTest.php`, `tests/Feature/ChallengeRubricEditingTest.php`.
 
 ## Decisiones
-- Los retos `active` existentes pasan a `evaluating` para no cerrar la evaluación del alumnado ya abierta.
-- Reabrir un reto lo deja en `evaluating` (sin cambios).
-- Pruebas de navegador: `migrate:fresh --seed` en `erronk2d-test` antes de cada ejecución.
+- Solo las rúbricas nacidas vacías en el reto se enlazan a la biblioteca, para no modificar plantillas compartidas.
+- Si se borra la rúbrica de la biblioteca, el reto conserva su copia y no se vuelve a crear.
 
 ## Último error
 - Ninguno.
