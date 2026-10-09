@@ -117,6 +117,24 @@ class RubricEditorTest extends TestCase
         $this->assertSame(1, $assessment->fresh()->level);
     }
 
+    public function test_rubric_linked_to_a_challenge_is_only_edited_from_that_challenge(): void
+    {
+        $owner = User::factory()->create(['role' => 'teacher']);
+        $rubric = Rubric::create([...$this->payload(), 'owner_id' => $owner->id]);
+        $challenge = Challenge::factory()->create(['team_rubric' => ['name' => $rubric->name, 'items' => $rubric->items], 'team_rubric_id' => $rubric->id]);
+        $editor = route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => 'team']);
+
+        $this->actingAs($owner)->get('/setup/rubrics')->assertInertia(fn (Assert $page) => $page->where('rubrics.0.challenge', ['name' => $challenge->name, 'editor_url' => $editor]));
+        $this->get(route('rubrics.edit', $rubric->id))->assertRedirect($editor);
+        $this->post('/setup/rubric', ['id' => $rubric->id, ...$this->payload(), 'name' => 'Cambio'])->assertSessionHasErrors('name');
+        $this->assertSame('Rúbrica de proyecto', $rubric->fresh()->name);
+
+        $this->post('/setup/rubric-copy', ['id' => $rubric->id])->assertSessionHasNoErrors();
+        $copy = Rubric::whereKeyNot($rubric->id)->sole();
+        $this->assertNull($copy->linkedChallenge());
+        $this->post('/setup/rubric', ['id' => $copy->id, ...$this->payload(), 'name' => 'Copia editable'])->assertSessionHasNoErrors();
+    }
+
     public function test_team_module_must_match_cycle_and_level(): void
     {
         $data = $this->payload();
