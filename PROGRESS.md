@@ -10,12 +10,10 @@ Importar estudiantes con las cabeceras `nombre` y `email` y guardar en la biblio
 - Una rúbrica enlazada a un reto no se edita desde la biblioteca: la tarjeta muestra «Pertenece al reto …» y «Editar en el reto»; su URL de edición redirige al editor del reto y el guardado se rechaza. Duplicarla crea una copia independiente.
 - Nombre por defecto («Rúbrica técnica»/«Rúbrica transversal») se guarda en la biblioteca como «… · nombre del reto». El editor avisa en el pie cuando el guardado también actualiza la biblioteca (`savesToLibrary`).
 - Pruebas: `ImportTest` (cabeceras nuevas y rechazo de `name`), `AcademicWorkflowTest`, `RubricEditorTest` (rúbrica enlazada solo editable desde el reto), `ChallengeRubricEditingTest` (creación, actualización también cuando edita otra persona, plantilla no se duplica).
-- Validado en local: `vue-tsc`, `vite build` y `php -l` correctos.
+- Validado en el VPS: 222 pruebas PHP en PostgreSQL, Pint y 16 pruebas Playwright correctas. Desplegado 464ecf2 en producción el 9 de octubre de 2026 con copia `backups/production-20261009-464ecf2`.
 
 ## Pendiente
-- Ejecutar PHPUnit, Pint y Playwright en el VPS (en local no hay `vendor`; PHP local 8.1). Incluye lo pendiente del bloque anterior (estados del reto).
-- Desplegar con copia previa; hay dos migraciones nuevas (estados del reto y enlace de rúbricas).
-- Las rúbricas creadas desde retos antes de este cambio no tienen enlace y no aparecen en la biblioteca.
+- Nada de este bloque. Las rúbricas creadas desde retos antes de este cambio no tienen enlace y no aparecen en la biblioteca (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
 - `app/Http/Controllers/ImportController.php`, `resources/js/pages/Setup.vue`, `resources/css/app.css`.

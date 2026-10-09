@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en fdd6a55; desplegada el 8 de octubre de 2026.** La lista de estudiantes de Evidencias muestra un recuento por valoración (verde/gris/rojo) en lugar del total y sin avatares. `evidence.spec.ts` 5/5 antes de desplegar. Imágenes desde `git archive fdd6a55`; `ops/deploy` con copia privada `backups/production-20261008-fdd6a55` de `3f780ff`; sin migraciones. App/web ejecutan fdd6a55, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+**Producción en 464ecf2; desplegada el 9 de octubre de 2026.** Estados del reto simplificados (sin borrador; «En curso» y «En evaluación»), vuelta al inicio tras guardar equipos, importación de estudiantes con cabeceras `nombre, email` y rúbricas creadas desde un reto guardadas en la biblioteca y editables solo desde el reto. Validación previa en el VPS: 222 pruebas PHP / 1.986 aserciones en PostgreSQL, Pint y 16 pruebas de navegador correctas. Imágenes desde `git archive 464ecf2`; `ops/deploy` con copia privada `backups/production-20261009-464ecf2` de `fdd6a55`; migraciones `simplify_challenge_statuses` y `link_challenge_rubrics_to_library` aplicadas. App/web ejecutan 464ecf2, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:464ecf2`: `sha256:ef839bc57ab5acd723846ecd36b7230bfa03086aeedf9ea054ae3d7b7f90dc03`.
+- `erronk2d-web:464ecf2`: `sha256:5f011a4cd555c2d9da07e10e58868acd5150822f33f970f7825bf4ec77f2a3ff`.
+
+**Producción anterior en fdd6a55; desplegada el 8 de octubre de 2026.** La lista de estudiantes de Evidencias muestra un recuento por valoración (verde/gris/rojo) en lugar del total y sin avatares. `evidence.spec.ts` 5/5 antes de desplegar. Imágenes desde `git archive fdd6a55`; `ops/deploy` con copia privada `backups/production-20261008-fdd6a55` de `3f780ff`; sin migraciones. App/web ejecutan fdd6a55, saludables; `/up` y `/login` HTTP 200 por HTTPS.
 
 - `erronk2d-app:fdd6a55`: `sha256:5334c59daee600d994d7d8a50f25bc24f74c51ea2cbfe125ddf919cc04f230f1`.
 - `erronk2d-web:fdd6a55`: `sha256:ba3bd063847fa7e1dd704ea71b713cd8479b1a25f14eb851746e8ebb61faa7ac`.
