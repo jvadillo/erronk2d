@@ -88,6 +88,7 @@ class ChallengeCreationTest extends TestCase
         $response = $this->actingAs($admin)->post('/challenges', $data);
         $challenge = $classroom->challenges()->firstOrFail();
         $response->assertRedirect('/challenges/'.$challenge->id);
+        $this->assertSame('active', $challenge->status);
         $this->assertSame([$student->id], $challenge->students()->pluck('users.id')->all());
         $this->assertSame($items, $challenge->team_rubric['items']);
         $this->assertDatabaseHas('audit_events', ['challenge_id' => $challenge->id, 'action' => 'create']);

@@ -168,9 +168,10 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   await secondTeamSearch.fill('ander');
   await secondTeamOptions.filter({ hasText: 'Ander García' }).click();
   await dialog.getByRole('button', { name: 'Guardar equipos', exact: true }).click();
-  await expect(dialog.getByRole('status')).toHaveText('Cambios guardados');
+  await expect(page.locator('.toast-region').getByText('Los cambios se han guardado correctamente.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Estudiantes y Equipos', exact: true })).toBeVisible();
   await page.reload();
-  await page.getByRole('tab', { name: 'Estudiantes y Equipos', exact: true }).click();
+  await page.getByRole('link', { name: 'Estudiantes y Equipos', exact: true }).click();
   await expect(dialog.locator('.team-editor > section')).toHaveCount(2);
   await expect(dialog.locator('.team-roster-heading b')).toHaveText(['2/5', '2/5']);
   await expect(dialog.locator('.team-members li')).toHaveCount(4);

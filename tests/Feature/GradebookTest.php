@@ -252,6 +252,16 @@ class GradebookTest extends TestCase
         $this->actingAs($outsider)->get('/challenges/'.$this->challenge->id)->assertNotFound();
     }
 
+    public function test_students_only_assess_while_the_challenge_is_being_evaluated(): void
+    {
+        $peer = ['action' => 'assess', 'kind' => 'peer', 'entries' => [['subject_id' => $this->students[1]->id, 'criterion' => 'quality', 'level' => 1]]];
+        $this->write(['action' => 'status', 'status' => 'draft'])->assertUnprocessable()->assertJsonValidationErrors('status');
+        $this->write(['action' => 'status', 'status' => 'active'])->assertOk();
+        $this->write($peer, $this->students[0])->assertUnprocessable();
+        $this->write(['action' => 'status', 'status' => 'evaluating'])->assertOk();
+        $this->write($peer, $this->students[0])->assertOk();
+    }
+
     public function test_revision_conflict_prevents_lost_updates_and_batch_is_atomic(): void
     {
         $this->teamGrade();

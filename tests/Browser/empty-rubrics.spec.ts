@@ -53,7 +53,7 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   for (let level = 1; level <= 4; level++) {
     await page.getByLabel(`Criterio 1, descripción del nivel ${level}`, { exact: true }).fill(`Solución de nivel ${level}`);
   }
-  await page.getByRole('button', { name: 'Revisar cambios', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).first().click();
   await page.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click();
   await expect(page.getByText('Crea los equipos del reto para poder evaluarlos.', { exact: true })).toBeVisible();
   await page.getByRole('tab', { name: 'Estudiantes y Equipos', exact: true }).click();
@@ -61,8 +61,9 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await page.locator('.team-student-option').filter({ hasText: 'Ainhoa Agirre' }).click();
   await page.locator('.team-student-option').filter({ hasText: 'Aitor Fernández' }).click();
   await page.getByRole('button', { name: 'Guardar equipos', exact: true }).click();
-  await expect(page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true }).getByRole('status')).toHaveText('Cambios guardados');
-  await page.getByRole('tab', { name: 'Evaluación', exact: true }).click();
+  await expect(page.locator('.toast-region').getByText('Los cambios se han guardado correctamente.', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(challengeUrl);
+  await page.getByRole('link', { name: 'Evaluación', exact: true }).click();
   await expect(page.locator('.matrix')).toBeVisible();
   await page.getByRole('button', { name: 'Ev. técnica', exact: true }).click();
   await page.getByRole('button', { name: 'Equipo 1, Primera solución: 8. Solución de nivel 3', exact: true }).click();
@@ -92,7 +93,7 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   for (let level = 1; level <= 4; level++) {
     await page.getByLabel(`Criterio 1, descripción del nivel ${level}`, { exact: true }).fill(`Colaboración de nivel ${level}`);
   }
-  await page.getByRole('button', { name: 'Revisar cambios', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).first().click();
   await page.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click();
   await expect(page.locator('.rubric-assessment tbody tr')).toHaveCount(1);
   await page.getByRole('button', { name: 'Ainhoa Agirre, Colaboración: 8. Colaboración de nivel 3', exact: true }).click();

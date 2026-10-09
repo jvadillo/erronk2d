@@ -68,7 +68,7 @@ final class ChallengeWriter
                     break;
                 case 'status':
                     $this->permit($actor, 'manage_challenges');
-                    Validator::make($input, ['status' => 'required|in:draft,active,evaluating,finished'])->validate();
+                    Validator::make($input, ['status' => 'required|in:active,evaluating,finished'])->validate();
                     if ($input['status'] === 'finished' && ! $before['complete']) {
                         throw ValidationException::withMessages(['status' => 'Completa las evaluaciones antes de finalizar.']);
                     }
@@ -220,7 +220,7 @@ final class ChallengeWriter
         }
         if (in_array($kind, ['self', 'peer'], true)) {
             abort_unless($actor->role === 'student' && $ch->students()->where('users.id', $actor->id)->exists(), 403);
-            abort_unless(in_array($ch->status, ['active', 'evaluating'], true), 422, 'La evaluación del alumnado no está abierta.');
+            abort_unless($ch->status === 'evaluating', 422, 'La evaluación del alumnado no está abierta.');
         }
         $items = collect(($kind === 'team' ? $ch->team_rubric : $ch->transversal_rubric)['items'] ?? [])->keyBy('key');
         if ($items->isEmpty()) {

@@ -82,7 +82,7 @@ class DatabaseSeeder extends Seeder
             $titles = ['Una web para nuestra comunidad', 'Datos que cuentan historias', 'Un comercio más cercano', 'Conectamos el barrio', 'Ideas con impacto', 'Nuestro portfolio profesional'];
             $descriptions = ['Diseñamos una plataforma accesible para conectar las iniciativas de nuestro entorno.', 'Transformamos datos abiertos en una experiencia interactiva, útil y comprensible.', 'Un escaparate digital para impulsar el pequeño comercio de nuestra ciudad.', 'Una aplicación para compartir recursos y fortalecer la comunidad.', 'Convertimos una necesidad real en un producto digital que aporta valor.', 'Mostramos lo aprendido en un portfolio que cuenta nuestra historia.'];
             foreach ($titles as $ci => $title) {
-                $ch = Challenge::create(['name' => $title, 'description' => $descriptions[$ci], 'classroom_id' => $class->id, 'period_id' => $periods[intdiv($ci, 2)]->id, 'status' => $ci === 5 ? 'draft' : ($ci === 4 ? 'active' : 'evaluating'), 'weight' => $ci % 2 === 0 ? '2' : '3', 'distribution_enabled' => $ci !== 2, 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30], 'team_rubric' => ['name' => $tr->name, 'items' => $tr->items], 'transversal_rubric' => ['name' => $xr->name, 'items' => $xr->items], 'starts_at' => now()->addDays($ci * 14)->toDateString(), 'ends_at' => now()->addDays($ci * 14 + 12)->toDateString()]);
+                $ch = Challenge::create(['name' => $title, 'description' => $descriptions[$ci], 'classroom_id' => $class->id, 'period_id' => $periods[intdiv($ci, 2)]->id, 'status' => $ci === 5 ? 'active' : 'evaluating', 'weight' => $ci % 2 === 0 ? '2' : '3', 'distribution_enabled' => $ci !== 2, 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30], 'team_rubric' => ['name' => $tr->name, 'items' => $tr->items], 'transversal_rubric' => ['name' => $xr->name, 'items' => $xr->items], 'starts_at' => now()->addDays($ci * 14)->toDateString(), 'ends_at' => now()->addDays($ci * 14 + 12)->toDateString()]);
                 $ch->update(['catalog_snapshot' => ['classroom' => $class->name, 'cycle' => $cycle->name, 'level' => 2, 'year' => $year->name, 'period' => $periods[intdiv($ci, 2)]->name, 'modules' => collect($modules)->mapWithKeys(fn ($module) => [$module->id => $module->only(['name', 'code'])])->all()]]);
                 $ch->modules()->attach(array_map(fn ($m) => $m->id, $modules));
                 $ch->students()->attach(array_map(fn ($s) => $s->id, $students));
@@ -130,7 +130,7 @@ class DatabaseSeeder extends Seeder
             }
             $empty = $ch->replicate();
             $empty->name = 'Reto vacío para pruebas';
-            $empty->status = 'draft';
+            $empty->status = 'active';
             $empty->save();
             $empty->modules()->sync(array_map(fn ($module) => $module->id, $modules));
         });

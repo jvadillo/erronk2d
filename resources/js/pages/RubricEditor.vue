@@ -98,7 +98,7 @@ const pendingChange = ref<Record<string, unknown> | null>(null);
 const legacyWeights = computed(() => !!props.challengeContext && initialItems.length > 0 && initialItems.reduce((sum, item) => sum + decimal(item.weight), 0) !== 100);
 const originalRelativeWeights = computed(() => legacyWeights.value && form.items.length === initialItems.length && form.items.every(item => { const original = initialItems.find(candidate => candidate.key === item.key); return original && decimal(item.weight) === decimal(original.weight); }));
 const submitDisabled = computed(() => form.processing || submitting.value || (legacy.value && !props.challengeContext));
-const saveLabel = computed(() => props.challengeContext ? 'Revisar cambios' : 'Guardar rúbrica');
+const saveLabel = computed(() => props.challengeContext ? 'Guardar cambios' : 'Guardar rúbrica');
 const kindLabels: Record<string, string> = { team: 'equipo', teacher: 'docentes', self: 'autoevaluaciones', peer: 'coevaluaciones' };
 watch(() => [form.name, form.items, form.scores, form.reason], () => { impact.value = null; pendingChange.value = null; }, { deep: true });
 async function previewChange() {

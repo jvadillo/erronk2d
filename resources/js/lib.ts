@@ -8,7 +8,7 @@ export const permission = (name: string) => {
   return allowed&&(!contextual.includes(name)||!!(page.props.academic as any)?.year?.is_open);
 };
 export const grade = (value: string | number | null | undefined, digits = 2) => value === null || value === undefined || value === '' ? '—' : Number(value).toLocaleString('es-ES', {minimumFractionDigits: digits, maximumFractionDigits: digits});
-export const statusLabel: Record<string,string> = {draft:'Borrador', active:'En curso', evaluating:'En evaluación', finished:'Finalizado', published:'Publicado'};
+export const statusLabel: Record<string,string> = {active:'En curso', evaluating:'En evaluación', finished:'Finalizado', published:'Publicado'};
 export async function api(url: string, payload?: object | FormData) {
   const xsrf = document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.slice('XSRF-TOKEN='.length);
   const csrfHeaders: Record<string, string> = xsrf ? { 'X-XSRF-TOKEN': decodeURIComponent(xsrf) } : { 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' };
