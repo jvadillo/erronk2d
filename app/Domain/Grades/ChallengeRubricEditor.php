@@ -148,14 +148,15 @@ final class ChallengeRubricEditor
     }
 
     /**
-     * A rubric created empty with the challenge is also kept in its author's library.
-     * Rubrics copied from the library stay independent so the template is not altered.
+     * A rubric created empty with the challenge is also kept in its author's library and follows
+     * every later edit of the challenge, whoever makes it. Rubrics copied from the library stay
+     * independent so the template is not altered.
      */
     public function libraryRubric(User $actor, Challenge $challenge, string $field): ?Rubric
     {
         $linked = Rubric::find($challenge->{$field.'_id'});
         if ($linked) {
-            return $linked->owner_id === $actor->id || $actor->role === 'admin' ? $linked : null;
+            return $linked;
         }
         if ($challenge->$field['items'] !== []) {
             return null;

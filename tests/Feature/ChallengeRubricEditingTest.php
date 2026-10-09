@@ -159,7 +159,7 @@ class ChallengeRubricEditingTest extends TestCase
         $input['rubric']['items'][0]['name'] = 'Cambio de otra persona';
         $this->save($input, $this->preview($input)->json('token'))->assertOk();
         $this->assertSame('Cambio de otra persona', $this->challenge->fresh()->team_rubric['items'][0]['name']);
-        $this->assertSame('Calidad revisada', Rubric::sole()->items[0]['name']);
+        $this->assertSame(['Cambio de otra persona', $this->teacher->id], [Rubric::sole()->items[0]['name'], Rubric::sole()->owner_id]);
     }
 
     public static function assessmentKinds(): array

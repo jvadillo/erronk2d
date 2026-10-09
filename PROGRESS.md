@@ -6,9 +6,9 @@ Importar estudiantes con las cabeceras `nombre` y `email` y guardar en la biblio
 ## Completado
 - Importación de estudiantes: cabeceras `nombre, email` sin distinguir mayúsculas; `name` ya no se acepta para estudiantes. Profesorado (`name, email`) y módulos (`name, code`) sin cambios. Mensaje de error: «La primera fila debe contener las cabeceras: …».
 - Ventana de importación (`Setup.vue`): bloque «Estructura del archivo» con las cabeceras y una fila de ejemplo según el tipo.
-- Rúbricas: migración `2026_10_09_120000_link_challenge_rubrics_to_library` (`team_rubric_id`, `transversal_rubric_id` en `challenges`, `nullOnDelete`). Al guardar una rúbrica que nació vacía en el reto se crea una rúbrica en la biblioteca de quien la edita (ciclo/nivel del grupo); los guardados siguientes la actualizan si quien edita es su propietario o admin. Las rúbricas copiadas de la biblioteca siguen independientes.
+- Rúbricas: migración `2026_10_09_120000_link_challenge_rubrics_to_library` (`team_rubric_id`, `transversal_rubric_id` en `challenges`, `nullOnDelete`). Al guardar una rúbrica que nació vacía en el reto se crea una rúbrica en la biblioteca de quien la edita (ciclo/nivel del grupo); los guardados siguientes la actualizan siempre, edite quien edite (el propietario no cambia). Las rúbricas copiadas de la biblioteca siguen independientes.
 - Nombre por defecto («Rúbrica técnica»/«Rúbrica transversal») se guarda en la biblioteca como «… · nombre del reto». El editor avisa en el pie cuando el guardado también actualiza la biblioteca (`savesToLibrary`).
-- Pruebas: `ImportTest` (cabeceras nuevas y rechazo de `name`), `AcademicWorkflowTest`, `ChallengeRubricEditingTest` (creación, actualización, otra persona no altera la biblioteca, plantilla no se duplica).
+- Pruebas: `ImportTest` (cabeceras nuevas y rechazo de `name`), `AcademicWorkflowTest`, `ChallengeRubricEditingTest` (creación, actualización también cuando edita otra persona, plantilla no se duplica).
 - Validado en local: `vue-tsc`, `vite build` y `php -l` correctos.
 
 ## Pendiente
