@@ -64,6 +64,11 @@ class User extends Authenticatable
         return Classroom::visibleTo($this)->whereKey($classroom->id)->exists();
     }
 
+    public function canAccessChallenge(Challenge $challenge): bool
+    {
+        return Challenge::visibleTo($this)->whereKey($challenge->id)->exists();
+    }
+
     public function teaches(int $moduleId, int $classroomId): bool
     {
         return $this->active && ($this->role === 'admin' || ($this->role === 'teacher' && DB::table('classroom_module_user')->where('classroom_id', $classroomId)->where('module_id', $moduleId)->where('user_id', $this->id)->exists()));

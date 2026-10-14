@@ -213,13 +213,17 @@ class GradebookTest extends TestCase
         $this->assertSame(6, ModuleGrade::count());
     }
 
-    public function test_class_teachers_can_read_but_only_module_responsibles_can_write(): void
+    public function test_only_teachers_of_a_challenge_module_can_read_and_only_module_responsibles_can_write(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => User::PERMISSIONS]);
-        $this->actingAs($teacher)->get('/challenges/'.$this->challenge->id)->assertNotFound();
-        $this->classroom->users()->attach($teacher);
-        $this->get('/challenges/'.$this->challenge->id)->assertOk();
+        $url = '/challenges/'.$this->challenge->id;
         $data = ['action' => 'grades', 'field' => 'exam', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => '8']]];
+        $this->actingAs($teacher)->get($url)->assertNotFound();
+        $this->classroom->users()->attach($teacher);
+        $this->get($url)->assertNotFound();
+        $this->write($data, $teacher)->assertNotFound();
+        $this->modules[1]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
+        $this->get($url)->assertOk();
         $this->write($data, $teacher)->assertForbidden();
         $this->modules[0]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
         $this->write($data, $teacher)->assertOk();
@@ -231,6 +235,7 @@ class GradebookTest extends TestCase
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => ['evaluate_transversal', 'modify_grades']]);
         $this->classroom->users()->attach($teacher);
+        $this->modules[0]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
         $data = ['action' => 'assess', 'kind' => 'teacher', 'entries' => [['subject_id' => $this->students[0]->id, 'criterion' => 'quality', 'level' => 1]]];
         $this->write($data)->assertOk();
         $data['entries'][0]['level'] = 2;
@@ -415,6 +420,7 @@ class GradebookTest extends TestCase
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
         $this->classroom->users()->attach($teacher);
+        $this->modules[1]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
         $data = ['action' => 'grades', 'field' => 'not_enrolled', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => true]]];
         $this->write($data, $teacher)->assertForbidden();
         $exam = [...$data, 'field' => 'exam', 'entries' => [['student_id' => $this->students[0]->id, 'value' => '8']]];

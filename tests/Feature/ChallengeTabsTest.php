@@ -24,7 +24,7 @@ class ChallengeTabsTest extends TestCase
         $this->challenge = Challenge::factory()->create(['status' => 'active']);
         $this->teacher = User::factory()->create(['role' => 'teacher']);
         $this->student = User::factory()->create(['role' => 'student']);
-        $this->challenge->classroom->users()->attach($this->teacher);
+        $this->challenge->modules()->attach($this->moduleForClass($this->challenge->classroom, [], $this->teacher));
         $this->enrollInClass($this->student, $this->challenge->classroom);
         $this->challenge->students()->attach($this->student);
         $this->withHeader('X-Academic-Year', (string) $this->challenge->classroom->academic_year_id);
@@ -91,10 +91,34 @@ class ChallengeTabsTest extends TestCase
         $otherTeacher = User::factory()->create(['role' => 'teacher']);
         $this->actingAs($otherTeacher)->get(route('challenges.show', $this->challenge))->assertNotFound();
         $this->get(route('challenges.evidence.index', $this->challenge))->assertNotFound();
+        $this->post(route('challenges.evidence.store', $this->challenge), ['student_id' => $this->student->id, 'note' => 'No permitido.'])->assertNotFound();
+        $this->assertDatabaseCount('challenge_evidences', 0);
         $this->challenge->update(['status' => 'published']);
         $this->actingAs($this->teacher)->post(route('challenges.evidence.store', $this->challenge), [
             'student_id' => $this->student->id, 'note' => 'No permitido.',
         ])->assertForbidden();
         $this->assertDatabaseCount('challenge_evidences', 0);
+    }
+
+    public function test_group_teacher_only_sees_challenges_with_a_module_they_teach(): void
+    {
+        $classroom = $this->challenge->classroom;
+        $otherModule = $this->moduleForClass($classroom);
+        $hidden = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
+        $hidden->modules()->attach($otherModule);
+        $moduleLess = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
+
+        $this->actingAs($this->teacher)->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 1)->where('challenges.0.id', $this->challenge->id));
+        foreach ([$hidden, $moduleLess] as $challenge) {
+            $this->get(route('challenges.show', $challenge))->assertNotFound();
+            $this->get(route('challenges.evidence.index', $challenge))->assertNotFound();
+        }
+
+        $otherModule->teachersFor($classroom->id)->attach($this->teacher, ['classroom_id' => $classroom->id]);
+        $this->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 2));
+        $this->get(route('challenges.show', $hidden))->assertOk();
+        $this->get(route('challenges.show', $moduleLess))->assertNotFound();
+
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 3));
     }
 }

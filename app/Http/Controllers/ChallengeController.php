@@ -26,6 +26,7 @@ class ChallengeController extends Controller
     private function authorizeChallenge(Request $request, Challenge $challenge): void
     {
         $this->context->classrooms($request->user())->findOrFail($challenge->classroom_id);
+        abort_unless($request->user()->canAccessChallenge($challenge), 404);
         if ($request->user()->role === 'student') {
             abort_unless($challenge->students()->where('users.id', $request->user()->id)->exists(), 404);
         }
@@ -33,7 +34,7 @@ class ChallengeController extends Controller
 
     public function index(Request $request, Gradebook $book): Response
     {
-        $query = Challenge::whereIn('classroom_id', $this->context->classrooms($request->user())->select('classrooms.id'))->with(['classroom.academicYear', 'period', 'modules', 'teams'])->orderByDesc('id');
+        $query = Challenge::visibleTo($request->user())->whereIn('classroom_id', $this->context->classrooms($request->user())->select('classrooms.id'))->with(['classroom.academicYear', 'period', 'modules', 'teams'])->orderByDesc('id');
         if ($request->user()->role === 'student') {
             $query->whereHas('students', fn ($q) => $q->where('users.id', $request->user()->id));
         }
@@ -67,6 +68,10 @@ class ChallengeController extends Controller
             }
             if (collect($data['module_ids'])->diff($class->modules->pluck('id'))->isNotEmpty()) {
                 throw ValidationException::withMessages(['module_ids' => 'Los módulos deben pertenecer al grupo seleccionado.']);
+            }
+            $user = $request->user();
+            if ($user->role === 'teacher' && ! collect($data['module_ids'])->contains(fn ($moduleId) => $user->teaches((int) $moduleId, $class->id))) {
+                throw ValidationException::withMessages(['module_ids' => 'Incluye al menos un módulo del que seas responsable en este grupo.']);
             }
             $rubrics = [];
             foreach (ChallengeRubricEditor::DEFAULT_NAMES as $kind => $name) {

@@ -53,5 +53,6 @@ class ChallengeEvidenceController extends Controller
     {
         abort_unless(in_array($request->user()->role, ['admin', 'teacher'], true), 403);
         $context->classrooms($request->user())->findOrFail($challenge->classroom_id);
+        abort_unless($request->user()->canAccessChallenge($challenge), 404);
     }
 }

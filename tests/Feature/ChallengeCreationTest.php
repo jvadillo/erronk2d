@@ -140,6 +140,22 @@ class ChallengeCreationTest extends TestCase
         $this->assertDatabaseCount('challenges', 0);
     }
 
+    public function test_teacher_must_be_responsible_for_a_selected_module_to_create_a_challenge(): void
+    {
+        ['classroom' => $classroom, 'module' => $module, 'data' => $data] = $this->scenario();
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $classroom->users()->attach($teacher);
+
+        $this->actingAs($teacher)->postJson('/challenges', $data)->assertUnprocessable()
+            ->assertJsonValidationErrors(['module_ids' => 'Incluye al menos un módulo del que seas responsable en este grupo.']);
+        $this->assertDatabaseCount('challenges', 0);
+
+        $module->teachersFor($classroom->id)->attach($teacher, ['classroom_id' => $classroom->id]);
+        $this->post('/challenges', $data)->assertRedirect();
+        $challenge = $classroom->challenges()->sole();
+        $this->get('/challenges/'.$challenge->id)->assertOk();
+    }
+
     public function test_student_cannot_create_challenges(): void
     {
         ['data' => $data] = $this->scenario();

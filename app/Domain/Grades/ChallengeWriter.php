@@ -26,7 +26,7 @@ final class ChallengeWriter
 
         return DB::transaction(function () use ($actor, $id, $input) {
             $challenge = Challenge::lockForUpdate()->findOrFail($id);
-            abort_unless($actor->active && $actor->canAccessClassroom($challenge->classroom), 404);
+            abort_unless($actor->active && $actor->canAccessChallenge($challenge), 404);
             abort_unless($challenge->classroom->academicYear->is_open, 403, 'El curso académico está cerrado.');
             abort_if($challenge->revision !== (int) $input['revision'], 409, 'Otra persona ha guardado cambios. Actualiza la matriz antes de continuar.');
             $action = $input['action'];

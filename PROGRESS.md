@@ -10,8 +10,10 @@ Dar a cada grupo su propia página de configuración y simplificar las tarjetas 
 - Pruebas: `GroupManagementTest` (resumen de la lista, página del grupo, acceso), `AcademicWorkflowTest` (redirección al crear), `workflows.spec.ts` (página del grupo, creación y curso cerrado).
 - Validado en el VPS: Pint, 224 pruebas PHP en PostgreSQL y 16 pruebas Playwright correctas; capturas de escritorio y móvil revisadas.
 - Bloques anteriores ya en producción: importación con `nombre, email`, rúbricas enlazadas a la biblioteca (464ecf2) y menú lateral de 216px (fe0fbab).
+- Visibilidad de retos: el profesorado solo ve y opera los retos de sus grupos con algún módulo del que es responsable (`Challenge::visibleTo`, `User::canAccessChallenge`); crear un reto exige serlo de algún módulo elegido. Admin sin cambios. Pruebas adaptadas, sin ejecutar (sin `vendor/` local).
 
 ## Pendiente
+- Ejecutar en el VPS las pruebas PHP tras el cambio de visibilidad de retos (`ChallengeTabsTest`, `ChallengeRubricEditingTest`, `GradebookTest`, `ChallengeCreationTest`) y Playwright; revisar si `/reports` debe filtrar por módulos del profesor.
 - Desplegar la página del grupo (`9f4941e` y siguientes) cuando el usuario lo pida.
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 

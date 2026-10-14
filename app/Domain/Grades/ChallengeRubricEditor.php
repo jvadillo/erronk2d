@@ -17,7 +17,7 @@ final class ChallengeRubricEditor
 
     public function authorize(User $actor, Challenge $challenge): void
     {
-        abort_unless($actor->canAccessClassroom($challenge->classroom), 404);
+        abort_unless($actor->canAccessChallenge($challenge), 404);
         abort_unless($actor->allows('manage_challenges'), 403);
         abort_unless($challenge->classroom->academicYear->is_open, 403, 'El curso académico está cerrado.');
         abort_if(in_array($challenge->status, ['published', 'finished'], true), 422, 'Reabre el reto con un motivo antes de editar su rúbrica.');
