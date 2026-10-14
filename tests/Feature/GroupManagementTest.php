@@ -113,7 +113,7 @@ class GroupManagementTest extends TestCase
         $this->assertSame([$module->id], $challenge->modules()->pluck('modules.id')->all());
         $this->assertTrue($actor->teaches($module->id, $group->id));
         $this->assertSame($report, app(Gradebook::class)->report($group->fresh())['rows']);
-        $this->get('/setup/classrooms')->assertInertia(fn (Assert $page) => $page->where('title', 'Grupos')->has('classrooms.0.modules', 0)->has('classrooms.0.retired_modules', 1));
+        $this->get(route('groups.show', $group))->assertInertia(fn (Assert $page) => $page->component('Group')->has('group.modules', 0)->has('group.retired_modules', 1));
         $this->get('/')->assertInertia(fn (Assert $page) => $page->has('classrooms.0.modules', 0));
         $module->update(['name' => 'Nuevo nombre']);
         $group->syncCatalog();
@@ -187,6 +187,39 @@ class GroupManagementTest extends TestCase
         $this->assertSame([$student->id], $challenge->students()->pluck('users.id')->all());
         $this->postJson('/setup/enrollment', ['classroom_id' => $group->id, 'email' => $student->email, 'active' => true])->assertUnprocessable();
         $this->assertSame(0, $group->students()->count());
+    }
+
+    public function test_group_list_shows_a_summary_and_each_group_has_its_own_page(): void
+    {
+        $group = Classroom::factory()->create(['name' => '2DAW-A']);
+        $member = User::factory()->create(['role' => 'teacher']);
+        $group->users()->syncWithoutDetaching([$member->id]);
+        $module = $this->moduleForClass($group, ['name' => 'Programación', 'code' => 'PROG'], $member);
+        $student = User::factory()->create();
+        $this->enrollInClass($student, $group);
+        $group->periods()->create(['name' => '1.ª Evaluación', 'position' => 1]);
+        $this->select($member, $group);
+
+        $this->get('/setup/classrooms')->assertInertia(fn (Assert $page) => $page
+            ->where('classrooms.0.url', route('groups.show', $group))->where('classrooms.0.students_count', 1)
+            ->has('classrooms.0.users', 2)->has('classrooms.0.periods', 1)->missing('classrooms.0.modules')->missing('classrooms.0.students'));
+        $this->get(route('groups.show', $group))->assertInertia(fn (Assert $page) => $page->component('Group')
+            ->where('group.name', '2DAW-A')->where('group.can_manage', false)->where('group.students.0.email', $student->email)
+            ->where('group.modules.0.code', 'PROG')->where('group.modules.0.teachers.0.id', $member->id)
+            ->where('group.periods.0.challenges_count', 0)->where('catalog.0.id', $module->id));
+    }
+
+    public function test_group_page_respects_membership_and_role(): void
+    {
+        $group = Classroom::factory()->create();
+        $url = route('groups.show', $group);
+        $this->get($url)->assertRedirect('/login');
+        $this->select(User::factory()->create(['role' => 'teacher']), $group);
+        $this->get($url)->assertNotFound();
+        $student = User::factory()->create();
+        $this->enrollInClass($student, $group);
+        $this->select($student, $group);
+        $this->get($url)->assertForbidden();
     }
 
     #[TestWith(['group-module'])]

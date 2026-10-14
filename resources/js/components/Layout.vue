@@ -48,7 +48,8 @@ watch(currentPath, () => {
   organizationOpen.value = window.matchMedia('(max-width: 650px)').matches ? false : inOrganization.value;
 });
 function isCurrent(url:string): boolean {
-  return new URL(url, 'http://localhost').pathname === currentPath.value;
+  const path = new URL(url, 'http://localhost').pathname;
+  return currentPath.value === path || currentPath.value.startsWith(`${path}/`);
 }
 </script>
 <template>

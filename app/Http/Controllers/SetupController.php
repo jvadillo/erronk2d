@@ -44,19 +44,8 @@ class SetupController extends Controller
         }
         abort_unless(isset(self::SECTIONS[$section]), 404);
         abort_if(in_array($section, self::ADMIN_SECTIONS, true) && $actor->role !== 'admin', 403);
-        $classes = $this->context->classrooms($actor)->with('users', 'students', 'catalogModules', 'academicYear', 'periods')->orderBy('name')->get();
-        foreach ($classes as $class) {
-            foreach ($class->catalogModules as $module) {
-                $module->name = $module->pivot->name;
-                $module->code = $module->pivot->code;
-                $module->setRelation('teachers', $module->teachersFor($class->id)->get(['users.id', 'users.name']));
-            }
-            $class->setAttribute('can_manage', $actor->canManageClassroom($class));
-            $class->setRelation('modules', $class->catalogModules->filter(fn ($module) => $module->pivot->ended_at === null)->values());
-            $class->setRelation('retired_modules', $class->catalogModules->filter(fn ($module) => $module->pivot->ended_at !== null)->values());
-            $class->unsetRelation('catalogModules');
-            $class->periods->loadCount('challenges');
-        }
+        $classes = $this->context->classrooms($actor)->with('users:users.id,users.name', 'periods:id,classroom_id,name')->withCount('students')->orderBy('name')->get();
+        $classes->each(fn (Classroom $class) => $class->setAttribute('url', route('groups.show', ['classroom' => $class->id])));
         $users = User::query()->where('role', $section === 'teachers' ? 'teacher' : 'student');
         if ($actor->role !== 'admin') {
             $users->whereHas('enrollments', fn (Builder $enrollments) => $enrollments->whereIn('classroom_id', $classes->pluck('id')));
@@ -94,6 +83,30 @@ class SetupController extends Controller
         return response()->json(['student' => $student]);
     }
 
+    public function group(Request $request, int $classroom): Response
+    {
+        $actor = $request->user();
+        abort_if($actor->role === 'student', 403);
+        $class = $this->context->classrooms($actor)->with('users:users.id,users.name', 'students:users.id,users.name,users.email', 'catalogModules', 'periods')->findOrFail($classroom);
+        foreach ($class->catalogModules as $module) {
+            $module->name = $module->pivot->name;
+            $module->code = $module->pivot->code;
+            $module->setRelation('teachers', $module->teachersFor($class->id)->get(['users.id', 'users.name']));
+        }
+        $class->setAttribute('can_manage', $actor->canManageClassroom($class));
+        $class->setRelation('modules', $class->catalogModules->filter(fn ($module) => $module->pivot->ended_at === null)->values());
+        $class->setRelation('retired_modules', $class->catalogModules->filter(fn ($module) => $module->pivot->ended_at !== null)->values());
+        $class->unsetRelation('catalogModules');
+        $class->periods->loadCount('challenges');
+
+        return Inertia::render('Group', [
+            'group' => $class,
+            'catalog' => Module::where('cycle_id', $class->cycle_id)->where('level', $class->level)->orderBy('name')->get(['id', 'name', 'code']),
+            'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->orderBy('name')->get(['id', 'name']),
+            'groupsUrl' => route('setup.section', ['section' => 'classrooms']),
+        ]);
+    }
+
     public function rubricEditor(Request $request, ?int $rubric = null): Response|RedirectResponse
     {
         $actor = $request->user();
@@ -122,7 +135,7 @@ class SetupController extends Controller
         if (in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'teacher'], true)) {
             abort_unless($actor->role === 'admin', 403);
         }
-        DB::transaction(function () use ($request, $entity, $actor) {
+        $model = DB::transaction(function () use ($request, $entity, $actor) {
             if (in_array($entity, ['classroom', 'group-module', 'group-periods', 'responsibility', 'enrollment'], true) || ($entity === 'student' && ($actor->role !== 'admin' || $request->filled('classroom_id')))) {
                 $this->context->requireWritable($request);
             }
@@ -143,7 +156,12 @@ class SetupController extends Controller
                 'rubric', 'rubric-copy' => $this->rubric($request, $entity === 'rubric-copy', $id),
             };
             AuditEvent::create(['user_id' => $actor->id, 'action' => 'setup.'.$entity, 'after' => $model->only(['id', 'name', 'role', 'is_open', 'owner_id', 'classroom_id', 'student_id', 'ended_at'])]);
+
+            return $model;
         });
+        if ($entity === 'classroom' && ! $request->integer('id')) {
+            return redirect()->route('groups.show', ['classroom' => $model->id])->with('success', 'Grupo creado. Revisa sus módulos, profesores y estudiantes.');
+        }
 
         return ($entity === 'rubric' ? redirect()->route('setup.section', ['section' => 'rubrics']) : back())->with('success', 'Información guardada.');
     }

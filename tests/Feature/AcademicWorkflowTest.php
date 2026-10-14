@@ -36,9 +36,10 @@ class AcademicWorkflowTest extends TestCase
         $module = Module::factory()->create();
         $this->select($teacher, $year);
 
-        $this->post('/setup/classroom', ['name' => '142GA', 'cycle_id' => $module->cycle_id, 'level' => 2, 'user_ids' => []])->assertSessionHasNoErrors()->assertRedirect();
+        $response = $this->post('/setup/classroom', ['name' => '142GA', 'cycle_id' => $module->cycle_id, 'level' => 2, 'user_ids' => []])->assertSessionHasNoErrors();
 
         $class = Classroom::firstOrFail();
+        $response->assertRedirect(route('groups.show', $class));
         $this->assertSame($teacher->id, $class->owner_id);
         $this->assertSame([$module->id], $class->modules()->pluck('modules.id')->all());
         $this->postJson('/setup/year', ['name' => 'Otro', 'periods' => ['Primera']])->assertForbidden();
