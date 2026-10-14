@@ -4,6 +4,7 @@
 Dar a cada grupo su propia página de configuración y simplificar las tarjetas de la lista de Grupos.
 
 ## Completado
+- Buscador para matricular (`StudentSearch.vue`, `GET /students/search`, throttle 60/min): desde 3 caracteres sugiere hasta 10 estudiantes activos no matriculados en el grupo por nombre o correo; combobox accesible con teclado. Sustituye la regla de correo exacto de la especificación por indicación del usuario. Alineados los botones «Añadir» y «Matricular» (`label` sin margen en `.group-inline-form`). 227 pruebas PHP y 16 Playwright correctas en el VPS (`6140f60` y siguiente).
 - Ruta `groups.show` (`/setup/classrooms/{classroom}`) → `SetupController::group`, página `Group.vue` con pestañas (`?tab=`): Configuración (datos del grupo y evaluaciones), Módulos (añadir/quitar, responsables), Profesores (solo propietario o admin pueden cambiarlos) y Estudiantes (matricular/desmatricular). Reutiliza los endpoints existentes de `/setup/*`; tras guardar se vuelve a la misma pestaña.
 - Lista de Grupos: `GroupCard.vue` muestra nombre, ciclo, curso y recuentos de estudiantes, profesores y evaluaciones con enlace a la página. El listado ya no carga módulos ni estudiantes. Crear un grupo abre su página.
 - `Setup.vue`: retirados los modales de editar grupo, evaluaciones y responsables. `Layout.vue`: «Grupos» queda activo en subpáginas.
@@ -15,6 +16,7 @@ Dar a cada grupo su propia página de configuración y simplificar las tarjetas 
 - Visibilidad de retos: el profesorado solo ve y opera los retos de sus grupos con algún módulo del que es responsable (`Challenge::visibleTo`, `User::canAccessChallenge`); crear un reto exige serlo de algún módulo elegido. Admin sin cambios. Pruebas adaptadas, sin ejecutar (sin `vendor/` local).
 
 ## Pendiente
+- Desplegar el buscador de estudiantes cuando el usuario lo pida.
 - Revisar si `/reports` debe filtrar por módulos del profesor (pendiente de decidir; no cambiado).
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 
