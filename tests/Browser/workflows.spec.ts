@@ -242,6 +242,7 @@ test('grupos: página propia con pestañas de configuración, módulos, profesor
   await page.screenshot({ path: 'test-results/group-page-desktop.png', fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Organización', exact: true }).click();
   await page.getByRole('tab', { name: 'Configuración', exact: true }).click();
   await expect(page.getByLabel('Evaluación 1', { exact: true })).toHaveValue('1.ª Evaluación');
   await expect(page.getByLabel('Evaluación 4', { exact: true })).toHaveValue('Evaluación adicional');
