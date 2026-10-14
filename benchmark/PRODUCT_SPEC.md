@@ -223,7 +223,7 @@ Account creation requires name (150), valid email (255), initial password (10–
 
 On edit, a blank password keeps the current password; a supplied replacement must meet the same length limits. Changing email to a different address removes its Google link and email-verification state. Case-only normalization does not count as a different address. Account edits preserve other accounts and enrollments.
 
-“Matricular por correo” takes a visible group and exact valid student email. A lookup returns only that active student's identity/name/email, or no match. It is case-insensitive, requires a group the caller can access, and is limited to 20 requests/minute. There is no broad search over other groups' students.
+In a group's Students tab, enrollment uses an autocomplete: after at least three characters it suggests up to 10 active students not currently enrolled in that group whose name or email contains the text (case-insensitive, name and email shown), limited to 60 requests/minute and to callers who can manage students in an accessible group. “Matricular por correo” takes a visible group and exact valid student email. A lookup returns only that active student's identity/name/email, or no match. It is case-insensitive, requires a group the caller can access, and is limited to 20 requests/minute. There is no broad search over other groups' students.
 
 Enrolling adds or reactivates that one group relationship. It leaves other enrollments, credentials, names and prior grades intact. A student can be enrolled in several groups in the same or different years. Enrollment defaults to participating in all group modules for future challenges; “No matriculado” is a separate challenge-level assessment exception.
 

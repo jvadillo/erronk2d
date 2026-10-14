@@ -129,6 +129,32 @@ class AcademicWorkflowTest extends TestCase
         $this->postJson('/students/lookup', ['email' => 'missing@example.test', 'classroom_id' => $class->id])->assertExactJson(['student' => null]);
     }
 
+    public function test_student_suggestions_match_name_or_email_and_skip_current_members_inactive_accounts_and_staff(): void
+    {
+        $class = Classroom::factory()->create();
+        $ane = User::factory()->create(['name' => 'Ane Etxeberria', 'email' => 'ane@example.test']);
+        $withdrawn = User::factory()->create(['name' => 'Ane Baja', 'email' => 'baja@example.test']);
+        $this->enrollInClass($withdrawn, $class);
+        $withdrawn->enrollments()->update(['ended_at' => now()]);
+        $this->enrollInClass(User::factory()->create(['name' => 'Ane Matriculada']), $class);
+        User::factory()->create(['name' => 'Ane Inactiva', 'active' => false]);
+        User::factory()->create(['name' => 'Ane Profesora', 'role' => 'teacher']);
+        $iker = User::factory()->create(['name' => 'Iker', 'email' => 'iker@example.test']);
+        $url = fn (string $query): string => route('students.search', ['classroom_id' => $class->id, 'q' => $query]);
+        $this->select($class->owner, $class->academicYear);
+
+        $this->getJson($url('ANE'))->assertExactJson(['students' => [$withdrawn->only(['id', 'name', 'email']), $ane->only(['id', 'name', 'email'])]]);
+        $this->getJson($url('IKER@EXAMPLE'))->assertExactJson(['students' => [$iker->only(['id', 'name', 'email'])]]);
+        $this->getJson($url('%%%'))->assertExactJson(['students' => []]);
+        $this->getJson($url('an'))->assertUnprocessable();
+
+        $this->select(User::factory()->create(['role' => 'teacher']), $class->academicYear);
+        $this->getJson($url('Ane'))->assertNotFound();
+        $this->enrollInClass($ane, $class);
+        $this->select($ane, $class->academicYear);
+        $this->getJson($url('Ane'))->assertForbidden();
+    }
+
     public function test_rubric_is_private_and_sharing_allows_copy_but_not_editing_original(): void
     {
         $owner = User::factory()->create(['role' => 'teacher']);

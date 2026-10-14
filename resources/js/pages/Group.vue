@@ -4,6 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, BookOpen, ContactRound, GraduationCap, Settings, X } from 'lucide-vue-next';
 import Layout from '../components/Layout.vue';
 import Modal from '../components/Modal.vue';
+import StudentSearch from '../components/StudentSearch.vue';
 
 type Person = { id: number; name: string; email?: string };
 type GroupModule = { id: number; name: string; code: string; teachers: Person[] };
@@ -173,7 +174,7 @@ function withdraw(student: Person): void {
         <section v-if="activeTab === 'students'" id="group-panel-students" role="tabpanel" aria-labelledby="group-tab-students" class="panel">
             <h2>Estudiantes · {{ group.students.length }}</h2>
             <form v-if="writable" class="group-inline-form" @submit.prevent="enroll">
-                <label>Correo del estudiante<input v-model="enrollment.email" type="email" required placeholder="estudiante@centro.edu" /></label>
+                <StudentSearch v-model="enrollment.email" :classroom-id="group.id" />
                 <button class="button" :disabled="enrollment.processing">Matricular</button>
             </form>
             <p v-for="error in enrollment.errors" class="notice error" role="alert">{{ error }}</p>
@@ -214,7 +215,7 @@ function withdraw(student: Person): void {
 .breakdown-row small.helper { margin: 2px 0 0; }
 .period-editor > label:first-child { flex: 1; width: auto; min-width: 0; }
 .group-inline-form { display: flex; align-items: end; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
-.group-inline-form label { flex: 1 1 220px; min-width: 0; max-width: 420px; }
+.group-inline-form label { flex: 1 1 220px; min-width: 0; max-width: 420px; margin: 0; }
 .group-teacher-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 18px; margin-bottom: 12px; }
 .group-teacher-list small { margin-left: 4px; }
 @media (max-width: 900px) { .group-panels { grid-template-columns: minmax(0, 1fr); } }

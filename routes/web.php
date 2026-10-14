@@ -45,6 +45,7 @@ Route::middleware(['auth', 'active', 'academic'])->group(function () {
     Route::post('/registrations/{registration}', [RegistrationController::class, 'update'])->name('registrations.update');
     Route::post('/setup/{entity}', [SetupController::class, 'store'])->name('setup.store');
     Route::post('/students/lookup', [SetupController::class, 'lookupStudent'])->middleware('throttle:20,1')->name('students.lookup');
+    Route::get('/students/search', [SetupController::class, 'searchStudents'])->middleware('throttle:60,1')->name('students.search');
     Route::post('/imports', [ImportController::class, 'import'])->middleware('throttle:20,1');
     Route::get('/reports', [ReportController::class, 'index']);
 });

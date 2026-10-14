@@ -83,6 +83,23 @@ class SetupController extends Controller
         return response()->json(['student' => $student]);
     }
 
+    /**
+     * Suggests active students not yet enrolled in the group whose name or email contains the text.
+     */
+    public function searchStudents(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->allows('manage_students'), 403);
+        $data = $request->validate(['q' => 'required|string|min:3|max:100', 'classroom_id' => 'required|integer']);
+        $class = $this->context->classrooms($request->user())->findOrFail($data['classroom_id']);
+        $pattern = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], Str::lower(trim($data['q']))).'%';
+        $students = User::where('role', 'student')->where('active', true)
+            ->where(fn (Builder $match) => $match->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$pattern])->orWhereRaw("LOWER(email) LIKE ? ESCAPE '\\'", [$pattern]))
+            ->whereDoesntHave('enrollments', fn (Builder $enrollments) => $enrollments->where('classroom_id', $class->id)->whereNull('ended_at'))
+            ->orderBy('name')->limit(10)->get(['id', 'name', 'email']);
+
+        return response()->json(['students' => $students]);
+    }
+
     public function group(Request $request, int $classroom): Response
     {
         $actor = $request->user();
