@@ -13,6 +13,7 @@ Importar estudiantes con las cabeceras `nombre` y `email` y guardar en la biblio
 - Validado en el VPS: 222 pruebas PHP en PostgreSQL, Pint y 16 pruebas Playwright correctas. Desplegado 464ecf2 en producción el 9 de octubre de 2026 con copia `backups/production-20261009-464ecf2`.
 
 ## Pendiente
+- Desplegar `fe0fbab` (menú lateral expandido de 252px a 216px en `resources/css/sidebar.css`; verificado con captura a 1440px en el entorno de pruebas del VPS).
 - Nada de este bloque. Las rúbricas creadas desde retos antes de este cambio no tienen enlace y no aparecen en la biblioteca (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
