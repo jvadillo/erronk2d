@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 3c19863; desplegada el 14 de octubre de 2026.** Cada grupo tiene su propia página (`/setup/classrooms/{id}`) con pestañas Configuración, Módulos, Profesores y Estudiantes; la lista de Grupos muestra tarjetas resumidas. Validación previa en el VPS: Pint, 224 pruebas PHP en PostgreSQL y 16 pruebas de navegador correctas. Imágenes desde `git archive 3c19863` (sin los cambios locales sin confirmar de visibilidad de retos); `ops/deploy` con copia privada `backups/production-20261014-3c19863` de `fe0fbab`; sin migraciones. App/web ejecutan 3c19863, saludables; `/up` y `/login` HTTP 200 por HTTPS; ruta `groups.show` registrada.
+**Producción en 1e1e3ba; desplegada el 14 de octubre de 2026.** Un profesor solo ve y opera los retos de sus grupos en los que participa algún módulo del que es responsable, y crear un reto exige serlo de alguno de los módulos elegidos (`02c1505`); administración sin cambios. Validación previa en el VPS: Pint, 226 pruebas PHP en PostgreSQL (tras corregir en `1e1e3ba` una prueba que usaba rúbricas sin propietario) y 16 pruebas de navegador correctas. Consulta previa de solo lectura: solo dos cuentas ficticias (Profesor de prueba 04 y 05, grupo 142GA) dejan de ver retos; ningún profesor real afectado. Imágenes desde `git archive 1e1e3ba`; `ops/deploy` con copia privada `backups/production-20261014-1e1e3ba` de `3c19863`; sin migraciones. App/web ejecutan 1e1e3ba, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:1e1e3ba`: `sha256:41c71bdf1319b27ac787fc79a91173330645feba27a93abd15806a9e7eec7c35`.
+- `erronk2d-web:1e1e3ba`: `sha256:e25f252b29e599d37201a1f55525624acef9c7fe4350d92187972306a75b5116`.
+
+**Producción anterior en 3c19863; desplegada el 14 de octubre de 2026.** Cada grupo tiene su propia página (`/setup/classrooms/{id}`) con pestañas Configuración, Módulos, Profesores y Estudiantes; la lista de Grupos muestra tarjetas resumidas. Validación previa en el VPS: Pint, 224 pruebas PHP en PostgreSQL y 16 pruebas de navegador correctas. Imágenes desde `git archive 3c19863` (sin los cambios locales sin confirmar de visibilidad de retos); `ops/deploy` con copia privada `backups/production-20261014-3c19863` de `fe0fbab`; sin migraciones. App/web ejecutan 3c19863, saludables; `/up` y `/login` HTTP 200 por HTTPS; ruta `groups.show` registrada.
 
 - `erronk2d-app:3c19863`: `sha256:efac4cc32aec1a555e5389fcf276f0ef8fc6234a8926cb799f9e5fa7d0a059f5`.
 - `erronk2d-web:3c19863`: `sha256:89670e74e16df82f3aa4d3800d3ec6aab8f599dc293080ba79b40bd3e622c081`.
