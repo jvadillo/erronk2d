@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 464ecf2; desplegada el 9 de octubre de 2026.** Estados del reto simplificados (sin borrador; «En curso» y «En evaluación»), vuelta al inicio tras guardar equipos, importación de estudiantes con cabeceras `nombre, email` y rúbricas creadas desde un reto guardadas en la biblioteca y editables solo desde el reto. Validación previa en el VPS: 222 pruebas PHP / 1.986 aserciones en PostgreSQL, Pint y 16 pruebas de navegador correctas. Imágenes desde `git archive 464ecf2`; `ops/deploy` con copia privada `backups/production-20261009-464ecf2` de `fdd6a55`; migraciones `simplify_challenge_statuses` y `link_challenge_rubrics_to_library` aplicadas. App/web ejecutan 464ecf2, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+**Producción en fe0fbab; desplegada el 14 de octubre de 2026.** Menú lateral expandido en escritorio más estrecho (252px → 216px), verificado con captura a 1440px en el entorno de pruebas. Imágenes desde `git archive fe0fbab`; `ops/deploy` con copia privada `backups/production-20261014-fe0fbab` de `464ecf2`; sin migraciones. App/web ejecutan fe0fbab, saludables; `/up` y `/login` HTTP 200 por HTTPS; el CSS servido usa 216px.
+
+- `erronk2d-app:fe0fbab`: `sha256:be78be829ba9d071dcba387633e04ed937a0629aa64cee41d8b2747c3842d04b`.
+- `erronk2d-web:fe0fbab`: `sha256:849fd7910bfe9f545f495a245f9b87d879ab718fe02144fb0267981a37f70f8e`.
+
+**Producción anterior en 464ecf2; desplegada el 9 de octubre de 2026.** Estados del reto simplificados (sin borrador; «En curso» y «En evaluación»), vuelta al inicio tras guardar equipos, importación de estudiantes con cabeceras `nombre, email` y rúbricas creadas desde un reto guardadas en la biblioteca y editables solo desde el reto. Validación previa en el VPS: 222 pruebas PHP / 1.986 aserciones en PostgreSQL, Pint y 16 pruebas de navegador correctas. Imágenes desde `git archive 464ecf2`; `ops/deploy` con copia privada `backups/production-20261009-464ecf2` de `fdd6a55`; migraciones `simplify_challenge_statuses` y `link_challenge_rubrics_to_library` aplicadas. App/web ejecutan 464ecf2, saludables; `/up` y `/login` HTTP 200 por HTTPS.
 
 - `erronk2d-app:464ecf2`: `sha256:ef839bc57ab5acd723846ecd36b7230bfa03086aeedf9ea054ae3d7b7f90dc03`.
 - `erronk2d-web:464ecf2`: `sha256:5f011a4cd555c2d9da07e10e58868acd5150822f33f970f7825bf4ec77f2a3ff`.
