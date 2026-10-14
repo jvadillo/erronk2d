@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en fe0fbab; desplegada el 14 de octubre de 2026.** Menú lateral expandido en escritorio más estrecho (252px → 216px), verificado con captura a 1440px en el entorno de pruebas. Imágenes desde `git archive fe0fbab`; `ops/deploy` con copia privada `backups/production-20261014-fe0fbab` de `464ecf2`; sin migraciones. App/web ejecutan fe0fbab, saludables; `/up` y `/login` HTTP 200 por HTTPS; el CSS servido usa 216px.
+**Producción en 3c19863; desplegada el 14 de octubre de 2026.** Cada grupo tiene su propia página (`/setup/classrooms/{id}`) con pestañas Configuración, Módulos, Profesores y Estudiantes; la lista de Grupos muestra tarjetas resumidas. Validación previa en el VPS: Pint, 224 pruebas PHP en PostgreSQL y 16 pruebas de navegador correctas. Imágenes desde `git archive 3c19863` (sin los cambios locales sin confirmar de visibilidad de retos); `ops/deploy` con copia privada `backups/production-20261014-3c19863` de `fe0fbab`; sin migraciones. App/web ejecutan 3c19863, saludables; `/up` y `/login` HTTP 200 por HTTPS; ruta `groups.show` registrada.
+
+- `erronk2d-app:3c19863`: `sha256:efac4cc32aec1a555e5389fcf276f0ef8fc6234a8926cb799f9e5fa7d0a059f5`.
+- `erronk2d-web:3c19863`: `sha256:89670e74e16df82f3aa4d3800d3ec6aab8f599dc293080ba79b40bd3e622c081`.
+
+**Producción anterior en fe0fbab; desplegada el 14 de octubre de 2026.** Menú lateral expandido en escritorio más estrecho (252px → 216px), verificado con captura a 1440px en el entorno de pruebas. Imágenes desde `git archive fe0fbab`; `ops/deploy` con copia privada `backups/production-20261014-fe0fbab` de `464ecf2`; sin migraciones. App/web ejecutan fe0fbab, saludables; `/up` y `/login` HTTP 200 por HTTPS; el CSS servido usa 216px.
 
 - `erronk2d-app:fe0fbab`: `sha256:be78be829ba9d071dcba387633e04ed937a0629aa64cee41d8b2747c3842d04b`.
 - `erronk2d-web:fe0fbab`: `sha256:849fd7910bfe9f545f495a245f9b87d879ab718fe02144fb0267981a37f70f8e`.
