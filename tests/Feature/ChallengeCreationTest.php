@@ -143,6 +143,7 @@ class ChallengeCreationTest extends TestCase
     public function test_teacher_must_be_responsible_for_a_selected_module_to_create_a_challenge(): void
     {
         ['classroom' => $classroom, 'module' => $module, 'data' => $data] = $this->scenario();
+        $data = [...$data, 'team_rubric_id' => null, 'transversal_rubric_id' => null];
         $teacher = User::factory()->create(['role' => 'teacher']);
         $classroom->users()->attach($teacher);
 
