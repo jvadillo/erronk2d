@@ -195,7 +195,7 @@ test('grupos: página propia con pestañas de configuración, módulos, profesor
   await card.getByRole('link', { name: 'Abrir el grupo 2DAW-A', exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/classrooms\/\d+$/);
   await expect(page.getByRole('heading', { level: 1, name: /^2DAW-A/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Grupos', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('.sidebar').getByRole('link', { name: 'Grupos', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('tab', { name: 'Configuración', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByLabel('Nombre', { exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Guardar datos', exact: true })).toHaveCount(0);
