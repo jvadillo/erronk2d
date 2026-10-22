@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-alpine
+FROM php:8.4.27-fpm-alpine
 RUN apk add --no-cache libpq libzip icu-libs \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS postgresql-dev libzip-dev icu-dev sqlite-dev \
     && docker-php-ext-install -j1 pdo_pgsql pdo_sqlite intl zip pcntl opcache \
