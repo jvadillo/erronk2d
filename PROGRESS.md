@@ -1,9 +1,10 @@
 # Estado de la tarea
 
 ## Objetivo
-Ajustes de la página del reto: estado con desplegable, «Publicar notas» y tarjetas de equipo.
+Confirmar los cambios de estado del reto y copiar rúbricas de la biblioteca en rúbricas vacías.
 
 ## Completado
+- Confirmación (modal) al pasar a «En evaluación» (autoevaluación y coevaluación) y a «Finalizado» (cierre y reapertura; deshabilitada si el reto no está completo). «Copiar rúbrica» junto a «Editar rúbrica» en rúbricas vacías: acción `copy_rubric` (`ChallengeRubricEditor::copy`/`copyable`: mismo tipo, con criterios, ciclo y curso del grupo o genéricas, solo módulos del reto) y prop `copyableRubrics`. 229 PHP y 17 Playwright correctas en el VPS; desplegado `03bb71b` el 24 de octubre de 2026 con copia `backups/production-20261024-03bb71b` de `5cd379a`.
 - Cabecera del reto: desplegable «Estado del reto» (En curso, En evaluación, Finalizado; solo con `manage_challenges` y reto abierto) en lugar de «Pasar a evaluación»/«Volver a En curso», y «Publicar notas». Retirado el desplegable de estado de Evaluación; «Introducción masiva» con icono. Tarjeta de equipo a media anchura aunque sea la única; `team-roster-heading` sustituido por `.team-card-count` («Sin integrantes», «1 persona», «N personas»). 16 Playwright correctas en el VPS y capturas revisadas; desplegado `5cd379a` el 24 de octubre de 2026 con copia `backups/production-20261024-5cd379a` de `39161ad`.
 - Tabla de evaluación a pantalla completa sin el `header.fullscreen-bar`: el botón de salir (icono, Esc sigue funcionando) ocupa el sitio del de entrar en `.matrix-toolbar`, y el estado de guardado se muestra en esa barra. Prueba nueva en `evidence.spec.ts`; 16 Playwright correctas en el VPS; desplegado `39161ad` el 24 de octubre de 2026 con copia `backups/production-20261024-39161ad` de `4cf919a`.
 - Tarjeta «Evaluación» de `ChallengeHub.vue` igual que las demás: sin `hub-card-primary` ni `hub-progress` (progreso y avisos). 16 pruebas Playwright correctas en el VPS y capturas de escritorio/móvil revisadas; desplegado `4cf919a` el 23 de octubre de 2026 con copia `backups/production-20261023-4cf919a` de `b98e9b8` (PHP 8.4.27).
@@ -23,15 +24,17 @@ Ajustes de la página del reto: estado con desplegable, «Publicar notas» y tar
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
+- `app/Domain/Grades/ChallengeRubricEditor.php`, `app/Http/Controllers/ChallengeController.php`, `tests/Feature/ChallengeRubricEditingTest.php`, `tests/Browser/empty-rubrics.spec.ts`.
 - `resources/js/pages/Challenge.vue`, `resources/js/components/ChallengeHub.vue`, `resources/css/app.css`, `tests/Browser/evidence.spec.ts`, `tests/Browser/workflows.spec.ts`.
 - `app/Http/Controllers/SetupController.php`, `routes/web.php`.
 - `resources/js/pages/Group.vue`, `resources/js/components/GroupCard.vue`, `resources/js/pages/Setup.vue`, `resources/js/components/Layout.vue`.
 - `tests/Feature/GroupManagementTest.php`, `tests/Feature/AcademicWorkflowTest.php`, `tests/Browser/workflows.spec.ts`.
 
 ## Decisiones
+- La rúbrica copiada queda independiente de la plantilla (como al crear un reto desde la biblioteca); no se vincula ni modifica la original.
 - Pasar a «Finalizado» desde el desplegable cierra el reto (el servidor exige evaluaciones completas); después solo se modifica con «Reabrir». Si el servidor rechaza el cambio, el desplegable vuelve al estado real.
 - Cuatro pestañas (el usuario enumeró cuatro aunque escribió «tres»). Las evaluaciones están en Configuración.
 - Al pasar de escritorio a móvil sin navegar, el submenú de Organización sigue abierto (comportamiento previo); la prueba lo cierra igual que antes.
 
 ## Último error
-- Ninguno.
+- Intermitente: `workflows.spec.ts` «curso académico» agotó una vez el tiempo al pulsar «Responsables» (página de Grupos, sin cambios); la repetición pasó 17/17.

@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 5cd379a; desplegada el 24 de octubre de 2026.** Estado del reto con un desplegable junto a «Publicar notas» (antes «Publicar»), sin el desplegable de estado en Evaluación; icono en «Introducción masiva»; tarjetas de equipo a media anchura aunque haya una sola y con el número de integrantes junto al número de equipo. Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, capturas revisadas. Imágenes desde `git archive 5cd379a`; `ops/deploy` con copia privada `backups/production-20261024-5cd379a` de `39161ad`; sin migraciones. App/web ejecutan 5cd379a, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+**Producción en 03bb71b; desplegada el 24 de octubre de 2026.** Confirmación antes de pasar el reto a «En evaluación» o «Finalizado», y «Copiar rúbrica» junto a «Editar rúbrica» cuando una rúbrica del reto está vacía (copia una rúbrica compatible de la biblioteca). Validación previa en el VPS: Pint, 229 pruebas PHP en PostgreSQL y 17 pruebas de navegador correctas. Imágenes desde `git archive 03bb71b`; `ops/deploy` con copia privada `backups/production-20261024-03bb71b` de `5cd379a`; sin migraciones. App/web ejecutan 03bb71b, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:03bb71b`: `sha256:83f2a26bbe42fa54c6ecbac1e5903ea17fab55383022888c4d56d25661c711c1`.
+- `erronk2d-web:03bb71b`: `sha256:886b6874fee06df94669b00b8700b20bada33f7cb033461850b63b4dd33ea103`.
+
+**Producción anterior en 5cd379a; desplegada el 24 de octubre de 2026.** Estado del reto con un desplegable junto a «Publicar notas» (antes «Publicar»), sin el desplegable de estado en Evaluación; icono en «Introducción masiva»; tarjetas de equipo a media anchura aunque haya una sola y con el número de integrantes junto al número de equipo. Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, capturas revisadas. Imágenes desde `git archive 5cd379a`; `ops/deploy` con copia privada `backups/production-20261024-5cd379a` de `39161ad`; sin migraciones. App/web ejecutan 5cd379a, saludables; `/up` y `/login` HTTP 200 por HTTPS.
 
 - `erronk2d-app:5cd379a`: `sha256:072e6a48dd5bc1680e32c4c9d8ddc6d94e14959d166965aec3b1bc6b4d5a967c`.
 - `erronk2d-web:5cd379a`: `sha256:d9abc5c41573a753a445b3f3c05b7c67a8742d26ef3ae25a18315399980d0d62`.
