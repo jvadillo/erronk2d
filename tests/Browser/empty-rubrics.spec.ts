@@ -131,6 +131,7 @@ test('rúbrica vacía: copiar una rúbrica compatible de la biblioteca', async (
   await expect(empty).toHaveCount(0);
   await expect(page.locator('.rubric-assessment')).toBeVisible();
   await page.reload();
+  await page.getByRole('button', { name: 'Ev. transversales', exact: true }).click();
   await expect(page.locator('.rubric-assessment')).toBeVisible();
   expect(errors).toEqual([]);
 });
