@@ -21,8 +21,6 @@ const emit = defineEmits<{
 }>();
 
 const students = computed(() => props.book.rows.length);
-const complete = computed(() => props.book.rows.filter((row: any) => row.pending.length === 0).length);
-const progress = computed(() => (students.value ? Math.round((complete.value / students.value) * 100) : 0));
 const unassigned = computed(() => props.book.rows.filter((row: any) => !row.team_id).length);
 const studentNames = computed(() => new Map<number, string>(props.book.rows.map((row: any) => [row.id, row.name])));
 const visibleTeams = computed(() => props.book.teams.map((team: any) => ({
@@ -120,7 +118,7 @@ function runEvaluationShortcut(id: string): void {
       </ul>
     </article>
 
-    <article class="hub-card hub-card-primary">
+    <article class="hub-card">
       <header class="hub-card-header">
         <span class="hub-icon"><ClipboardCheck :size="20" /></span>
         <div>
@@ -129,11 +127,6 @@ function runEvaluationShortcut(id: string): void {
         </div>
         <ArrowUpRight class="hub-arrow" :size="18" aria-hidden="true" />
       </header>
-      <div class="hub-progress">
-        <p><strong>{{ complete }}</strong> de {{ students }} estudiantes con la evaluación completa</p>
-        <div class="hub-progress-track" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" aria-label="Evaluaciones completas"><i :style="{ width: `${progress}%` }" /></div>
-        <p v-if="book.issues.length" class="hub-issues">{{ book.issues.length }} {{ book.issues.length === 1 ? 'aviso pendiente de revisar' : 'avisos pendientes de revisar' }}</p>
-      </div>
       <ul class="hub-links">
         <li v-for="shortcut in evaluationShortcuts" :key="shortcut.id">
           <component :is="shortcut.href ? 'a' : 'button'" :href="shortcut.href" :type="shortcut.href ? undefined : 'button'" :aria-describedby="`hub-hint-${shortcut.id}`" @click.prevent="runEvaluationShortcut(shortcut.id)">
@@ -210,6 +203,7 @@ function runEvaluationShortcut(id: string): void {
 .hub-card-header p { margin-top: 1px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .hub-arrow { color: #b8a6b3; transition: transform .15s, color .15s; }
 .hub-card-header:hover .hub-arrow { color: var(--green); transform: translate(2px, -2px); }
+.hub-card-header:has(+ .hub-links) { margin-bottom: 14px; }
 
 .hub-figures { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; margin: 14px 0 8px; color: var(--muted); font-size: 12px; }
 .hub-figures strong { margin-right: 3px; color: #2b1f28; font-size: 21px; font-weight: 600; letter-spacing: -.6px; }
@@ -266,27 +260,6 @@ function runEvaluationShortcut(id: string): void {
 .hub-links a:hover, .hub-links button:hover { background: #faf4f8; }
 .hub-links a:hover > svg:last-child, .hub-links button:hover > svg:last-child { color: var(--green); transform: translateX(2px); }
 
-.hub-card-primary { background: #82005e; border-color: #82005e; color: #fff; }
-.hub-card-primary:hover { border-color: #6f0050; box-shadow: 0 14px 34px #82005e33; }
-.hub-card-primary .hub-icon { background: #ffffff1f; color: #fff; }
-.hub-card-primary .hub-card-header p, .hub-card-primary .hub-links small { color: #ecc9e1; }
-.hub-card-primary .hub-arrow { color: #e0a8cf; }
-.hub-card-primary .hub-card-header:hover .hub-arrow { color: #fff; }
-.hub-card-primary .hub-title:focus-visible::after { outline-color: #fff; }
-.hub-progress { margin: 14px 0 12px; }
-.hub-progress p { color: #f3dcec; font-size: 12px; }
-.hub-progress strong { margin-right: 3px; color: #fff; font-size: 21px; font-weight: 600; letter-spacing: -.6px; }
-.hub-progress-track { height: 6px; margin-top: 10px; overflow: hidden; border-radius: 99px; background: #ffffff2b; }
-.hub-progress-track i { display: block; height: 100%; border-radius: inherit; background: #fff; }
-.hub-progress .hub-issues { margin-top: 10px; color: #ffd9a8; font-size: 11px; }
-.hub-card-primary .hub-links { border-top-color: #ffffff26; }
-.hub-card-primary .hub-links li + li { border-top-color: #ffffff17; }
-.hub-card-primary .hub-links a, .hub-card-primary .hub-links button { color: #fff; }
-.hub-card-primary .hub-links a > svg:first-child, .hub-card-primary .hub-links button > svg:first-child { color: #e9b9da; }
-.hub-card-primary .hub-links a > svg:last-child, .hub-card-primary .hub-links button > svg:last-child { color: #d08fbd; }
-.hub-card-primary .hub-links a:hover, .hub-card-primary .hub-links button:hover { background: #ffffff14; }
-.hub-card-primary .hub-links a:hover > svg:last-child, .hub-card-primary .hub-links button:hover > svg:last-child { color: #fff; }
-.hub-card-primary :focus-visible { outline-color: #fff; }
 
 @media (max-width: 1000px) {
   .hub-grid { grid-template-columns: minmax(0, 1fr); }
@@ -296,11 +269,11 @@ function runEvaluationShortcut(id: string): void {
   .hub-card-header p { display: none; }
   .hub-card-header { align-items: center; }
   .hub-links a, .hub-links button { min-height: 38px; padding: 3px 10px; }
-  .hub-figures, .hub-progress, .hub-weights { margin-top: 10px; }
+  .hub-figures, .hub-weights { margin-top: 10px; }
 }
 @media (max-width: 650px) {
   .hub-card { padding: 20px 18px 10px; }
-  .hub-figures strong, .hub-progress strong { font-size: 21px; }
+  .hub-figures strong { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hub-card, .hub-arrow, .hub-links svg { transition: none; }

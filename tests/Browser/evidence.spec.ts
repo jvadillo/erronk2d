@@ -236,6 +236,7 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
     await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
   }
   await expect(page.getByRole('tablist', { name: 'Vistas del reto' })).toHaveCount(0);
+  await expect(page.getByRole('progressbar', { name: 'Evaluaciones completas' })).toHaveCount(0);
   await expect(page.locator('.matrix')).toBeHidden();
   await page.screenshot({ path: 'test-results/challenge-hub-desktop.png', fullPage: true });
 
