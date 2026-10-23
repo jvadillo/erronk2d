@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 39161ad; desplegada el 24 de octubre de 2026.** La tabla de evaluación a pantalla completa ya no tiene cabecera: el botón para salir está en la barra de herramientas, en el sitio del de entrar, junto con el estado de guardado. Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, captura revisada. Imágenes desde `git archive 39161ad`; `ops/deploy` con copia privada `backups/production-20261024-39161ad` de `4cf919a`; sin migraciones. App/web ejecutan 39161ad, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+**Producción en 5cd379a; desplegada el 24 de octubre de 2026.** Estado del reto con un desplegable junto a «Publicar notas» (antes «Publicar»), sin el desplegable de estado en Evaluación; icono en «Introducción masiva»; tarjetas de equipo a media anchura aunque haya una sola y con el número de integrantes junto al número de equipo. Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, capturas revisadas. Imágenes desde `git archive 5cd379a`; `ops/deploy` con copia privada `backups/production-20261024-5cd379a` de `39161ad`; sin migraciones. App/web ejecutan 5cd379a, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:5cd379a`: `sha256:072e6a48dd5bc1680e32c4c9d8ddc6d94e14959d166965aec3b1bc6b4d5a967c`.
+- `erronk2d-web:5cd379a`: `sha256:d9abc5c41573a753a445b3f3c05b7c67a8742d26ef3ae25a18315399980d0d62`.
+
+**Producción anterior en 39161ad; desplegada el 24 de octubre de 2026.** La tabla de evaluación a pantalla completa ya no tiene cabecera: el botón para salir está en la barra de herramientas, en el sitio del de entrar, junto con el estado de guardado. Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, captura revisada. Imágenes desde `git archive 39161ad`; `ops/deploy` con copia privada `backups/production-20261024-39161ad` de `4cf919a`; sin migraciones. App/web ejecutan 39161ad, saludables; `/up` y `/login` HTTP 200 por HTTPS.
 
 - `erronk2d-app:39161ad`: `sha256:faadf1fe32197b03a38929b4eca70fbef7b00b4c0d619bfbce4ee9f75eafd0cd`.
 - `erronk2d-web:39161ad`: `sha256:7691972a94041064a7e25f4abce0cfe7f0775c2bae94d120088205a0c3071bad`.
