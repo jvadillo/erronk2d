@@ -76,9 +76,6 @@ class DatabaseSeeder extends Seeder
             $tr = Rubric::create(['owner_id' => $teachers[0]->id, 'cycle_id' => $cycle->id, 'level' => 2, 'name' => 'Proyecto web · Rúbrica de equipo', 'kind' => 'team', 'items' => $teamItems]);
             $xr = Rubric::create(['owner_id' => $teachers[0]->id, 'cycle_id' => $cycle->id, 'level' => 2, 'name' => 'Aprender en equipo · Transversales', 'kind' => 'transversal', 'items' => $transItems]);
             Rubric::create(['owner_id' => $teachers[0]->id, 'cycle_id' => $cycle->id, 'level' => 2, 'name' => 'Presentación de un prototipo', 'kind' => 'team', 'items' => [...array_map(fn ($item) => [...$item, 'module_id' => null], array_slice($teamItems, 0, 2))]]);
-            foreach (Rubric::all() as $rubric) {
-                $rubric->sharedUsers()->sync(array_map(fn ($teacher) => $teacher->id, array_slice($teachers, 1)));
-            }
             $titles = ['Una web para nuestra comunidad', 'Datos que cuentan historias', 'Un comercio más cercano', 'Conectamos el barrio', 'Ideas con impacto', 'Nuestro portfolio profesional'];
             $descriptions = ['Diseñamos una plataforma accesible para conectar las iniciativas de nuestro entorno.', 'Transformamos datos abiertos en una experiencia interactiva, útil y comprensible.', 'Un escaparate digital para impulsar el pequeño comercio de nuestra ciudad.', 'Una aplicación para compartir recursos y fortalecer la comunidad.', 'Convertimos una necesidad real en un producto digital que aporta valor.', 'Mostramos lo aprendido en un portfolio que cuenta nuestra historia.'];
             foreach ($titles as $ci => $title) {

@@ -155,22 +155,21 @@ class AcademicWorkflowTest extends TestCase
         $this->getJson($url('Ane'))->assertForbidden();
     }
 
-    public function test_rubric_is_private_and_sharing_allows_copy_but_not_editing_original(): void
+    public function test_rubric_is_private_to_its_owner_who_can_duplicate_it(): void
     {
         $owner = User::factory()->create(['role' => 'teacher']);
-        $recipient = User::factory()->create(['role' => 'teacher']);
+        $other = User::factory()->create(['role' => 'teacher']);
         $rubric = $this->rubric($owner);
-        $this->actingAs($recipient)->get('/setup/rubrics')->assertInertia(fn (Assert $page) => $page->has('rubrics', 0));
+        $this->actingAs($other)->get('/setup/rubrics')->assertInertia(fn (Assert $page) => $page->has('rubrics', 0));
         $this->postJson('/setup/rubric-copy', ['id' => $rubric->id])->assertNotFound();
-        $rubric->sharedUsers()->attach($recipient);
-
-        $this->post('/setup/rubric-copy', ['id' => $rubric->id])->assertSessionHasNoErrors();
-
-        $copy = Rubric::where('owner_id', $recipient->id)->firstOrFail();
-        $this->assertSame($rubric->items, $copy->items);
-        $this->assertSame(0, $copy->sharedUsers()->count());
-        $this->postJson('/setup/rubric', ['id' => $rubric->id, 'name' => 'Cambio'])->assertForbidden();
+        $this->postJson('/setup/rubric', ['id' => $rubric->id, 'name' => 'Cambio'])->assertNotFound();
         $this->assertSame('Privada', $rubric->fresh()->name);
+
+        $this->actingAs($owner)->post('/setup/rubric-copy', ['id' => $rubric->id])->assertSessionHasNoErrors();
+
+        $copy = Rubric::where('owner_id', $owner->id)->whereKeyNot($rubric->id)->firstOrFail();
+        $this->assertSame($rubric->items, $copy->items);
+        $this->assertSame('Privada (copia)', $copy->name);
     }
 
     public function test_module_responsibility_is_specific_to_class_and_revoked_with_membership(): void

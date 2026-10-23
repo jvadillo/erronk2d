@@ -17,7 +17,7 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 | Navegación | Lateral plegable a iconos con preferencia persistente; Organización dividida en ocho páginas con submenú y acceso según rol | Selector de curso visible y persistente en la cuenta; URL, título e historial propios. Solicitudes solo para administración; submenú móvil y teclado |
 | Retos | Clase/Evaluación, módulos, peso, fechas, estados, opciones y rúbricas copiadas | Las rúbricas y módulos se eligen al crear; cambios posteriores de esas vinculaciones no incluidos |
 | Equipos | 2–5 integrantes, exclusividad por reto, composición independiente | Reorganización bloqueada después de empezar evaluaciones |
-| Rúbricas | Criterios, pesos, niveles, GENERAL/módulo para equipo; biblioteca privada y compartida para usar/copiar | Cada reto conserva su copia; transversales sin módulo |
+| Rúbricas | Criterios, pesos, niveles, GENERAL/módulo para equipo; biblioteca privada de cada docente | Cada reto conserva su copia; transversales sin módulo |
 | Nota de equipo y reparto | Cálculo ponderado, presupuesto exacto, validación atómica del reparto | Reparto opcional introducido por el profesor; alumnado no reparte en la app |
 | Defensas | Una por estudiante/módulo/reto, opcional, fecha, responsable, notas | Todas se suman/restan sobre la misma nota individual; no existen notas de reto por módulo |
 | Exámenes | Una nota por estudiante/módulo/reto, edición individual o masiva | Sustituye las múltiples actividades/exámenes del texto inicial, por decisión del usuario |

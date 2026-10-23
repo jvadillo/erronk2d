@@ -44,7 +44,6 @@
 .rubric-description.expanded { display: block; max-height: none; }
 .rubric-description-toggle:hover .rubric-description { color: #5b3350; }
 .field-error { display: block; color: #a13932; font-size: 12px; margin-top: 5px; }
-.rubric-sharing-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0 20px; max-height: 260px; overflow: auto; margin-top: 12px; }
 .rubric-assessment-table .rubric-choice-cell { padding: 0; position: relative; height: 1px; }
 .rubric-choice { position: absolute; inset: 0; z-index: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; width: 100%; height: 100%; margin: 0; text-align: left; padding: 16px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.55; color: #5b3350; }
 .rubric-level-content { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 120px; }

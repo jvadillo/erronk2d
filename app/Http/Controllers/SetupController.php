@@ -64,7 +64,7 @@ class SetupController extends Controller
             'modules' => Module::with('cycle')->orderBy('name')->get(),
             'cycleModuleUrl' => route('setup.store', ['entity' => 'cycle-module']),
             'rubricCreateUrl' => route('rubrics.create'),
-            'rubrics' => $section === 'rubrics' ? Rubric::availableTo($actor)->with(['sharedUsers:id,name', 'teamChallenge:id,name,team_rubric_id', 'transversalChallenge:id,name,transversal_rubric_id'])->orderBy('name')->get()->map(fn (Rubric $rubric): array => [
+            'rubrics' => $section === 'rubrics' ? Rubric::availableTo($actor)->with(['teamChallenge:id,name,team_rubric_id', 'transversalChallenge:id,name,transversal_rubric_id'])->orderBy('name')->get()->map(fn (Rubric $rubric): array => [
                 ...$rubric->makeHidden(['teamChallenge', 'transversalChallenge'])->toArray(), 'edit_url' => route('rubrics.edit', ['rubric' => $rubric->id]),
                 'challenge' => ($challenge = $rubric->linkedChallenge()) ? ['name' => $challenge->name, 'editor_url' => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $rubric->kind])] : null,
             ]) : [],
@@ -128,8 +128,7 @@ class SetupController extends Controller
     {
         $actor = $request->user();
         abort_unless(in_array($actor->role, ['admin', 'teacher'], true), 403);
-        $model = $rubric ? Rubric::availableTo($actor)->with('sharedUsers:id,name')->findOrFail($rubric) : null;
-        abort_unless($model === null || $actor->role === 'admin' || $model->owner_id === $actor->id, 403, 'Puedes crear una copia de esta rúbrica compartida.');
+        $model = $rubric ? Rubric::availableTo($actor)->findOrFail($rubric) : null;
         if ($challenge = $model?->linkedChallenge()) {
             return redirect()->route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $model->kind]);
         }
@@ -138,7 +137,6 @@ class SetupController extends Controller
             'rubric' => $model,
             'cycles' => Cycle::orderBy('name')->get(['id', 'name']),
             'modules' => Module::orderBy('name')->get(['id', 'cycle_id', 'level', 'name', 'code']),
-            'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->whereKeyNot($actor->id)->orderBy('name')->get(['id', 'name']),
             'saveUrl' => route('setup.store', ['entity' => 'rubric']),
             'libraryUrl' => route('setup.section', ['section' => 'rubrics']),
         ]);
@@ -397,11 +395,10 @@ class SetupController extends Controller
 
             return $model;
         }
-        abort_unless(! $id || $model->owner_id === $actor->id || $actor->role === 'admin', 403, 'Solo el propietario puede editar el original. Puedes crear una copia.');
         if ($id && ($challenge = $model->linkedChallenge())) {
             throw ValidationException::withMessages(['name' => "Esta rúbrica pertenece al reto «{$challenge->name}». Edítala desde el reto."]);
         }
-        $data = $request->validate(['name' => 'required|string|max:150', 'kind' => 'required|in:team,transversal', 'cycle_id' => 'nullable|integer|exists:cycles,id', 'level' => 'nullable|integer|between:1,4', 'shared_user_ids' => 'sometimes|array', 'shared_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)], 'items' => 'required|array|list|min:1|max:40', 'items.*.key' => 'required|string|max:80|distinct|regex:/^[a-zA-Z0-9_-]+$/', 'items.*.name' => 'required|string|max:150', 'items.*.description' => 'nullable|string|max:2000', 'items.*.module_id' => 'nullable|integer|exists:modules,id', 'items.*.weight' => ['required', 'numeric', 'gt:0', 'max:100', 'decimal:0,2', ChallengeWriter::DECIMAL], 'items.*.levels' => 'required|array|list|min:2|max:20', 'items.*.levels.*.score' => ['required', 'numeric', 'between:0,10', ChallengeWriter::GRADE_DECIMAL], 'items.*.levels.*.description' => 'required|string|max:2000']);
+        $data = $request->validate(['name' => 'required|string|max:150', 'kind' => 'required|in:team,transversal', 'cycle_id' => 'nullable|integer|exists:cycles,id', 'level' => 'nullable|integer|between:1,4', 'items' => 'required|array|list|min:1|max:40', 'items.*.key' => 'required|string|max:80|distinct|regex:/^[a-zA-Z0-9_-]+$/', 'items.*.name' => 'required|string|max:150', 'items.*.description' => 'nullable|string|max:2000', 'items.*.module_id' => 'nullable|integer|exists:modules,id', 'items.*.weight' => ['required', 'numeric', 'gt:0', 'max:100', 'decimal:0,2', ChallengeWriter::DECIMAL], 'items.*.levels' => 'required|array|list|min:2|max:20', 'items.*.levels.*.score' => ['required', 'numeric', 'between:0,10', ChallengeWriter::GRADE_DECIMAL], 'items.*.levels.*.description' => 'required|string|max:2000']);
         if (empty($data['cycle_id']) !== empty($data['level'])) {
             throw ValidationException::withMessages(['cycle_id' => 'Selecciona ciclo y nivel juntos, o deja ambos vacíos para una rúbrica general.']);
         }
@@ -425,10 +422,7 @@ class SetupController extends Controller
             }
         }
         unset($item);
-        $model->fill(collect($data)->except('shared_user_ids')->all())->save();
-        if (array_key_exists('shared_user_ids', $data)) {
-            $model->sharedUsers()->sync($data['shared_user_ids']);
-        }
+        $model->fill($data)->save();
 
         return $model;
     }

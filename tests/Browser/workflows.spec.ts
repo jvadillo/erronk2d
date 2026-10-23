@@ -134,7 +134,10 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   await page.getByRole('link', { name: 'Estudiantes y Equipos', exact: true }).click();
   const dialog = page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true });
   await expect(dialog.getByText('Este reto no tiene estudiantes.', { exact: false })).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
+  const teamHeading = dialog.locator('.workspace-heading');
+  await expect(teamHeading.getByRole('heading', { name: 'Estudiantes y Equipos', exact: true })).toBeVisible();
+  await expect(teamHeading.getByRole('button', { name: 'Añadir equipo', exact: true })).toBeVisible();
+  await expect(teamHeading.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
   await dialog.getByRole('button', { name: 'Incorporar estudiantes del grupo', exact: true }).click();
   const teams = dialog.locator('.team-editor > section');
   await expect(teams.first().locator('.team-card-count')).toHaveText('Sin integrantes');

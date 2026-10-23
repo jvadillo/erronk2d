@@ -8,10 +8,9 @@ import ModuleCriteriaNotice from '../components/ModuleCriteriaNotice.vue';
 import { api } from '../lib';
 import { commonScores, decimal, percentage, percentageWeights, type RubricItem, type RubricModule } from '../rubrics';
 const props = defineProps<{
-  rubric: { id: number | null; name: string; kind: string; cycle_id: number | null; level: number | null; items: RubricItem[]; shared_users: { id: number }[] } | null;
+  rubric: { id: number | null; name: string; kind: string; cycle_id: number | null; level: number | null; items: RubricItem[] } | null;
   cycles: { id: number; name: string }[];
   modules: RubricModule[];
-  teachers: { id: number; name: string }[];
   saveUrl: string;
   libraryUrl: string;
   challengeContext?: { id: number; name: string; kind: 'team' | 'transversal'; cycle: string | null; level: number | null; revision: number; requiresReason: boolean; savesToLibrary: boolean; previewUrl: string };
@@ -34,7 +33,6 @@ const form = useForm(props.challengeContext ? `ChallengeRubric:${props.challenge
   kind: props.rubric?.kind ?? 'team',
   cycle_id: props.rubric?.cycle_id ?? '' as number | string,
   level: props.rubric?.level ?? '' as number | string,
-  shared_user_ids: props.rubric?.shared_users.map(user => user.id) ?? [],
   scores: initialScores,
   items: initialItems.length ? initialItems : [makeItem(initialScores, '100')],
 });
@@ -88,7 +86,7 @@ function submit() {
   if (props.challengeContext) { previewChange(); return; }
   if (legacy.value) return;
   form.transform(data => ({
-    id: data.id, name: data.name, kind: data.kind, cycle_id: data.cycle_id || null, level: data.level || null, shared_user_ids: data.shared_user_ids,
+    id: data.id, name: data.name, kind: data.kind, cycle_id: data.cycle_id || null, level: data.level || null,
     items: data.items.map(item => ({ ...item, module_id: data.kind === 'transversal' ? null : item.module_id, weight: String(item.weight).replace(',', '.'), levels: data.scores.map((score, index) => ({ score: score.replace(',', '.'), description: item.levels[index]?.description ?? '' })) })),
   })).post(props.saveUrl, { onSuccess: () => form.defaults() });
 }
@@ -180,7 +178,6 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
         </table>
       </div>
       <div class="rubric-toolbar"><button type="button" class="button" :disabled="form.items.length >= 40 || (legacy && !challengeContext)" @click="form.items.push(makeItem(form.scores))"><Plus :size="16"/>Añadir criterio</button><span class="helper">{{ form.items.length }} criterios · {{ form.scores.length }} niveles. Desplaza la tabla para ver todas las columnas.</span></div>
-      <details v-if="!challengeContext" class="panel rubric-sharing"><summary>Compartir para usar y copiar · {{ form.shared_user_ids.length }} personas</summary><div class="rubric-sharing-list"><label v-for="teacher in teachers" :key="teacher.id" class="check"><input v-model="form.shared_user_ids" type="checkbox" :value="teacher.id"/>{{ teacher.name }}</label></div></details>
       </fieldset>
       <footer class="rubric-toolbar"><p class="helper">{{ challengeContext ? (challengeContext.savesToLibrary ? 'Los cambios se aplicarán a este reto y a su rúbrica en la biblioteca. Se conservará la evidencia anterior en el historial.' : 'Los cambios se aplicarán únicamente a este reto. Se conservará la evidencia anterior en el historial.') : 'Editar esta plantilla no modifica las rúbricas que ya están asignadas a retos.' }}</p><div class="actions"><Link :href="libraryUrl" class="button">Cancelar</Link><button class="button primary" type="submit" :disabled="submitDisabled">{{ saveLabel }}</button></div></footer>
     </form>

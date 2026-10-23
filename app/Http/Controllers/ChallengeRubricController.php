@@ -30,8 +30,8 @@ class ChallengeRubricController extends Controller
         $evaluation = $kind === 'team' ? 'team' : 'teacher';
 
         return Inertia::render('RubricEditor', [
-            'rubric' => [...$rubric, 'id' => null, 'kind' => $kind, 'cycle_id' => null, 'level' => null, 'shared_users' => []],
-            'cycles' => [], 'teachers' => [],
+            'rubric' => [...$rubric, 'id' => null, 'kind' => $kind, 'cycle_id' => null, 'level' => null],
+            'cycles' => [],
             'modules' => $challenge->modules->map(fn ($module) => ['id' => $module->id, 'name' => $challenge->catalog_snapshot['modules'][$module->id]['name'] ?? $module->name, 'code' => $challenge->catalog_snapshot['modules'][$module->id]['code'] ?? $module->code]),
             'saveUrl' => route('challenges.update', $challenge),
             'libraryUrl' => route('challenges.show', ['challenge' => $challenge, 'evaluation' => $evaluation, 'subject' => $request->integer('subject') ?: null]),

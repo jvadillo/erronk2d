@@ -35,16 +35,13 @@ class RubricEditorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('RubricEditor')->where('rubric', null)->where('saveUrl', route('setup.store', ['entity' => 'rubric'])));
     }
 
-    public function test_editor_respects_ownership_and_sharing(): void
+    public function test_editor_respects_ownership(): void
     {
         $owner = User::factory()->create(['role' => 'teacher']);
-        $reader = User::factory()->create(['role' => 'teacher']);
         $rubric = Rubric::create([...$this->payload(), 'owner_id' => $owner->id]);
         $url = route('rubrics.edit', $rubric->id);
 
-        $this->actingAs($reader)->get($url)->assertNotFound();
-        $rubric->sharedUsers()->attach($reader);
-        $this->get($url)->assertForbidden();
+        $this->actingAs(User::factory()->create(['role' => 'teacher']))->get($url)->assertNotFound();
         $this->actingAs($owner)->get($url)->assertInertia(fn (Assert $page) => $page->component('RubricEditor')->where('rubric.id', $rubric->id));
         $this->actingAs(User::factory()->create(['role' => 'admin']))->get($url)->assertOk();
     }
@@ -53,7 +50,7 @@ class RubricEditorTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'teacher']);
         $reader = User::factory()->create(['role' => 'teacher']);
-        $data = [...$this->payload(), 'shared_user_ids' => [$reader->id], 'owner_id' => $reader->id];
+        $data = [...$this->payload(), 'owner_id' => $reader->id];
 
         $this->actingAs($owner)->post(route('setup.store', ['entity' => 'rubric']), $data)
             ->assertSessionHasNoErrors()->assertRedirect(route('setup.section', ['section' => 'rubrics']));
@@ -63,7 +60,6 @@ class RubricEditorTest extends TestCase
         $this->assertSame('33.33', $rubric->items[0]['weight']);
         $this->assertSame($data['items'][0]['levels'], $rubric->items[0]['levels']);
         $this->assertSame($data['items'][1]['levels'], $rubric->items[1]['levels']);
-        $this->assertSame([$reader->id], $rubric->sharedUsers()->pluck('users.id')->all());
     }
 
     /** @return array<string, array{string, string, string}> */

@@ -4,17 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Rubric extends Model
 {
     protected $fillable = ['name', 'kind', 'items', 'owner_id', 'cycle_id', 'level'];
-
-    public function sharedUsers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class);
-    }
 
     public function teamChallenge(): HasOne
     {
@@ -34,13 +28,12 @@ class Rubric extends Model
         return $this->kind === 'team' ? $this->teamChallenge : $this->transversalChallenge;
     }
 
+    /**
+     * Rubrics are private to their owner; administrators see the whole library.
+     */
     public function scopeAvailableTo(Builder $query, User $user): Builder
     {
-        if ($user->role === 'admin') {
-            return $query;
-        }
-
-        return $query->where(fn (Builder $access) => $access->where('owner_id', $user->id)->orWhereHas('sharedUsers', fn (Builder $users) => $users->where('users.id', $user->id)));
+        return $user->role === 'admin' ? $query : $query->where('owner_id', $user->id);
     }
 
     protected function casts(): array
