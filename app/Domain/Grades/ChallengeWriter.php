@@ -37,6 +37,8 @@ final class ChallengeWriter
             switch ($action) {
                 case 'rubric': $this->rubrics->apply($actor, $challenge, $input);
                     break;
+                case 'copy_rubric': $this->rubrics->copy($actor, $challenge, $input);
+                    break;
                 case 'participants': $this->participants($actor, $challenge);
                     break;
                 case 'teams': $this->teams($actor, $challenge, $input);

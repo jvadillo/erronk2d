@@ -121,7 +121,7 @@ class ChallengeController extends Controller
         ];
     }
 
-    public function show(Request $request, Challenge $challenge, Gradebook $book): Response
+    public function show(Request $request, Challenge $challenge, Gradebook $book, ChallengeRubricEditor $rubrics): Response
     {
         $this->authorizeChallenge($request, $challenge);
         $data = $book->challenge($challenge);
@@ -142,7 +142,10 @@ class ChallengeController extends Controller
             ]),
             'challengeUrl' => route('challenges.show', $challenge),
             'evidenceStoreUrl' => route('challenges.evidence.store', $challenge), 'history' => $challenge->publications()->select('id', 'version', 'created_at')->orderByDesc('version')->get(),
-            'rubricEditorUrls' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $kind])])->all()]);
+            'rubricEditorUrls' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $kind])])->all(),
+            'copyableRubrics' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => $request->user()->allows('manage_challenges') && $challenge->{$kind.'_rubric'}['items'] === []
+                ? $rubrics->copyable($request->user(), $challenge, $kind)->map(fn (Rubric $rubric): array => ['id' => $rubric->id, 'name' => $rubric->name, 'criteria' => count($rubric->items)])->all()
+                : []])->all()]);
     }
 
     public function update(Request $request, Challenge $challenge, ChallengeWriter $writer): JsonResponse

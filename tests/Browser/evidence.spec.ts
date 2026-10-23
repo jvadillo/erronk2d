@@ -244,7 +244,17 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
   await status.selectOption('active');
   await expect(page.locator('.toast-region').getByText('El reto vuelve a estar en curso.', { exact: false })).toBeVisible();
   await expect(page.locator('.challenge-meta .badge')).toHaveText('En curso');
+  await status.selectOption('finished');
+  const finishing = page.getByRole('dialog', { name: 'Finalizar el reto', exact: true });
+  await expect(finishing).toContainText('habrá que reabrirlo');
+  await finishing.getByRole('button', { name: 'Cerrar', exact: true }).click();
+  await expect(status).toHaveValue('active');
   await status.selectOption('evaluating');
+  const evaluating = page.getByRole('dialog', { name: 'Pasar a evaluación', exact: true });
+  await expect(evaluating).toContainText('Se habilitará la autoevaluación y la coevaluación entre estudiantes');
+  await expect(page.locator('.challenge-meta .badge')).toHaveText('En curso');
+  await evaluating.getByRole('button', { name: 'Pasar a evaluación', exact: true }).click();
+  await expect(evaluating).toHaveCount(0);
   await expect(page.locator('.challenge-meta .badge')).toHaveText('En evaluación');
   await expect(page.locator('.matrix')).toBeHidden();
   await page.screenshot({ path: 'test-results/challenge-hub-desktop.png', fullPage: true });

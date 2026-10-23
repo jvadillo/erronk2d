@@ -5,6 +5,7 @@ namespace App\Domain\Grades;
 use App\Models\Challenge;
 use App\Models\Rubric;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -145,6 +146,46 @@ final class ChallengeRubricEditor
             $library->fill(['name' => $this->libraryName($challenge, $change['rubric']['name']), 'items' => $change['rubric']['items']])->save();
             $challenge->{$change['field'].'_id'} = $library->id;
         }
+    }
+
+    /**
+     * Library rubrics whose criteria can fill an empty challenge rubric: same kind, with criteria,
+     * of the group's cycle and level (or generic) and only referring to modules of the challenge.
+     *
+     * @return Collection<int, Rubric>
+     */
+    public function copyable(User $actor, Challenge $challenge, string $kind): Collection
+    {
+        $class = $challenge->classroom;
+        $moduleIds = $challenge->modules()->pluck('modules.id')->all();
+
+        return Rubric::availableTo($actor)->where('kind', $kind)
+            ->whereKeyNot(array_filter([$challenge->team_rubric_id, $challenge->transversal_rubric_id]))
+            ->orderBy('name')->get()
+            ->filter(fn (Rubric $rubric): bool => $rubric->items !== []
+                && (! $rubric->cycle_id || ($rubric->cycle_id === $class->cycle_id && $rubric->level === $class->level))
+                && collect($rubric->items)->every(fn (array $item): bool => empty($item['module_id']) || ($kind === 'team' && in_array((int) $item['module_id'], $moduleIds, true))))
+            ->values();
+    }
+
+    /**
+     * Copies a library rubric into an empty challenge rubric. The template stays independent.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function copy(User $actor, Challenge $challenge, array $input): void
+    {
+        $this->authorize($actor, $challenge);
+        $data = Validator::make($input, ['kind' => 'required|in:team,transversal', 'rubric_id' => 'required|integer'])->validate();
+        $field = $data['kind'].'_rubric';
+        if ($challenge->$field['items'] !== []) {
+            throw ValidationException::withMessages(['rubric_id' => 'La rúbrica del reto ya tiene criterios. Modifícala con «Editar rúbrica».']);
+        }
+        $rubric = $this->copyable($actor, $challenge, $data['kind'])->firstWhere('id', (int) $data['rubric_id']);
+        if (! $rubric) {
+            throw ValidationException::withMessages(['rubric_id' => 'Selecciona una rúbrica de la biblioteca compatible con este reto.']);
+        }
+        $challenge->$field = ['name' => $rubric->name, 'items' => $rubric->items];
     }
 
     /**

@@ -100,3 +100,37 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await page.waitForLoadState('networkidle');
   expect(errors).toEqual([]);
 });
+
+test('rúbrica vacía: copiar una rúbrica compatible de la biblioteca', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await login(page);
+  await page.getByRole('button', { name: 'Nuevo reto', exact: true }).click();
+  const creation = page.getByRole('dialog');
+  await creation.getByLabel('Nombre del reto').fill(`Rúbrica copiada ${Date.now()}`);
+  await creation.getByRole('combobox', { name: 'Grupo', exact: true }).selectOption({ label: '2DAW-A · 2026-2027' });
+  await creation.getByRole('combobox', { name: 'Evaluación', exact: true }).selectOption({ label: '1.ª Evaluación' });
+  await creation.getByLabel('PROG · Programación', { exact: true }).check();
+  await creation.getByRole('combobox', { name: 'Rúbrica del reto', exact: true }).selectOption({ label: 'Crear nueva rúbrica' });
+  await creation.getByRole('combobox', { name: 'Rúbrica transversal', exact: true }).selectOption({ label: 'Crear nueva rúbrica' });
+  await creation.getByRole('button', { name: 'Crear reto', exact: true }).click();
+  await expect(page).toHaveURL(/\/challenges\/\d+$/);
+  await page.getByRole('link', { name: 'Ev. transversales', exact: true }).click();
+  const empty = page.getByRole('alert');
+  await expect(empty).toContainText('La rúbrica no contiene todavía criterios.');
+  await expect(empty.getByRole('button', { name: 'Editar rúbrica', exact: true })).toBeVisible();
+  await empty.getByRole('button', { name: 'Copiar rúbrica', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Copiar rúbrica', exact: true });
+  const source = dialog.getByRole('combobox', { name: 'Rúbrica de la biblioteca', exact: true });
+  const value = await source.locator('option', { hasText: 'Aprender en equipo · Transversales' }).getAttribute('value');
+  await source.selectOption(value!);
+  await page.screenshot({ path: 'test-results/rubric-copy-dialog.png' });
+  await dialog.getByRole('button', { name: 'Copiar rúbrica', exact: true }).click();
+  await expect(page.locator('.toast-region').getByText('Rúbrica copiada.', { exact: false })).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  await expect(empty).toHaveCount(0);
+  await expect(page.locator('.rubric-assessment')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.rubric-assessment')).toBeVisible();
+  expect(errors).toEqual([]);
+});

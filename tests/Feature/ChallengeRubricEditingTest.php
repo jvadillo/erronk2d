@@ -470,4 +470,55 @@ class ChallengeRubricEditingTest extends TestCase
         $this->preview($this->payload())->assertForbidden();
         $this->save($this->payload(), $token)->assertForbidden();
     }
+
+    public function test_empty_rubric_can_copy_only_compatible_library_rubrics(): void
+    {
+        $this->challenge->update(['team_rubric' => ['name' => 'Rúbrica técnica', 'items' => []], 'transversal_rubric' => ['name' => 'Rúbrica transversal', 'items' => []]]);
+        $class = $this->challenge->classroom->fresh();
+        $items = $this->rubricItems();
+        $moduleId = $this->challenge->modules()->value('modules.id');
+        $otherModule = $this->moduleForClass($class);
+        $library = fn (string $name, string $kind, array $attributes = []) => Rubric::create(['owner_id' => $this->teacher->id, 'name' => $name, 'kind' => $kind, 'items' => $items, ...$attributes]);
+        $compatible = $library('Proyecto del ciclo', 'team', ['cycle_id' => $class->cycle_id, 'level' => $class->level, 'items' => [[...$items[0], 'module_id' => $moduleId], $items[1]]]);
+        $library('Otro módulo', 'team', ['items' => [[...$items[0], 'module_id' => $otherModule->id], $items[1]]]);
+        $library('Otro curso', 'team', ['cycle_id' => $class->cycle_id, 'level' => $class->level - 1]);
+        $library('Sin criterios', 'team', ['items' => []]);
+        Rubric::create(['owner_id' => User::factory()->create(['role' => 'teacher'])->id, 'name' => 'Ajena', 'kind' => 'team', 'items' => $items]);
+        $transversal = $library('Colaboración', 'transversal');
+
+        $this->get(route('challenges.show', $this->challenge))->assertInertia(fn (Assert $page) => $page
+            ->where('copyableRubrics.team', [['id' => $compatible->id, 'name' => 'Proyecto del ciclo', 'criteria' => 2]])
+            ->where('copyableRubrics.transversal', [['id' => $transversal->id, 'name' => 'Colaboración', 'criteria' => 2]]));
+
+        $revision = $this->challenge->fresh()->revision;
+        $this->postJson(route('challenges.update', $this->challenge), ['action' => 'copy_rubric', 'kind' => 'team', 'rubric_id' => $compatible->id, 'revision' => $revision])->assertOk();
+        $challenge = $this->challenge->fresh();
+        $this->assertSame(['name' => 'Proyecto del ciclo', 'items' => $compatible->items], $challenge->team_rubric);
+        $this->assertNull($challenge->team_rubric_id);
+        $this->assertSame(1, AuditEvent::where('action', 'copy_rubric')->count());
+        $this->assertSame('Proyecto del ciclo', $compatible->fresh()->name);
+    }
+
+    public function test_copy_rubric_rejects_incompatible_rubrics_and_rubrics_with_criteria(): void
+    {
+        $this->challenge->update(['transversal_rubric' => ['name' => 'Rúbrica transversal', 'items' => []]]);
+        $team = Rubric::create(['owner_id' => $this->teacher->id, 'name' => 'Equipo', 'kind' => 'team', 'items' => $this->rubricItems()]);
+        $copy = fn (string $kind, int $id) => $this->postJson(route('challenges.update', $this->challenge), ['action' => 'copy_rubric', 'kind' => $kind, 'rubric_id' => $id, 'revision' => $this->challenge->fresh()->revision]);
+
+        $copy('transversal', $team->id)->assertUnprocessable()->assertJsonValidationErrors('rubric_id');
+        $copy('team', $team->id)->assertUnprocessable()->assertJsonValidationErrors('rubric_id');
+        $this->assertSame([], $this->challenge->fresh()->transversal_rubric['items']);
+        $this->assertSame('Proyecto', $this->challenge->fresh()->team_rubric['name']);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function rubricItems(): array
+    {
+        $levels = [['score' => '5', 'description' => 'Suficiente'], ['score' => '10', 'description' => 'Excelente']];
+
+        return [
+            ['key' => 'design', 'name' => 'Diseño', 'description' => null, 'module_id' => null, 'weight' => '50', 'levels' => $levels],
+            ['key' => 'tests', 'name' => 'Pruebas', 'description' => null, 'module_id' => null, 'weight' => '50', 'levels' => $levels],
+        ];
+    }
 }
