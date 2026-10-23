@@ -49,6 +49,7 @@
 .team-capacity-hint { margin-top: 9px; color: #877e84; font-size: 10px; }
 .team-name-error { margin: 10px 0 0; }
 .team-heading-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
+.team-heading-actions .save-status:empty { display: none; }
 
 @media (max-width: 680px) {
   .team-editor { grid-template-columns: minmax(0, 1fr); }

@@ -41,7 +41,7 @@ const teacher=(usePage().props.auth as any).role!=='student';
 .challenge-card h2 { margin-bottom: 6px; color: #2b1f28; font-size: 18px; line-height: 1.3; letter-spacing: -.3px; }
 .card-description { min-height: 0; margin-bottom: 14px; color: var(--muted); font-size: 12px; line-height: 1.55; }
 .module-chips { margin: 0 0 18px; }
-.card-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: auto 0 16px; overflow: hidden; border: 1px solid #f0e8ee; border-radius: 10px; background: #f0e8ee; }
+.card-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, .7fr); gap: 1px; margin: auto 0 16px; overflow: hidden; border: 1px solid #f0e8ee; border-radius: 10px; background: #f0e8ee; }
 .card-facts div { min-width: 0; padding: 9px 12px; background: #fbf8fa; }
 .card-facts dt { color: var(--muted); font-size: 10px; }
 .card-facts dd { margin: 2px 0 0; overflow: hidden; color: #2b1f28; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
