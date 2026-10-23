@@ -137,6 +137,9 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
   await dialog.getByRole('button', { name: 'Incorporar estudiantes del grupo', exact: true }).click();
   const teams = dialog.locator('.team-editor > section');
+  await expect(teams.first().locator('.team-card-count')).toHaveText('Sin integrantes');
+  const editorWidth = await dialog.locator('.team-editor').evaluate(element => element.clientWidth);
+  expect(await teams.first().evaluate(element => element.getBoundingClientRect().width)).toBeLessThan(editorWidth * 0.6);
   await teams.first().getByRole('button', { name: 'Añadir estudiantes', exact: true }).click();
   const firstTeamOptions = teams.first().locator('.team-student-option');
   await expect(firstTeamOptions.first()).toBeVisible();
@@ -149,8 +152,10 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   await expect(firstTeamOptions).toHaveCount(1);
   await firstTeamOptions.filter({ hasText: 'Aitor Fernández' }).click();
   await expect(teams.first().locator('.team-members li')).toHaveCount(2);
+  await expect(teams.first().locator('.team-card-count')).toHaveText('2 personas');
   await teams.first().locator('.team-members button').first().click();
   await expect(teams.first().locator('.team-members li')).toHaveCount(1);
+  await expect(teams.first().locator('.team-card-count')).toHaveText('1 persona');
   await expect(dialog.getByRole('button', { name: 'Guardar equipos', exact: true })).toBeDisabled();
   await firstTeamSearch.fill('ainhoa');
   await expect(firstTeamOptions).toHaveCount(1);
@@ -173,7 +178,7 @@ test('equipos: recuperar participantes y asignar estudiantes con búsqueda y ord
   await page.reload();
   await page.getByRole('link', { name: 'Estudiantes y Equipos', exact: true }).click();
   await expect(dialog.locator('.team-editor > section')).toHaveCount(2);
-  await expect(dialog.locator('.team-roster-heading b')).toHaveText(['2/5', '2/5']);
+  await expect(dialog.locator('.team-card-count')).toHaveText(['2 personas', '2 personas']);
   await expect(dialog.locator('.team-members li')).toHaveCount(4);
   await page.setViewportSize({ width: 390, height: 844 });
   await teams.first().getByRole('button', { name: 'Añadir estudiantes', exact: true }).click();

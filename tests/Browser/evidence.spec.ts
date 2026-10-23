@@ -237,6 +237,15 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
   }
   await expect(page.getByRole('tablist', { name: 'Vistas del reto' })).toHaveCount(0);
   await expect(page.getByRole('progressbar', { name: 'Evaluaciones completas' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Publicar notas', exact: true })).toBeVisible();
+  const status = page.getByRole('combobox', { name: 'Estado del reto', exact: true });
+  await expect(status.locator('option')).toHaveText(['En curso', 'En evaluación', 'Finalizado']);
+  await expect(status).toHaveValue('evaluating');
+  await status.selectOption('active');
+  await expect(page.locator('.toast-region').getByText('El reto vuelve a estar en curso.', { exact: false })).toBeVisible();
+  await expect(page.locator('.challenge-meta .badge')).toHaveText('En curso');
+  await status.selectOption('evaluating');
+  await expect(page.locator('.challenge-meta .badge')).toHaveText('En evaluación');
   await expect(page.locator('.matrix')).toBeHidden();
   await page.screenshot({ path: 'test-results/challenge-hub-desktop.png', fullPage: true });
 
@@ -259,6 +268,9 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
   await page.getByRole('link', { name: 'Tabla general', exact: true }).click();
   await expect(page).toHaveURL(`${challengeUrl}?tab=evaluation`);
   await expect(page.locator('.matrix')).toBeVisible();
+  const evaluationPanel = page.getByRole('tabpanel', { name: 'Evaluación', exact: true });
+  await expect(evaluationPanel.getByRole('combobox', { name: 'Estado del reto' })).toHaveCount(0);
+  await expect(evaluationPanel.getByRole('button', { name: 'Introducción masiva', exact: true }).locator('svg')).toHaveCount(1);
   const enterFullscreen = page.getByRole('button', { name: 'Ver tabla a pantalla completa', exact: true });
   await enterFullscreen.click();
   const fullscreenTable = page.getByRole('region', { name: 'Tabla de evaluación a pantalla completa', exact: true });

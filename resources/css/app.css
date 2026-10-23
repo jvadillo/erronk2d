@@ -22,17 +22,12 @@
 .team-dialog-intro { color: #70656d; margin: 0 0 14px; }
 .team-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; margin-bottom: 16px; }
 .team-editor > section.team-card { display: flex; flex-direction: column; align-items: stretch; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 3px 12px #301b2a0a; }
-.team-editor > section.team-card:only-child { grid-column: 1 / -1; }
 .team-editor > section.selecting { grid-column: auto; }
 .team-card-heading { display: flex; align-items: center; justify-content: space-between; margin: -3px 0 8px; }
 .team-card-index { color: #961e74; background: #f6e8f2; padding: 4px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.team-card-count { margin: 0 auto 0 8px; padding: 3px 9px; border: 1px solid #e6dfe4; border-radius: 99px; color: #6b6068; font-size: 11px; font-weight: 500; }
 .team-editor .team-name-field { display: flex; flex-direction: column; gap: 6px; margin: 5px 0 14px; color: #6b6068; font-size: 11px; }
 .team-editor .team-name-field input:not([type=checkbox]) { width: 100%; max-width: none; }
-.team-roster-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 9px; border-bottom: 1px solid #efecee; }
-.team-roster-heading > div { display: flex; flex-direction: column; }
-.team-roster-heading strong { color: #4b2a42; font-size: 12px; }
-.team-roster-heading span { color: var(--muted); font-size: 10px; }
-.team-roster-heading b { color: #971773; background: #f6e8f2; border-radius: 7px; padding: 4px 8px; font-size: 11px; font-variant-numeric: tabular-nums; }
 .team-editor .team-members { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
 .team-editor .team-members li { min-height: 38px; padding: 4px 6px 4px 11px; border: 1px solid #eee6ec; border-radius: 8px; background: #faf7f9; }
 .team-editor .team-members li .team-member-name { color: #4b2a42; font-size: 12px; }
