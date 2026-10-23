@@ -1,9 +1,10 @@
 # Estado de la tarea
 
 ## Objetivo
-Confirmar los cambios de estado del reto y copiar rúbricas de la biblioteca en rúbricas vacías.
+Simplificar rúbricas (sin compartir), botones de equipos en la cabecera y nuevas tarjetas de retos.
 
 ## Completado
+- Rúbricas solo del propietario (admin ve todas): retirados `sharedUsers`, `shared_user_ids`, el panel «Compartir» del editor, la etiqueta Propia/Compartida y la tabla `rubric_user` (migración `drop_rubric_user_table`; producción no tenía filas). «Añadir equipo»/«Guardar equipos» en la cabecera de Estudiantes y Equipos (solo con `manage_teams`). Tarjetas de retos con franja de color por estado, icono y datos de grupo, evaluación y equipos. Pint, 71 pruebas PHP de rúbricas/creación/reinicio/demo y la prueba Playwright de equipos correctas (por indicación del usuario no se repitió el resto); desplegado `d62b895` el 24 de octubre de 2026 con copia `backups/production-20261024-d62b895` de `03bb71b`.
 - Confirmación (modal) al pasar a «En evaluación» (autoevaluación y coevaluación) y a «Finalizado» (cierre y reapertura; deshabilitada si el reto no está completo). «Copiar rúbrica» junto a «Editar rúbrica» en rúbricas vacías: acción `copy_rubric` (`ChallengeRubricEditor::copy`/`copyable`: mismo tipo, con criterios, ciclo y curso del grupo o genéricas, solo módulos del reto) y prop `copyableRubrics`. 229 PHP y 17 Playwright correctas en el VPS; desplegado `03bb71b` el 24 de octubre de 2026 con copia `backups/production-20261024-03bb71b` de `5cd379a`.
 - Cabecera del reto: desplegable «Estado del reto» (En curso, En evaluación, Finalizado; solo con `manage_challenges` y reto abierto) en lugar de «Pasar a evaluación»/«Volver a En curso», y «Publicar notas». Retirado el desplegable de estado de Evaluación; «Introducción masiva» con icono. Tarjeta de equipo a media anchura aunque sea la única; `team-roster-heading` sustituido por `.team-card-count` («Sin integrantes», «1 persona», «N personas»). 16 Playwright correctas en el VPS y capturas revisadas; desplegado `5cd379a` el 24 de octubre de 2026 con copia `backups/production-20261024-5cd379a` de `39161ad`.
 - Tabla de evaluación a pantalla completa sin el `header.fullscreen-bar`: el botón de salir (icono, Esc sigue funcionando) ocupa el sitio del de entrar en `.matrix-toolbar`, y el estado de guardado se muestra en esa barra. Prueba nueva en `evidence.spec.ts`; 16 Playwright correctas en el VPS; desplegado `39161ad` el 24 de octubre de 2026 con copia `backups/production-20261024-39161ad` de `4cf919a`.
@@ -24,6 +25,7 @@ Confirmar los cambios de estado del reto y copiar rúbricas de la biblioteca en 
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
+- `app/Models/Rubric.php`, `app/Http/Controllers/SetupController.php`, `resources/js/pages/RubricEditor.vue`, `resources/js/pages/Dashboard.vue`.
 - `app/Domain/Grades/ChallengeRubricEditor.php`, `app/Http/Controllers/ChallengeController.php`, `tests/Feature/ChallengeRubricEditingTest.php`, `tests/Browser/empty-rubrics.spec.ts`.
 - `resources/js/pages/Challenge.vue`, `resources/js/components/ChallengeHub.vue`, `resources/css/app.css`, `tests/Browser/evidence.spec.ts`, `tests/Browser/workflows.spec.ts`.
 - `app/Http/Controllers/SetupController.php`, `routes/web.php`.
@@ -31,6 +33,7 @@ Confirmar los cambios de estado del reto y copiar rúbricas de la biblioteca en 
 - `tests/Feature/GroupManagementTest.php`, `tests/Feature/AcademicWorkflowTest.php`, `tests/Browser/workflows.spec.ts`.
 
 ## Decisiones
+- Sin uso compartido de rúbricas por indicación del usuario: cada docente reutiliza las suyas (duplicar o copiar en un reto).
 - La rúbrica copiada queda independiente de la plantilla (como al crear un reto desde la biblioteca); no se vincula ni modifica la original.
 - Pasar a «Finalizado» desde el desplegable cierra el reto (el servidor exige evaluaciones completas); después solo se modifica con «Reabrir». Si el servidor rechaza el cambio, el desplegable vuelve al estado real.
 - Cuatro pestañas (el usuario enumeró cuatro aunque escribió «tres»). Las evaluaciones están en Configuración.

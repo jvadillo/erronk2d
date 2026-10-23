@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 03bb71b; desplegada el 24 de octubre de 2026.** Confirmación antes de pasar el reto a «En evaluación» o «Finalizado», y «Copiar rúbrica» junto a «Editar rúbrica» cuando una rúbrica del reto está vacía (copia una rúbrica compatible de la biblioteca). Validación previa en el VPS: Pint, 229 pruebas PHP en PostgreSQL y 17 pruebas de navegador correctas. Imágenes desde `git archive 03bb71b`; `ops/deploy` con copia privada `backups/production-20261024-03bb71b` de `5cd379a`; sin migraciones. App/web ejecutan 03bb71b, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+**Producción en d62b895; desplegada el 24 de octubre de 2026.** Rúbricas privadas de su propietario sin uso compartido (migración `drop_rubric_user_table` aplicada; no había rúbricas compartidas), botones «Añadir equipo» y «Guardar equipos» en la cabecera de Estudiantes y Equipos y nuevas tarjetas de retos. Validación previa en el VPS: Pint, 71 pruebas PHP de las áreas afectadas en PostgreSQL y la prueba de navegador de equipos correctas; capturas revisadas. Imágenes desde `git archive d62b895`; `ops/deploy` con copia privada `backups/production-20261024-d62b895` de `03bb71b`. App/web ejecutan d62b895, saludables; `/up` y `/login` HTTP 200 por HTTPS; `rubric_user` eliminada y 7 rúbricas conservadas.
+
+- `erronk2d-app:d62b895`: `sha256:4ff5579987ce605c2e1e3691fdb1d7492b202d745482fbe338b3520e68bb69d2`.
+- `erronk2d-web:d62b895`: `sha256:9e104d85acec86211e6cb74d52b38cd3d510770428480052ace72c27d5b8205b`.
+
+**Producción anterior en 03bb71b; desplegada el 24 de octubre de 2026.** Confirmación antes de pasar el reto a «En evaluación» o «Finalizado», y «Copiar rúbrica» junto a «Editar rúbrica» cuando una rúbrica del reto está vacía (copia una rúbrica compatible de la biblioteca). Validación previa en el VPS: Pint, 229 pruebas PHP en PostgreSQL y 17 pruebas de navegador correctas. Imágenes desde `git archive 03bb71b`; `ops/deploy` con copia privada `backups/production-20261024-03bb71b` de `5cd379a`; sin migraciones. App/web ejecutan 03bb71b, saludables; `/up` y `/login` HTTP 200 por HTTPS.
 
 - `erronk2d-app:03bb71b`: `sha256:83f2a26bbe42fa54c6ecbac1e5903ea17fab55383022888c4d56d25661c711c1`.
 - `erronk2d-web:03bb71b`: `sha256:886b6874fee06df94669b00b8700b20bada33f7cb033461850b63b4dd33ea103`.
