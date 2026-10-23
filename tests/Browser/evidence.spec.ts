@@ -259,6 +259,16 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
   await page.getByRole('link', { name: 'Tabla general', exact: true }).click();
   await expect(page).toHaveURL(`${challengeUrl}?tab=evaluation`);
   await expect(page.locator('.matrix')).toBeVisible();
+  const enterFullscreen = page.getByRole('button', { name: 'Ver tabla a pantalla completa', exact: true });
+  await enterFullscreen.click();
+  const fullscreenTable = page.getByRole('region', { name: 'Tabla de evaluación a pantalla completa', exact: true });
+  await expect(fullscreenTable.getByRole('heading')).toHaveCount(0);
+  const exitFullscreen = fullscreenTable.locator('.matrix-toolbar').getByRole('button', { name: 'Salir de pantalla completa', exact: true });
+  await expect(exitFullscreen).toBeFocused();
+  await page.screenshot({ path: 'test-results/challenge-matrix-fullscreen.png' });
+  await exitFullscreen.click();
+  await expect(fullscreenTable).toHaveCount(0);
+  await expect(enterFullscreen).toBeFocused();
   await back.click();
   await page.getByRole('link', { name: 'Gestionar equipos', exact: true }).click();
   await expect(page.getByRole('tabpanel', { name: 'Estudiantes y Equipos', exact: true })).toBeVisible();
