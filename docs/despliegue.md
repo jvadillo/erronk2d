@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 4cf919a; desplegada el 23 de octubre de 2026.** La tarjeta «Evaluación» del inicio del reto tiene el mismo aspecto que las demás (sin fondo morado ni bloque de progreso). Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, capturas revisadas. Imágenes desde `git archive 4cf919a`; `ops/deploy` con copia privada `backups/production-20261023-4cf919a` de `b98e9b8`; sin migraciones. App/web ejecutan 4cf919a, saludables; `/up` y `/login` HTTP 200 por HTTPS; el CSS servido ya no contiene `hub-card-primary` ni `hub-progress`.
+**Producción en 39161ad; desplegada el 24 de octubre de 2026.** La tabla de evaluación a pantalla completa ya no tiene cabecera: el botón para salir está en la barra de herramientas, en el sitio del de entrar, junto con el estado de guardado. Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, captura revisada. Imágenes desde `git archive 39161ad`; `ops/deploy` con copia privada `backups/production-20261024-39161ad` de `4cf919a`; sin migraciones. App/web ejecutan 39161ad, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:39161ad`: `sha256:faadf1fe32197b03a38929b4eca70fbef7b00b4c0d619bfbce4ee9f75eafd0cd`.
+- `erronk2d-web:39161ad`: `sha256:7691972a94041064a7e25f4abce0cfe7f0775c2bae94d120088205a0c3071bad`.
+
+**Producción anterior en 4cf919a; desplegada el 23 de octubre de 2026.** La tarjeta «Evaluación» del inicio del reto tiene el mismo aspecto que las demás (sin fondo morado ni bloque de progreso). Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, capturas revisadas. Imágenes desde `git archive 4cf919a`; `ops/deploy` con copia privada `backups/production-20261023-4cf919a` de `b98e9b8`; sin migraciones. App/web ejecutan 4cf919a, saludables; `/up` y `/login` HTTP 200 por HTTPS; el CSS servido ya no contiene `hub-card-primary` ni `hub-progress`.
 
 - `erronk2d-app:4cf919a`: `sha256:5e988ee61d2fee3e81676d810d11fb566505bc8022b1a010e929b6548e0dfea6`.
 - `erronk2d-web:4cf919a`: `sha256:a8b60e78fb1cd7a134ff2225d23cafcb4ca971ec0e787f6ec36bb3be0557f03d`.
