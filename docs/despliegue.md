@@ -1,6 +1,13 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en 1773e50; desplegada el 14 de octubre de 2026.** Buscador para matricular en la pestaña Estudiantes del grupo (desde 3 caracteres, hasta 10 estudiantes activos no matriculados por nombre o correo; `GET /students/search`, 60/min) y botones «Añadir»/«Matricular» alineados con su campo. Validación previa en el VPS: Pint, 227 pruebas PHP en PostgreSQL y 16 pruebas de navegador correctas. Imágenes desde `git archive 1773e50`; `ops/deploy` con copia privada `backups/production-20261014-1773e50` de `1e1e3ba`; sin migraciones. App/web ejecutan 1773e50, saludables; `/up` y `/login` HTTP 200 por HTTPS; `/students/search` sin sesión responde 401.
+**Producción en 4cf919a; desplegada el 23 de octubre de 2026.** La tarjeta «Evaluación» del inicio del reto tiene el mismo aspecto que las demás (sin fondo morado ni bloque de progreso). Validación previa en el VPS: build TypeScript/Vite y 16 pruebas de navegador correctas, capturas revisadas. Imágenes desde `git archive 4cf919a`; `ops/deploy` con copia privada `backups/production-20261023-4cf919a` de `b98e9b8`; sin migraciones. App/web ejecutan 4cf919a, saludables; `/up` y `/login` HTTP 200 por HTTPS; el CSS servido ya no contiene `hub-card-primary` ni `hub-progress`.
+
+- `erronk2d-app:4cf919a`: `sha256:5e988ee61d2fee3e81676d810d11fb566505bc8022b1a010e929b6548e0dfea6`.
+- `erronk2d-web:4cf919a`: `sha256:a8b60e78fb1cd7a134ff2225d23cafcb4ca971ec0e787f6ec36bb3be0557f03d`.
+
+**Producción anterior en b98e9b8** (PHP 8.4.27), con copia `backups/production-20261022-b98e9b8`.
+
+**Producción anterior en 1773e50; desplegada el 14 de octubre de 2026.** Buscador para matricular en la pestaña Estudiantes del grupo (desde 3 caracteres, hasta 10 estudiantes activos no matriculados por nombre o correo; `GET /students/search`, 60/min) y botones «Añadir»/«Matricular» alineados con su campo. Validación previa en el VPS: Pint, 227 pruebas PHP en PostgreSQL y 16 pruebas de navegador correctas. Imágenes desde `git archive 1773e50`; `ops/deploy` con copia privada `backups/production-20261014-1773e50` de `1e1e3ba`; sin migraciones. App/web ejecutan 1773e50, saludables; `/up` y `/login` HTTP 200 por HTTPS; `/students/search` sin sesión responde 401.
 
 - `erronk2d-app:1773e50`: `sha256:660b3957848c79f89b01fa3d37e0ea767e2909b13f7bedebcc424a6150df499b`.
 - `erronk2d-web:1773e50`: `sha256:288ee892bc901edea9ca67fa6125e7f417d2de0b19b458ceb8010cbc0a5daf8d`.

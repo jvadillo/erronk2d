@@ -1,9 +1,10 @@
 # Estado de la tarea
 
 ## Objetivo
-Dar a cada grupo su propia página de configuración y simplificar las tarjetas de la lista de Grupos.
+Igualar la tarjeta «Evaluación» del inicio del reto a las demás (sin fondo morado ni bloque de progreso).
 
 ## Completado
+- Tarjeta «Evaluación» de `ChallengeHub.vue` igual que las demás: sin `hub-card-primary` ni `hub-progress` (progreso y avisos). 16 pruebas Playwright correctas en el VPS y capturas de escritorio/móvil revisadas; desplegado `4cf919a` el 23 de octubre de 2026 con copia `backups/production-20261023-4cf919a` de `b98e9b8` (PHP 8.4.27).
 - Buscador para matricular (`StudentSearch.vue`, `GET /students/search`, throttle 60/min): desde 3 caracteres sugiere hasta 10 estudiantes activos no matriculados en el grupo por nombre o correo; combobox accesible con teclado. Sustituye la regla de correo exacto de la especificación por indicación del usuario. Alineados los botones «Añadir» y «Matricular» (`label` sin margen en `.group-inline-form`). 227 pruebas PHP y 16 Playwright correctas en el VPS; desplegado `1773e50` el 14 de octubre de 2026 con copia `backups/production-20261014-1773e50`.
 - Ruta `groups.show` (`/setup/classrooms/{classroom}`) → `SetupController::group`, página `Group.vue` con pestañas (`?tab=`): Configuración (datos del grupo y evaluaciones), Módulos (añadir/quitar, responsables), Profesores (solo propietario o admin pueden cambiarlos) y Estudiantes (matricular/desmatricular). Reutiliza los endpoints existentes de `/setup/*`; tras guardar se vuelve a la misma pestaña.
 - Lista de Grupos: `GroupCard.vue` muestra nombre, ciclo, curso y recuentos de estudiantes, profesores y evaluaciones con enlace a la página. El listado ya no carga módulos ni estudiantes. Crear un grupo abre su página.
@@ -20,6 +21,7 @@ Dar a cada grupo su propia página de configuración y simplificar las tarjetas 
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
+- `resources/js/components/ChallengeHub.vue`, `tests/Browser/evidence.spec.ts`.
 - `app/Http/Controllers/SetupController.php`, `routes/web.php`.
 - `resources/js/pages/Group.vue`, `resources/js/components/GroupCard.vue`, `resources/js/pages/Setup.vue`, `resources/js/components/Layout.vue`.
 - `tests/Feature/GroupManagementTest.php`, `tests/Feature/AcademicWorkflowTest.php`, `tests/Browser/workflows.spec.ts`.
