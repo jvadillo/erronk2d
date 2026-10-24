@@ -1,20 +1,31 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, BookOpen, ContactRound, GraduationCap, Settings, X } from 'lucide-vue-next';
+import { ArrowLeft, BookOpen, ContactRound, Copy, GraduationCap, Settings, X } from 'lucide-vue-next';
+import CatalogQuickAdd, { type CatalogItem } from '../components/CatalogQuickAdd.vue';
+import GroupForm from '../components/GroupForm.vue';
 import Layout from '../components/Layout.vue';
 import Modal from '../components/Modal.vue';
 import StudentSearch from '../components/StudentSearch.vue';
 
-type Person = { id: number; name: string; email?: string };
-type GroupModule = { id: number; name: string; code: string; teachers: Person[] };
+type Person = { id: number; name: string; email?: string; active?: boolean };
+type GroupModule = { id: number; name: string; code: string };
 type Period = { id?: number; name: string; challenges_count: number };
 const props = defineProps<{
     group: { id: number; name: string; cycle_id: number; level: number; cycle_name: string; owner_id: number; can_manage: boolean; users: Person[]; students: Person[]; modules: GroupModule[]; retired_modules: GroupModule[]; periods: Period[] };
     catalog: { id: number; name: string; code: string }[];
     teachers: Person[];
+    openYears: CatalogItem[];
     groupsUrl: string;
+    duplicateUrl: string;
 }>();
+const duplicating = ref(false);
+const addingModule = ref(false);
+const catalogItems = computed<CatalogItem[]>(() => props.catalog.map(module => ({ ...module, cycle_id: props.group.cycle_id, level: props.group.level })));
+function useCatalogModule(module: CatalogItem): void {
+    addingModule.value = false;
+    if (!props.group.modules.some(active => active.id === module.id)) setModule(module.id, true);
+}
 
 const page = usePage();
 const writable = computed(() => !!(page.props.academic as any)?.year?.is_open);
@@ -66,18 +77,6 @@ function setModule(id: string | number, active: boolean): void {
     moduleForm.active = active;
     moduleForm.post('/setup/group-module', { preserveScroll: true, onSuccess: () => { moduleToAdd.value = ''; } });
 }
-const responsibilityModule = ref<GroupModule | null>(null);
-const responsibilityForm = useForm({ classroom_id: props.group.id, module_id: 0, teacher_ids: [] as number[] });
-function editResponsibility(module: GroupModule): void {
-    responsibilityForm.clearErrors();
-    responsibilityForm.module_id = module.id;
-    responsibilityForm.teacher_ids = module.teachers.map(teacher => teacher.id);
-    responsibilityModule.value = module;
-}
-function saveResponsibility(): void {
-    responsibilityForm.post('/setup/responsibility', { preserveScroll: true, onSuccess: () => { responsibilityModule.value = null; } });
-}
-
 const groupTeachers = computed(() => [...props.group.users].sort(byName));
 const ownerName = computed(() => props.group.users.find(user => user.id === props.group.owner_id)?.name ?? props.teachers.find(teacher => teacher.id === props.group.owner_id)?.name ?? '');
 
@@ -100,8 +99,9 @@ function withdraw(student: Person): void {
         <header class="page-heading">
             <div>
                 <h1>{{ group.name }}<span class="accent">.</span></h1>
-                <p class="muted">{{ group.cycle_name }} · {{ group.level }}.º · {{ group.students.length }} estudiantes · {{ group.users.length }} profesores · {{ group.periods.length }} evaluaciones</p>
+                <p class="muted">{{ group.cycle_name }} · Curso / nivel {{ group.level }}.º · {{ group.students.length }} estudiantes · {{ group.users.length }} profesores · {{ group.periods.length }} evaluaciones</p>
             </div>
+            <button type="button" class="button" @click="duplicating = true"><Copy :size="17" />Duplicar para otro curso académico</button>
         </header>
         <div class="section-switcher group-tabs" role="tablist" aria-label="Configuración del grupo" @keydown="navigateTabs">
             <button v-for="tab in tabs" :id="`group-tab-${tab.id}`" :key="tab.id" type="button" role="tab" :aria-selected="activeTab === tab.id" :aria-controls="`group-panel-${tab.id}`" :tabindex="activeTab === tab.id ? 0 : -1" :title="tab.label" @click="selectTab(tab.id)"><component :is="tab.icon" :size="16" aria-hidden="true" /><span>{{ tab.label }}</span></button>
@@ -123,13 +123,13 @@ function withdraw(student: Person): void {
             </form>
             <form class="panel" @submit.prevent="savePeriods">
                 <h2>Evaluaciones</h2>
-                <p class="helper">Las evaluaciones con retos conservan su nombre y no se pueden eliminar.</p>
+                <p class="helper">Las evaluaciones con retos conservan su nombre y no se pueden eliminar.<template v-if="writable && !canManage"> Solo el propietario del grupo o administración pueden cambiarlas.</template></p>
                 <div v-for="(period, index) in periodsForm.periods" :key="period.id ?? `new-${index}`" class="level-editor period-editor">
-                    <label>Evaluación {{ index + 1 }}<input v-model="period.name" :readonly="!!period.challenges_count || !writable" required maxlength="100" /></label>
-                    <button v-if="writable" type="button" class="icon-button" :aria-label="`Quitar evaluación ${index + 1}`" :disabled="!!period.challenges_count || periodsForm.periods.length === 1" @click="periodsForm.periods.splice(index, 1)"><X :size="16" /></button>
+                    <label>Evaluación {{ index + 1 }}<input v-model="period.name" :readonly="!!period.challenges_count || !canManage" required maxlength="100" /></label>
+                    <button v-if="canManage" type="button" class="icon-button" :aria-label="`Quitar evaluación ${index + 1}`" :disabled="!!period.challenges_count || periodsForm.periods.length === 1" @click="periodsForm.periods.splice(index, 1)"><X :size="16" /></button>
                 </div>
                 <p v-for="error in periodsForm.errors" class="notice error" role="alert">{{ error }}</p>
-                <div v-if="writable" class="actions">
+                <div v-if="canManage" class="actions">
                     <button type="button" class="button" :disabled="periodsForm.periods.length >= 12" @click="periodsForm.periods.push({ id: undefined, name: '', challenges_count: 0 })">Añadir evaluación</button>
                     <button class="button primary" :disabled="periodsForm.processing">Guardar evaluaciones</button>
                 </div>
@@ -138,21 +138,22 @@ function withdraw(student: Person): void {
 
         <section v-if="activeTab === 'modules'" id="group-panel-modules" role="tabpanel" aria-labelledby="group-tab-modules" class="panel">
             <h2>Módulos · {{ group.modules.length }}</h2>
-            <form v-if="writable && availableModules.length" class="group-inline-form" @submit.prevent="setModule(moduleToAdd, true)">
+            <form v-if="canManage && availableModules.length" class="group-inline-form" @submit.prevent="setModule(moduleToAdd, true)">
                 <label>Añadir módulo<select v-model="moduleToAdd" required><option value="" disabled>Selecciona un módulo</option><option v-for="module in availableModules" :key="module.id" :value="module.id">{{ module.code }} · {{ module.name }}</option></select></label>
                 <button class="button" :disabled="moduleForm.processing">Añadir</button>
             </form>
+            <template v-if="canManage">
+                <button type="button" class="button small" :aria-expanded="addingModule" @click="addingModule = !addingModule">{{ addingModule ? 'Cancelar' : 'Crear módulo en el catálogo' }}</button>
+                <CatalogQuickAdd v-if="addingModule" kind="module" :items="catalogItems" :cycle-id="group.cycle_id" :level="group.level" @created="useCatalogModule" @select="useCatalogModule" @conflict="router.reload({ only: ['catalog'] })" />
+            </template>
             <p v-for="error in moduleForm.errors" class="notice error" role="alert">{{ error }}</p>
             <p v-if="!group.modules.length" class="helper">El grupo no tiene módulos activos.</p>
             <div v-for="module in group.modules" :key="module.id" class="breakdown-row">
-                <span>{{ module.code }} · {{ module.name }}<small class="helper">{{ module.teachers.map(teacher => teacher.name).join(', ') || 'Sin responsables' }}</small></span>
-                <div class="actions">
-                    <button v-if="canManage" class="button small" @click="editResponsibility(module)">Responsables</button>
-                    <button v-if="writable" class="button small" :disabled="moduleForm.processing" :aria-label="`Quitar ${module.code}`" @click="setModule(module.id, false)">Quitar</button>
-                </div>
+                <span>{{ module.code }} · {{ module.name }}</span>
+                <button v-if="canManage" class="button small" :disabled="moduleForm.processing" :aria-label="`Quitar ${module.code}`" @click="setModule(module.id, false)">Quitar</button>
             </div>
             <p v-if="group.retired_modules.length" class="helper">Retirados: {{ group.retired_modules.map(module => module.code).join(', ') }}.</p>
-            <p class="helper">Al quitar un módulo, sus retos y notas se conservan. Puedes volver a añadirlo.</p>
+            <p class="helper">Todo el profesorado del grupo puede usar sus módulos activos en los retos y evaluarlos. Al quitar un módulo, sus retos y notas se conservan.<template v-if="writable && !canManage"> Solo el propietario del grupo o administración pueden cambiar los módulos.</template></p>
         </section>
 
         <section v-if="activeTab === 'teachers'" id="group-panel-teachers" role="tabpanel" aria-labelledby="group-tab-teachers" class="panel">
@@ -187,16 +188,8 @@ function withdraw(student: Person): void {
             <p class="helper">La baja conserva la cuenta, las otras matrículas y las notas anteriores. Para importar varios estudiantes a la vez, usa Organización → Estudiantes.</p>
         </section>
 
-        <Modal v-if="responsibilityModule" :title="`Responsables · ${responsibilityModule.code}`" @close="responsibilityModule = null">
-            <form @submit.prevent="saveResponsibility">
-                <p>{{ responsibilityModule.name }}</p>
-                <fieldset>
-                    <legend>Profesores responsables</legend>
-                    <label v-for="teacher in groupTeachers" :key="teacher.id" class="check"><input v-model="responsibilityForm.teacher_ids" type="checkbox" :value="teacher.id" />{{ teacher.name }}</label>
-                </fieldset>
-                <p v-for="error in responsibilityForm.errors" class="notice error" role="alert">{{ error }}</p>
-                <button class="button primary full" :disabled="responsibilityForm.processing">Guardar</button>
-            </form>
+        <Modal v-if="duplicating" :title="`Duplicar ${group.name} para otro curso académico`" wide @close="duplicating = false">
+            <GroupForm mode="duplicate" :submit-url="duplicateUrl" :years="openYears" :teachers="teachers" :source="group" />
         </Modal>
     </Layout>
 </template>

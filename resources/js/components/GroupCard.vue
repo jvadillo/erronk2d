@@ -8,7 +8,7 @@ defineProps<{ group: { id: number; name: string; cycle_name: string; level: numb
 <template>
     <section class="panel group-card">
         <h3><Link :href="group.url">{{ group.name }}</Link></h3>
-        <p class="muted">{{ group.cycle_name }} · {{ group.level }}.º curso</p>
+        <p class="muted">{{ group.cycle_name }} · Curso / nivel {{ group.level }}.º</p>
         <dl class="group-stats">
             <div><dt>Estudiantes</dt><dd>{{ group.students_count }}</dd></div>
             <div><dt>Profesores</dt><dd>{{ group.users.length }}</dd></div>

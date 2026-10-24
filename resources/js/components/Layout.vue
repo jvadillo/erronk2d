@@ -17,7 +17,7 @@ function switchYear(event:Event) {
   switching.value=true;
   router.post(academic.value.switch_url,{academic_year_id:academicYearId},{preserveState:false,onFinish:()=>switching.value=false});
 }
-function showContextError(event:Event){notify((event as CustomEvent).detail,'error',{duration:null,action:{label:'Volver al curso activo',run:()=>router.visit('/')}})}
+function showContextError(event:Event){notify((event as CustomEvent).detail,'error',{duration:null,action:{label:'Volver al curso académico activo',run:()=>router.visit('/')}})}
 onMounted(()=>window.addEventListener('academic-context-error',showContextError));
 onUnmounted(()=>window.removeEventListener('academic-context-error',showContextError));
 const auth = computed(() => page.props.auth as Auth);
@@ -73,7 +73,7 @@ function isCurrent(url:string): boolean {
       </nav>
       <div class="profile"><span class="avatar" :title="auth.name">{{auth.name.split(' ').slice(0,2).map(n=>n[0]).join('')}}</span><div class="profile-info"><strong>{{auth.name}}</strong><small>{{auth.role==='admin'?'Administración':auth.role==='teacher'?'Profesorado':'Estudiante'}}</small></div><Link href="/logout" method="post" as="button" aria-label="Cerrar sesión" title="Cerrar sesión"><LogOut :size="17"/></Link></div>
     </aside>
-    <main class="main"><div v-if="academic?.year&&!academic.year.is_open" class="notice warning" role="status">{{academic.year.name}} · Curso cerrado. Solo lectura.</div><div v-if="academic&&!academic.year" class="notice" role="status">{{auth.role==='admin'?'Configura el primer curso académico, los ciclos y los módulos en Organización.':auth.role==='student'?'Todavía no tienes matrícula. Estás a la espera de asignación administrativa.':'No hay cursos académicos disponibles. Estás a la espera de asignación administrativa.'}}</div><slot/></main>
+    <main class="main"><div v-if="academic?.year&&!academic.year.is_open" class="notice warning" role="status">{{academic.year.name}} · Curso cerrado. Solo lectura.</div><div v-if="academic&&!academic.year" class="notice" role="status"><template v-if="auth.role==='student'">Todavía no tienes matrícula. Tu profesorado te incorporará a un grupo.</template><template v-else>Todavía no hay cursos académicos abiertos. Puedes crear uno al preparar tu primer grupo.<Link href="/setup/classrooms?crear=grupo" class="button small">Crear grupo</Link></template></div><slot/></main>
     <Toasts/>
   </div>
 </template>

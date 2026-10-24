@@ -46,9 +46,9 @@ const closed=computed(()=>!(usePage().props.academic as any)?.year?.is_open||['p
 const rows=computed(()=>book.value.rows.filter((r:any)=>(!onlyPending.value||r.pending.length)&&(!teamFilter.value||r.team_id===Number(teamFilter.value))&&r.name.toLowerCase().includes(search.value.toLowerCase())).sort((a:any,b:any)=>sort.value==='team'?(a.team_name??'').localeCompare(b.team_name??'')||a.name.localeCompare(b.name):a.name.localeCompare(b.name)));
 const complete=computed(()=>book.value.rows.filter((r:any)=>r.pending.length===0).length);
 const modules=computed(()=>book.value.modules);
-const participatingTeachers=computed(()=>Array.from(new Set<string>(modules.value.flatMap((m:any)=>m.teachers.map((t:any)=>t.name)))));
+const participatingTeachers=computed(()=>(book.value.teachers??[]).map((t:any)=>t.name));
 const writable=(p:string)=>permission(p)&&!closed.value;
-const moduleWritable=(p:string,m:any)=>writable(p)&&(auth.role==='admin'||m.teachers.some((t:any)=>t.id===auth.id));
+const moduleWritable=(p:string,_m?:any)=>writable(p);
 let saveQueue: Promise<boolean> = Promise.resolve(true);
 let queued = 0;
 function save(payload:any): Promise<boolean> {
@@ -115,7 +115,6 @@ async function copyRubric(){if(!copySource.value)return;if(await save({action:'c
 function editRubric(){if(busy.value||closed.value)return;router.visit(props.rubricEditorUrls[rubricKind.value==='team'?'team':'transversal'],{data:{subject:evaluationSubject.value??''}})}
 const currentSubject=computed(()=>subjects.value.find((subject:any)=>subject.id===Number(evaluationSubject.value)));
 const evaluationSelections=computed(()=>Object.fromEntries(rubric.value.items.map((item:any)=>[item.key,selected(Number(evaluationSubject.value),item.key)])));
-const disabledCriteria=computed(()=>rubricKind.value==='team'?rubric.value.items.filter((item:any)=>item.module_id&&auth.role!=='admin'&&!modules.value.find((module:any)=>module.id===Number(item.module_id))?.teachers.some((teacher:any)=>teacher.id===auth.id)).map((item:any)=>item.key):[]);
 function changeSubject(by:number){const index=subjects.value.findIndex((subject:any)=>subject.id===Number(evaluationSubject.value));const target=subjects.value[index+by];if(target)evaluationSubject.value=target.id}
 const rubric=computed(()=>rubricKind.value==='team'?book.value.challenge.team_rubric:book.value.challenge.transversal_rubric);
 const subjects=computed(()=>rubricKind.value==='team'?book.value.teams:book.value.rows);
@@ -161,7 +160,7 @@ async function submitDefense(){const d=defenseDetail.value;if(await save({action
   <div class="rubric-evaluation-toolbar"><h1 ref="evaluationHeading" tabindex="-1">{{rubricKind==='team'?'Rúbrica del equipo':'Transversales del profesorado'}}</h1><label>{{rubricKind==='team'?'Equipo a evaluar':'Estudiante a evaluar'}}<select v-model="evaluationSubject" :disabled="busy"><option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{subject.name}}</option></select></label><div class="actions"><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[0]?.id" @click="changeSubject(-1)">Anterior</button><button class="button" :disabled="busy||!currentSubject||currentSubject.id===subjects[subjects.length-1]?.id" @click="changeSubject(1)">Siguiente</button></div><button v-if="rubric.items.length&&writable('manage_challenges')" class="button" :disabled="busy" @click="editRubric">Editar rúbrica</button><button v-if="rubric.items.length&&currentSubject&&fullscreen!=='rubric'" type="button" class="icon-button bordered stage-enter-rubric" aria-label="Ver rúbrica a pantalla completa" title="Ver rúbrica a pantalla completa" @click="toggleFullscreen('rubric')"><Maximize2 :size="18"/></button><button v-if="fullscreen==='rubric'" type="button" class="button stage-exit" @click="toggleFullscreen('rubric')"><Minimize2 :size="16"/>Salir de pantalla completa<kbd>Esc</kbd></button></div>
   <div v-if="!rubric.items.length" class="notice warning" role="alert"><p>La rúbrica no contiene todavía criterios.</p><button v-if="writable('manage_challenges')" class="button" :disabled="busy" @click="editRubric">Editar rúbrica</button><button v-if="writable('manage_challenges')" class="button" :disabled="busy" @click="openCopyRubric">Copiar rúbrica</button><p v-else>El profesorado con permiso para gestionar el reto debe completar la rúbrica antes de evaluar.</p></div>
   <ModuleCriteriaNotice v-if="rubricKind==='team'&&rubric.items.length" :items="rubric.items" :modules="modules"/>
-  <RubricAssessment v-if="rubric.items.length&&currentSubject" :rubric="rubric" :subject="currentSubject.name" :selections="evaluationSelections" :show-modules="rubricKind==='team'" :modules="modules" :disabled="busy||!writable(rubricKind==='team'?'evaluate_team':'evaluate_transversal')" :disabled-criteria="disabledCriteria" @select="(key,level)=>save({action:'assess',kind:rubricKind,entries:[{subject_id:Number(evaluationSubject),criterion:key,level}]})"/>
+  <RubricAssessment v-if="rubric.items.length&&currentSubject" :rubric="rubric" :subject="currentSubject.name" :selections="evaluationSelections" :show-modules="rubricKind==='team'" :modules="modules" :disabled="busy||!writable(rubricKind==='team'?'evaluate_team':'evaluate_transversal')" @select="(key,level)=>save({action:'assess',kind:rubricKind,entries:[{subject_id:Number(evaluationSubject),criterion:key,level}]})"/>
   <p v-else-if="rubric.items.length" class="empty-state">{{rubricKind==='team'?'Crea los equipos del reto para poder evaluarlos.':'No hay estudiantes en este reto.'}}</p>
   </div>
 </section>
