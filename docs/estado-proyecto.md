@@ -12,7 +12,7 @@ Se completaron la preparación de Laravel Boost requerida por `AGENTS.md`, prueb
 
 | Área | Resultado implementado | Aclaración o alcance |
 | --- | --- | --- |
-| Cursos, clases y módulos | Cursos académicos independientes, catálogo estable de ciclos/módulos y varias matrículas por estudiante | Propietario/miembros por clase, responsables por módulo y nombres congelados. Baja de matrícula conserva histórico; no se trasladan notas |
+| Cursos, clases y módulos | Cursos académicos independientes, catálogo estable de ciclos/módulos y varias matrículas por estudiante | Propietario/miembros por clase, pertenencia al grupo como única regla de acceso docente (sin responsables por módulo), altas docentes de cursos académicos, ciclos y módulos sin duplicados, duplicación de grupos para otro curso académico y nombres congelados. Baja de matrícula conserva histórico; no se trasladan notas |
 | Personas y acceso | Administrador, profesorado y alumnado; permisos de escritura; recuperación; cuentas activas/inactivas; acceso Google y solicitudes de registro | Google aplazado por el usuario; pendiente corregir URI autorizada en Google Cloud. Nuevas cuentas requieren aprobación, rol y clase para estudiantes. API Resend configurada |
 | Navegación | Lateral plegable a iconos con preferencia persistente; Organización dividida en ocho páginas con submenú y acceso según rol | Selector de curso visible y persistente en la cuenta; URL, título e historial propios. Solicitudes solo para administración; submenú móvil y teclado |
 | Retos | Clase/Evaluación, módulos, peso, fechas, estados, opciones y rúbricas copiadas | Las rúbricas y módulos se eligen al crear; cambios posteriores de esas vinculaciones no incluidos |

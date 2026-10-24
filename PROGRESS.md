@@ -1,44 +1,39 @@
 # Estado de la tarea
 
 ## Objetivo
-Tarjetas de retos más modernas: color suave y forma propios de cada reto.
+Que el profesorado prepare su actividad sin depender de administración: crear cursos académicos, ciclos y módulos; crear o duplicar grupos; acceso a retos y notas por pertenencia al grupo, sin responsables de módulo.
 
 ## Completado
-- `ChallengeCard.vue`: cabecera de 96px con uno de 8 colores suaves y una de 6 formas SVG, derivados del id del reto (siempre iguales; `data-theme`), sin icono genérico y con grupo, evaluación y equipos con iconos y sin bordes. Prueba «inicio del reto» correcta en el VPS y capturas de escritorio y móvil revisadas. Desplegado `52b626f` el 24 de octubre de 2026 con copia `backups/production-20261024-52b626f` de `d62b895`.
-- Rúbricas solo del propietario (admin ve todas): retirados `sharedUsers`, `shared_user_ids`, el panel «Compartir» del editor, la etiqueta Propia/Compartida y la tabla `rubric_user` (migración `drop_rubric_user_table`; producción no tenía filas). «Añadir equipo»/«Guardar equipos» en la cabecera de Estudiantes y Equipos (solo con `manage_teams`). Tarjetas de retos con franja de color por estado, icono y datos de grupo, evaluación y equipos. Pint, 71 pruebas PHP de rúbricas/creación/reinicio/demo y la prueba Playwright de equipos correctas (por indicación del usuario no se repitió el resto); desplegado `d62b895` el 24 de octubre de 2026 con copia `backups/production-20261024-d62b895` de `03bb71b`.
-- Confirmación (modal) al pasar a «En evaluación» (autoevaluación y coevaluación) y a «Finalizado» (cierre y reapertura; deshabilitada si el reto no está completo). «Copiar rúbrica» junto a «Editar rúbrica» en rúbricas vacías: acción `copy_rubric` (`ChallengeRubricEditor::copy`/`copyable`: mismo tipo, con criterios, ciclo y curso del grupo o genéricas, solo módulos del reto) y prop `copyableRubrics`. 229 PHP y 17 Playwright correctas en el VPS; desplegado `03bb71b` el 24 de octubre de 2026 con copia `backups/production-20261024-03bb71b` de `5cd379a`.
-- Cabecera del reto: desplegable «Estado del reto» (En curso, En evaluación, Finalizado; solo con `manage_challenges` y reto abierto) en lugar de «Pasar a evaluación»/«Volver a En curso», y «Publicar notas». Retirado el desplegable de estado de Evaluación; «Introducción masiva» con icono. Tarjeta de equipo a media anchura aunque sea la única; `team-roster-heading` sustituido por `.team-card-count` («Sin integrantes», «1 persona», «N personas»). 16 Playwright correctas en el VPS y capturas revisadas; desplegado `5cd379a` el 24 de octubre de 2026 con copia `backups/production-20261024-5cd379a` de `39161ad`.
-- Tabla de evaluación a pantalla completa sin el `header.fullscreen-bar`: el botón de salir (icono, Esc sigue funcionando) ocupa el sitio del de entrar en `.matrix-toolbar`, y el estado de guardado se muestra en esa barra. Prueba nueva en `evidence.spec.ts`; 16 Playwright correctas en el VPS; desplegado `39161ad` el 24 de octubre de 2026 con copia `backups/production-20261024-39161ad` de `4cf919a`.
-- Tarjeta «Evaluación» de `ChallengeHub.vue` igual que las demás: sin `hub-card-primary` ni `hub-progress` (progreso y avisos). 16 pruebas Playwright correctas en el VPS y capturas de escritorio/móvil revisadas; desplegado `4cf919a` el 23 de octubre de 2026 con copia `backups/production-20261023-4cf919a` de `b98e9b8` (PHP 8.4.27).
-- Buscador para matricular (`StudentSearch.vue`, `GET /students/search`, throttle 60/min): desde 3 caracteres sugiere hasta 10 estudiantes activos no matriculados en el grupo por nombre o correo; combobox accesible con teclado. Sustituye la regla de correo exacto de la especificación por indicación del usuario. Alineados los botones «Añadir» y «Matricular» (`label` sin margen en `.group-inline-form`). 227 pruebas PHP y 16 Playwright correctas en el VPS; desplegado `1773e50` el 14 de octubre de 2026 con copia `backups/production-20261014-1773e50`.
-- Ruta `groups.show` (`/setup/classrooms/{classroom}`) → `SetupController::group`, página `Group.vue` con pestañas (`?tab=`): Configuración (datos del grupo y evaluaciones), Módulos (añadir/quitar, responsables), Profesores (solo propietario o admin pueden cambiarlos) y Estudiantes (matricular/desmatricular). Reutiliza los endpoints existentes de `/setup/*`; tras guardar se vuelve a la misma pestaña.
-- Lista de Grupos: `GroupCard.vue` muestra nombre, ciclo, curso y recuentos de estudiantes, profesores y evaluaciones con enlace a la página. El listado ya no carga módulos ni estudiantes. Crear un grupo abre su página.
-- `Setup.vue`: retirados los modales de editar grupo, evaluaciones y responsables. `Layout.vue`: «Grupos» queda activo en subpáginas.
-- Pruebas: `GroupManagementTest` (resumen de la lista, página del grupo, acceso), `AcademicWorkflowTest` (redirección al crear), `workflows.spec.ts` (página del grupo, creación y curso cerrado).
-- Validado en el VPS: Pint, 224 pruebas PHP en PostgreSQL y 16 pruebas Playwright correctas; capturas de escritorio y móvil revisadas.
-- Página del grupo desplegada en producción (`3c19863`) el 14 de octubre de 2026 con copia `backups/production-20261014-3c19863`.
-- Visibilidad de retos por módulos responsables (`02c1505`, prueba corregida en `1e1e3ba`): 226 pruebas PHP y 16 Playwright correctas en el VPS; desplegado `1e1e3ba` el 14 de octubre de 2026 con copia `backups/production-20261014-1e1e3ba`. Solo dos cuentas ficticias dejan de ver retos.
-- Bloques anteriores ya en producción: importación con `nombre, email`, rúbricas enlazadas a la biblioteca (464ecf2) y menú lateral de 216px (fe0fbab).
-- Visibilidad de retos: el profesorado solo ve y opera los retos de sus grupos con algún módulo del que es responsable (`Challenge::visibleTo`, `User::canAccessChallenge`); crear un reto exige serlo de algún módulo elegido. Admin sin cambios. Pruebas adaptadas, sin ejecutar (sin `vendor/` local).
+- Pendiente de desplegar y de validar en el VPS (ver «Último error»). Sin commit de despliegue.
+- Catálogo común (`app/Domain/Catalog.php`): claves normalizadas `name_key`/`code_key` (mayúsculas y espacios irrelevantes) con índices únicos; duplicados rechazados con mensaje y altas simultáneas convertidas en error de validación (savepoint). Módulos únicos por nombre y código dentro del ciclo, en cualquier curso / nivel.
+- Profesorado: crea cursos académicos (abiertos, sin cerrar otros), ciclos y módulos (`/setup/year|cycle|module`, JSON si `wantsJson`). Editar, cerrar/reabrir y reorganizar sigue siendo de administración. Organización muestra a docentes Cursos académicos, Ciclos y Módulos (solo `teachers` y `registrations` son administrativas).
+- Creación de grupo (`GroupForm.vue` + `CatalogQuickAdd.vue`): elige o crea curso académico, ciclo y módulos sin salir del formulario; nivel 1.º–4.º; evaluaciones (3 por defecto); profesores; `module_ids` opcional en `/setup/classroom` y `academic_year_id` explícito (curso abierto). Tras crear, el contexto pasa al curso del grupo. `?crear=grupo` abre el formulario.
+- Permisos por grupo: propietario/admin cambian datos, evaluaciones, módulos y profesores (`group-module` y `group-periods` ahora exigen `canManageClassroom`); miembros gestionan matrículas, retos, equipos, rúbricas, notas y publicación.
+- Responsables de módulo eliminados: `User::teaches`, `Module::teachersFor`, `/setup/responsibility`, filtro de `Challenge::visibleTo`, bloqueos de `ChallengeWriter`, requisito al crear retos, incidencia «sin profesor responsable», controles de `Group.vue`/`Challenge.vue`/`RubricAssessment.vue`. El libro expone `teachers` (profesorado activo del grupo). Migración `2026_10_25_100000_open_catalog_and_retire_module_responsibilities` archiva las filas en `audit_events` (`system.module_responsibilities_retired`) y elimina la tabla; `down()` la restaura.
+- Duplicar grupo (`POST /setup/classrooms/{id}/duplicate`, `groups.duplicate`): curso destino abierto, nombre, profesorado activo revisable, alumnado activo opcional; copia ciclo, nivel, módulos activos y evaluaciones; nunca actividad; transaccional; quien duplica es propietario.
+- Textos: «Curso académico» frente a «Curso / nivel», estados vacíos con acciones disponibles, sin mensajes de espera a administración. Importaciones de módulos y `erronk2d:catalog` usan la regla de duplicados por ciclo.
+- Pruebas nuevas: `GroupPreparationTest` (recorrido sin estructura previa, duplicados, concurrencia, permisos, ajenos, duplicación con/sin matrículas, curso cerrado) y `CatalogMigrationTest`; adaptadas las de responsables, navegación, catálogo oficial y `workflows.spec.ts`.
+- Validado localmente: `npm run build` (vue-tsc) y `php -l` de los archivos PHP modificados.
+- Anterior, ya en producción: tarjetas de retos con color y forma propios (`52b626f`, copia `backups/production-20261024-52b626f`), rúbricas sin compartir, cabecera de equipos, confirmaciones de estado, página de grupo con pestañas y buscador de matrícula (detalle en el historial de Git).
 
 ## Pendiente
-- Revisar si `/reports` debe filtrar por módulos del profesor (pendiente de decidir; no cambiado).
+- Ejecutar en el VPS (o con Docker operativo): `vendor/bin/pint --dirty --format agent`, la suite PHP en PostgreSQL y Playwright (`workflows.spec.ts` cambia: grupo como miembro sin cambios estructurales, alta de curso académico con duplicado, creación de grupo con alta de módulo, duplicación desde curso cerrado, selectores «Curso / nivel»).
+- Desplegar tras la validación (la migración retira `classroom_module_user`; las filas quedan archivadas en `audit_events`).
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
-- `app/Models/Rubric.php`, `app/Http/Controllers/SetupController.php`, `resources/js/pages/RubricEditor.vue`, `resources/js/pages/Dashboard.vue`, `resources/js/components/ChallengeCard.vue`.
-- `app/Domain/Grades/ChallengeRubricEditor.php`, `app/Http/Controllers/ChallengeController.php`, `tests/Feature/ChallengeRubricEditingTest.php`, `tests/Browser/empty-rubrics.spec.ts`.
-- `resources/js/pages/Challenge.vue`, `resources/js/components/ChallengeHub.vue`, `resources/css/app.css`, `tests/Browser/evidence.spec.ts`, `tests/Browser/workflows.spec.ts`.
-- `app/Http/Controllers/SetupController.php`, `routes/web.php`.
-- `resources/js/pages/Group.vue`, `resources/js/components/GroupCard.vue`, `resources/js/pages/Setup.vue`, `resources/js/components/Layout.vue`.
-- `tests/Feature/GroupManagementTest.php`, `tests/Feature/AcademicWorkflowTest.php`, `tests/Browser/workflows.spec.ts`.
+- `app/Domain/Catalog.php`, `database/migrations/2026_10_25_100000_open_catalog_and_retire_module_responsibilities.php`, `app/Models/{AcademicYear,Cycle,Module,User,Challenge}.php`.
+- `app/Http/Controllers/SetupController.php` (`store`, `classroom`, `duplicate`, `targetYear`), `routes/web.php`, `app/Domain/Grades/{Gradebook,ChallengeWriter}.php`, `app/Http/Controllers/{ChallengeController,ImportController}.php`, `app/Console/Commands/ImportOfficialCatalog.php`.
+- `resources/js/components/{GroupForm,CatalogQuickAdd,Layout,GroupCard,RubricAssessment}.vue`, `resources/js/pages/{Setup,Group,Dashboard,Challenge,Reports}.vue`.
+- `tests/Feature/{GroupPreparationTest,CatalogMigrationTest,GroupManagementTest,GradebookTest,AcademicWorkflowTest,OrganizationNavigationTest}.php`, `tests/Browser/workflows.spec.ts`.
+- Especificación: `prompt.md` (secciones 2, 3 y 29), `docs/decisiones.md`, `README.md`.
 
 ## Decisiones
-- Sin uso compartido de rúbricas por indicación del usuario: cada docente reutiliza las suyas (duplicar o copiar en un reto).
-- La rúbrica copiada queda independiente de la plantilla (como al crear un reto desde la biblioteca); no se vincula ni modifica la original.
-- Pasar a «Finalizado» desde el desplegable cierra el reto (el servidor exige evaluaciones completas); después solo se modifica con «Reabrir». Si el servidor rechaza el cambio, el desplegable vuelve al estado real.
-- Cuatro pestañas (el usuario enumeró cuatro aunque escribió «tres»). Las evaluaciones están en Configuración.
-- Al pasar de escritorio a móvil sin navegar, el submenú de Organización sigue abierto (comportamiento previo); la prueba lo cierra igual que antes.
+- Duplicados de módulo por ciclo (cualquier nivel), no por ciclo y nivel: el catálogo oficial no tiene repetidos dentro de un ciclo. Las colisiones heredadas reciben una clave con sufijo `#id` en la migración, sin fusionar ni borrar datos.
+- Si `/setup/classroom` (alta) no recibe `academic_year_id`, usa el curso activo con la comprobación de pestaña caducada (409); si lo recibe, exige un curso abierto disponible.
+- La duplicación solo reutiliza módulos activos que siguen en el mismo ciclo y nivel del catálogo; el nombre del ciclo se toma del catálogo actual.
+- Sin uso compartido de rúbricas: cada docente reutiliza las suyas; la pertenencia al grupo no comparte bibliotecas.
+- `/reports` no filtra por módulos: la pertenencia al grupo da acceso a todo su seguimiento.
 
 ## Último error
-- Intermitente: `workflows.spec.ts` «curso académico» agotó una vez el tiempo al pulsar «Responsables» (página de Grupos, sin cambios); la repetición pasó 17/17.
+- Docker Desktop no arranca en esta máquina (la distribución WSL `docker-desktop` aparece «Uninstalling») y el PHP local es 8.1 (el proyecto exige 8.4): no se han podido ejecutar Pint, PHPUnit ni Playwright en esta sesión.
