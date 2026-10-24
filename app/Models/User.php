@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'role', 'permissions', 'active', 'classroom_id'])]
 #[Hidden(['password', 'remember_token', 'google_id', 'classroom_id', 'last_academic_year_id', 'permissions'])]
@@ -67,10 +66,5 @@ class User extends Authenticatable
     public function canAccessChallenge(Challenge $challenge): bool
     {
         return Challenge::visibleTo($this)->whereKey($challenge->id)->exists();
-    }
-
-    public function teaches(int $moduleId, int $classroomId): bool
-    {
-        return $this->active && ($this->role === 'admin' || ($this->role === 'teacher' && DB::table('classroom_module_user')->where('classroom_id', $classroomId)->where('module_id', $moduleId)->where('user_id', $this->id)->exists()));
     }
 }

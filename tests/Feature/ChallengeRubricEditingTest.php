@@ -40,9 +40,7 @@ class ChallengeRubricEditingTest extends TestCase
         $this->challenge = Challenge::factory()->create(['team_rubric' => $rubric, 'transversal_rubric' => $rubric, 'status' => 'evaluating', 'distribution_enabled' => true]);
         $class = $this->challenge->classroom;
         $class->users()->attach($this->teacher);
-        $responsible = User::factory()->create(['role' => 'teacher']);
-        $module = $this->moduleForClass($class, [], $responsible);
-        $module->teachersFor($class->id)->attach($this->teacher, ['classroom_id' => $class->id]);
+        $module = $this->moduleForClass($class);
         $this->challenge->modules()->attach($module);
         $this->students = User::factory()->count(4)->create()->all();
         $this->challenge->students()->attach(array_column($this->students, 'id'));
@@ -87,7 +85,7 @@ class ChallengeRubricEditingTest extends TestCase
         return $this->challenge->assessments()->create(['kind' => $kind, 'subject_id' => $subject, 'scope_id' => $scope, 'criterion' => $criterion, 'level' => $level, 'updated_by' => $this->teacher->id]);
     }
 
-    public function test_responsible_teacher_can_edit_both_rubrics_and_group_member_without_responsibility_cannot(): void
+    public function test_group_member_can_edit_both_rubrics_and_teacher_outside_the_group_cannot(): void
     {
         foreach (['team', 'transversal'] as $kind) {
             $this->get(route('challenges.rubrics.edit', [$this->challenge, $kind]))->assertInertia(fn (Assert $page) => $page
@@ -99,9 +97,8 @@ class ChallengeRubricEditingTest extends TestCase
             $this->assertSame('Edición '.$kind, $this->challenge->fresh()->{$kind === 'team' ? 'team_rubric' : 'transversal_rubric'}['name']);
         }
 
-        $member = User::factory()->create(['role' => 'teacher']);
-        $this->challenge->classroom->users()->attach($member);
-        $this->actingAs($member)->get(route('challenges.rubrics.edit', [$this->challenge, 'team']))->assertNotFound();
+        $outsider = User::factory()->create(['role' => 'teacher']);
+        $this->actingAs($outsider)->get(route('challenges.rubrics.edit', [$this->challenge, 'team']))->assertNotFound();
         $this->preview($this->payload())->assertNotFound();
     }
 
@@ -160,7 +157,6 @@ class ChallengeRubricEditingTest extends TestCase
 
         $colleague = User::factory()->create(['role' => 'teacher']);
         $this->challenge->classroom->users()->attach($colleague);
-        $this->challenge->modules()->sole()->teachersFor($this->challenge->classroom_id)->attach($colleague, ['classroom_id' => $this->challenge->classroom_id]);
         $this->actingAs($colleague);
         $input = $this->payload();
         $input['rubric']['items'][0]['name'] = 'Cambio de otra persona';

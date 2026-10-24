@@ -60,10 +60,8 @@ class DatabaseSeeder extends Seeder
             foreach ([['PROG', 'Programación'], ['DWEC', 'Desarrollo web en entorno cliente'], ['DWES', 'Desarrollo web en entorno servidor'], ['DIW', 'Diseño de interfaces web']] as $i => [$code,$name]) {
                 $m = Module::create(['cycle_id' => $cycle->id, 'level' => 2, 'name' => $name, 'code' => $code]);
                 $class->syncCatalog();
-                $m->teachersFor($class->id)->attach($teachers[$i], ['classroom_id' => $class->id]);
                 $modules[] = $m;
             }
-            $modules[0]->teachersFor($class->id)->attach($teachers[1], ['classroom_id' => $class->id]);
             $levels = [['score' => '4', 'description' => 'Necesita acompañamiento para avanzar.'], ['score' => '6', 'description' => 'Resuelve las tareas básicas con apoyo puntual.'], ['score' => '8', 'description' => 'Trabaja con autonomía y cumple los objetivos.'], ['score' => '10', 'description' => 'Supera los objetivos y aporta mejoras al equipo.']];
             $teamItems = [];
             foreach (['Calidad del código', 'Experiencia de usuario', 'Arquitectura del servidor', 'Diseño y accesibilidad', 'Presentación y documentación'] as $i => $name) {

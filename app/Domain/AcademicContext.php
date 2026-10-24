@@ -64,7 +64,7 @@ final class AcademicContext
     public function requireWritable(Request $request): AcademicYear
     {
         $year = $this->year();
-        abort_unless($year, 403, 'No hay un curso académico disponible. Espera a la administración.');
+        abort_unless($year, 403, 'No hay un curso académico seleccionado. Selecciona o crea un curso académico abierto.');
         abort_unless($year->is_open, 403, 'El curso académico está cerrado y es de solo lectura.');
         $expected = $request->header('X-Academic-Year', $request->input('academic_year_id'));
         abort_unless((string) $expected === (string) $year->id, 409, 'El curso académico ha cambiado. Actualiza la página antes de guardar.');

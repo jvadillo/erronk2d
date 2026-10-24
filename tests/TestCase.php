@@ -22,7 +22,6 @@ abstract class TestCase extends BaseTestCase
         $classroom->syncCatalog();
         if ($teacher) {
             $classroom->users()->syncWithoutDetaching([$teacher->id]);
-            $module->teachersFor($classroom->id)->attach($teacher, ['classroom_id' => $classroom->id]);
         }
 
         return $module;

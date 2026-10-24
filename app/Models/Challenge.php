@@ -21,19 +21,11 @@ class Challenge extends Model
     }
 
     /**
-     * Un profesor solo ve los retos de sus grupos en los que participa algún módulo del que es responsable.
+     * La pertenencia al grupo da acceso a todos sus retos.
      */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        $query->whereIn('challenges.classroom_id', Classroom::visibleTo($user)->select('classrooms.id'));
-        if ($user->role !== 'teacher') {
-            return $query;
-        }
-
-        return $query->whereExists(fn ($responsibilities) => $responsibilities->from('challenge_module')
-            ->join('classroom_module_user', fn ($join) => $join->on('classroom_module_user.module_id', '=', 'challenge_module.module_id')->on('classroom_module_user.classroom_id', '=', 'challenges.classroom_id'))
-            ->whereColumn('challenge_module.challenge_id', 'challenges.id')
-            ->where('classroom_module_user.user_id', $user->id));
+        return $query->whereIn('challenges.classroom_id', Classroom::visibleTo($user)->select('classrooms.id'));
     }
 
     public function classroom(): BelongsTo

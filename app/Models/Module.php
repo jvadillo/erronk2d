@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Domain\Catalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Module extends Model
 {
@@ -13,14 +13,19 @@ class Module extends Model
 
     protected $fillable = ['cycle_id', 'level', 'name', 'code'];
 
+    protected $hidden = ['name_key', 'code_key'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Module $module) {
+            $module->name_key = Catalog::key($module->name);
+            $module->code_key = Catalog::key($module->code);
+        });
+    }
+
     protected function casts(): array
     {
         return [];
-    }
-
-    public function teachersFor(int $classroomId): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'classroom_module_user')->wherePivot('classroom_id', $classroomId)->where('users.active', true);
     }
 
     public function cycle(): BelongsTo

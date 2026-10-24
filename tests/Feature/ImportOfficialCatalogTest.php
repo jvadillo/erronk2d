@@ -40,7 +40,7 @@ class ImportOfficialCatalogTest extends TestCase
         $this->assertDatabaseCount('modules', 2691);
     }
 
-    public function test_selected_cycle_preserves_existing_names_and_group_modules(): void
+    public function test_selected_cycle_preserves_existing_names_group_modules_and_codes_of_other_levels(): void
     {
         $cycle = Cycle::factory()->create(['code' => 'CENTRO', 'name' => 'Producción Agroecológica']);
         $group = Classroom::factory()->create(['cycle_id' => $cycle->id, 'level' => 1]);
@@ -53,12 +53,12 @@ class ImportOfficialCatalogTest extends TestCase
         $this->artisan('erronk2d:catalog', ['--execute' => true, '--cycle' => ['121_0101']])->assertSuccessful();
 
         $this->assertDatabaseCount('cycles', 1);
-        $this->assertDatabaseCount('modules', 17);
+        $this->assertDatabaseCount('modules', 16);
         $this->assertSame($originalCycle, $cycle->fresh()->getAttributes());
         $this->assertSame($originalModule, $module->fresh()->getAttributes());
         $this->assertSame($groupModules, $group->catalogModules()->pluck('modules.id')->all());
         $this->assertModelExists($otherLevel);
-        $this->assertDatabaseHas('modules', ['cycle_id' => $cycle->id, 'code' => '0409', 'level' => 1]);
+        $this->assertDatabaseMissing('modules', ['cycle_id' => $cycle->id, 'code' => '0409', 'level' => 1]);
     }
 
     public function test_ambiguous_cycle_rolls_back_earlier_inserts(): void

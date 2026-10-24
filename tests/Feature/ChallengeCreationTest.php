@@ -140,21 +140,21 @@ class ChallengeCreationTest extends TestCase
         $this->assertDatabaseCount('challenges', 0);
     }
 
-    public function test_teacher_must_be_responsible_for_a_selected_module_to_create_a_challenge(): void
+    public function test_any_group_member_can_create_a_challenge_with_its_modules_and_outsiders_cannot(): void
     {
-        ['classroom' => $classroom, 'module' => $module, 'data' => $data] = $this->scenario();
+        ['classroom' => $classroom, 'data' => $data] = $this->scenario();
         $data = [...$data, 'team_rubric_id' => null, 'transversal_rubric_id' => null];
-        $teacher = User::factory()->create(['role' => 'teacher']);
-        $classroom->users()->attach($teacher);
-
-        $this->actingAs($teacher)->postJson('/challenges', $data)->assertUnprocessable()
-            ->assertJsonValidationErrors(['module_ids' => 'Incluye al menos un módulo del que seas responsable en este grupo.']);
+        $outsider = User::factory()->create(['role' => 'teacher']);
+        $this->actingAs($outsider)->postJson('/challenges', $data)->assertNotFound();
         $this->assertDatabaseCount('challenges', 0);
 
-        $module->teachersFor($classroom->id)->attach($teacher, ['classroom_id' => $classroom->id]);
-        $this->post('/challenges', $data)->assertRedirect();
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $classroom->users()->attach($teacher);
+        $this->actingAs($teacher)->post('/challenges', $data)->assertRedirect();
+
         $challenge = $classroom->challenges()->sole();
         $this->get('/challenges/'.$challenge->id)->assertOk();
+        $this->actingAs($outsider)->get('/challenges/'.$challenge->id)->assertNotFound();
     }
 
     public function test_student_cannot_create_challenges(): void

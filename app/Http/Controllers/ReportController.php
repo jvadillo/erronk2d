@@ -22,7 +22,7 @@ class ReportController extends Controller
             return response()->streamDownload(function () use ($report) {
                 $out = fopen('php://output', 'w');
                 fwrite($out, "\xEF\xBB\xBF");
-                fputcsv($out, ['Estudiante', 'Módulo', 'Evaluación', 'Nota', 'Media del curso'], ';', '"', '');
+                fputcsv($out, ['Estudiante', 'Módulo', 'Evaluación', 'Nota', 'Media del curso académico'], ';', '"', '');
                 foreach ($report['rows'] as $row) {
                     foreach ($row['periods'] as $period) {
                         $safe = fn ($s) => preg_match('/^[=+@\-\t\r]/u', (string) $s) ? "'".$s : $s;

@@ -23,13 +23,12 @@ class GroupManagementTest extends TestCase
         $this->withHeader('X-Academic-Year', (string) $group->academic_year_id);
     }
 
-    #[TestWith(['teacher'])]
+    #[TestWith(['owner'])]
     #[TestWith(['admin'])]
-    public function test_member_or_admin_can_add_and_remove_empty_evaluations_preserving_used_ids(string $role): void
+    public function test_owner_or_admin_can_add_and_remove_empty_evaluations_preserving_used_ids(string $role): void
     {
         $group = Classroom::factory()->create();
-        $actor = User::factory()->create(['role' => $role]);
-        $group->users()->attach($actor);
+        $actor = $role === 'owner' ? $group->owner : User::factory()->create(['role' => 'admin']);
         $challenge = Challenge::factory()->create(['classroom_id' => $group->id]);
         $unused = $group->periods()->create(['name' => 'Eliminar', 'position' => 2]);
         $other = Classroom::factory()->create(['academic_year_id' => $group->academic_year_id]);
@@ -92,12 +91,11 @@ class GroupManagementTest extends TestCase
         $this->assertDatabaseCount('audit_events', 0);
     }
 
-    public function test_member_can_retire_and_restore_module_without_changing_reports_or_responsibilities(): void
+    public function test_owner_can_retire_and_restore_module_without_changing_reports(): void
     {
         $this->freezeTime();
         $group = Classroom::factory()->create();
-        $actor = User::factory()->create(['role' => 'teacher']);
-        $group->users()->attach($actor);
+        $actor = $group->owner;
         $module = $this->moduleForClass($group, ['name' => 'Original', 'code' => 'MOD'], $actor);
         $student = User::factory()->create();
         $this->enrollInClass($student, $group);
@@ -111,7 +109,6 @@ class GroupManagementTest extends TestCase
 
         $this->assertSame(0, $group->modules()->count());
         $this->assertSame([$module->id], $challenge->modules()->pluck('modules.id')->all());
-        $this->assertTrue($actor->teaches($module->id, $group->id));
         $this->assertSame($report, app(Gradebook::class)->report($group->fresh())['rows']);
         $this->get(route('groups.show', $group))->assertInertia(fn (Assert $page) => $page->component('Group')->has('group.modules', 0)->has('group.retired_modules', 1));
         $this->get('/')->assertInertia(fn (Assert $page) => $page->has('classrooms.0.modules', 0));
@@ -205,7 +202,7 @@ class GroupManagementTest extends TestCase
             ->has('classrooms.0.users', 2)->has('classrooms.0.periods', 1)->missing('classrooms.0.modules')->missing('classrooms.0.students'));
         $this->get(route('groups.show', $group))->assertInertia(fn (Assert $page) => $page->component('Group')
             ->where('group.name', '2DAW-A')->where('group.can_manage', false)->where('group.students.0.email', $student->email)
-            ->where('group.modules.0.code', 'PROG')->where('group.modules.0.teachers.0.id', $member->id)
+            ->where('group.modules.0.code', 'PROG')->missing('group.modules.0.teachers')->where('duplicateUrl', route('groups.duplicate', $group))
             ->where('group.periods.0.challenges_count', 0)->where('catalog.0.id', $module->id));
     }
 
@@ -224,7 +221,7 @@ class GroupManagementTest extends TestCase
 
     #[TestWith(['group-module'])]
     #[TestWith(['group-periods'])]
-    public function test_group_configuration_respects_membership_year_and_authentication(string $endpoint): void
+    public function test_group_structure_requires_owner_open_year_and_authentication(string $endpoint): void
     {
         $group = Classroom::factory()->create();
         $module = $this->moduleForClass($group);
@@ -233,6 +230,10 @@ class GroupManagementTest extends TestCase
         $outsider = User::factory()->create(['role' => 'teacher']);
         $this->select($outsider, $group);
         $this->postJson('/setup/'.$endpoint, $data)->assertNotFound();
+        $member = User::factory()->create(['role' => 'teacher']);
+        $group->users()->attach($member);
+        $this->select($member, $group);
+        $this->postJson('/setup/'.$endpoint, $data)->assertForbidden();
         $student = User::factory()->create();
         $this->enrollInClass($student, $group);
         $this->select($student, $group);

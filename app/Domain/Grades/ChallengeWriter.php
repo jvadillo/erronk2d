@@ -183,7 +183,6 @@ final class ChallengeWriter
         $field = $input['field'];
         $this->permit($actor, $field === 'exam' ? 'enter_exams' : 'enter_defenses');
         $module = $ch->modules()->findOrFail($input['module_id']);
-        abort_unless($actor->teaches($module->id, $ch->classroom_id), 403, 'Solo los responsables del módulo pueden modificar estas notas.');
         if ($field === 'defense') {
             abort_unless($module->pivot->defense_enabled, 422, 'La defensa de este módulo está desactivada.');
         }
@@ -236,9 +235,6 @@ final class ChallengeWriter
             }
             if ($kind === 'team') {
                 abort_unless($ch->teams()->whereKey($entry['subject_id'])->exists(), 422);
-                if (! empty($item['module_id'])) {
-                    abort_unless($actor->teaches((int) $item['module_id'], $ch->classroom_id), 403);
-                }
             } else {
                 abort_unless($ch->students()->where('users.id', $entry['subject_id'])->exists(), 422);
             }

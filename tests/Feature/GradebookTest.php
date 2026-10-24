@@ -213,29 +213,36 @@ class GradebookTest extends TestCase
         $this->assertSame(6, ModuleGrade::count());
     }
 
-    public function test_only_teachers_of_a_challenge_module_can_read_and_only_module_responsibles_can_write(): void
+    public function test_any_group_member_can_grade_and_correct_every_module_and_outsiders_cannot(): void
     {
-        $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => User::PERMISSIONS]);
+        $teacher = User::factory()->create(['role' => 'teacher']);
         $url = '/challenges/'.$this->challenge->id;
-        $data = ['action' => 'grades', 'field' => 'exam', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => '8']]];
+        $student = $this->students[0]->id;
+        $exam = fn (int $moduleId, string $value) => ['action' => 'grades', 'field' => 'exam', 'module_id' => $moduleId, 'entries' => [['student_id' => $student, 'value' => $value]]];
         $this->actingAs($teacher)->get($url)->assertNotFound();
+        $this->write($exam($this->modules[0]->id, '8'), $teacher)->assertNotFound();
+        $this->assertSame(0, ModuleGrade::count());
+
         $this->classroom->users()->attach($teacher);
-        $this->get($url)->assertNotFound();
-        $this->write($data, $teacher)->assertNotFound();
-        $this->modules[1]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
-        $this->get($url)->assertOk();
-        $this->write($data, $teacher)->assertForbidden();
-        $this->modules[0]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
-        $this->write($data, $teacher)->assertOk();
-        $this->write($data)->assertOk();
-        $this->assertSame(1, ModuleGrade::count());
+        $this->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page->where('book.teachers', fn ($teachers) => collect($teachers)->pluck('id')->contains($teacher->id))->missing('book.modules.0.teachers'));
+        foreach ($this->modules as $module) {
+            $this->write($exam($module->id, '8'), $teacher)->assertOk();
+            $this->write(['action' => 'grades', 'field' => 'defense', 'module_id' => $module->id, 'entries' => [['student_id' => $student, 'value' => '0.5']]], $teacher)->assertOk();
+        }
+        $this->write($exam($this->modules[0]->id, '6'))->assertOk();
+        $this->write($exam($this->modules[0]->id, '7'), $teacher)->assertOk();
+
+        $grade = ModuleGrade::where('module_id', $this->modules[0]->id)->sole();
+        $this->assertSame(['7.0000', $teacher->id, $teacher->id], [$grade->exam, $grade->updated_by, $grade->defense_teacher_id]);
+        $this->assertSame(count($this->modules), ModuleGrade::count());
+        $this->assertSame(1, AuditEvent::where('action', 'grades')->where('user_id', $this->admin->id)->count());
+        $this->assertSame(5, AuditEvent::where('action', 'grades')->where('user_id', $teacher->id)->count());
     }
 
     public function test_shared_transversal_has_no_module_or_teacher_average(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => ['evaluate_transversal', 'modify_grades']]);
         $this->classroom->users()->attach($teacher);
-        $this->modules[0]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
         $data = ['action' => 'assess', 'kind' => 'teacher', 'entries' => [['subject_id' => $this->students[0]->id, 'criterion' => 'quality', 'level' => 1]]];
         $this->write($data)->assertOk();
         $data['entries'][0]['level'] = 2;
@@ -416,13 +423,11 @@ class GradebookTest extends TestCase
         $this->assertTrue(collect($snapshot['rows'])->firstWhere('id', $student->id)['modules'][$module->id]['not_enrolled']);
     }
 
-    public function test_not_enrolled_requires_responsibility_and_cannot_erase_existing_grades(): void
+    public function test_not_enrolled_requires_group_membership_and_cannot_erase_existing_grades(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
-        $this->classroom->users()->attach($teacher);
-        $this->modules[1]->teachersFor($this->classroom->id)->attach($teacher, ['classroom_id' => $this->classroom->id]);
         $data = ['action' => 'grades', 'field' => 'not_enrolled', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => true]]];
-        $this->write($data, $teacher)->assertForbidden();
+        $this->write($data, $teacher)->assertNotFound();
         $exam = [...$data, 'field' => 'exam', 'entries' => [['student_id' => $this->students[0]->id, 'value' => '8']]];
         $this->write($exam)->assertOk();
         $this->write($data)->assertUnprocessable();

@@ -116,8 +116,7 @@ class ImportOfficialCatalog extends Command
                 $counts['existing_cycles']++;
             }
             foreach ($entry['modules'] as $module) {
-                $matches = $modules->filter(fn (Module $existingModule): bool => (int) $existingModule->level === $module['level'] &&
-                    ($this->normalize($existingModule->code) === $this->normalize($module['code']) || $this->normalize($existingModule->name) === $this->normalize($module['name'])));
+                $matches = $modules->filter(fn (Module $existingModule): bool => $this->normalize($existingModule->code) === $this->normalize($module['code']) || $this->normalize($existingModule->name) === $this->normalize($module['name']));
                 if ($matches->count() > 1) {
                     throw new RuntimeException('Coincidencia ambigua para un módulo del ciclo '.$entry['code'].'.');
                 }

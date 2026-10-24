@@ -100,25 +100,24 @@ class ChallengeTabsTest extends TestCase
         $this->assertDatabaseCount('challenge_evidences', 0);
     }
 
-    public function test_group_teacher_only_sees_challenges_with_a_module_they_teach(): void
+    public function test_every_group_teacher_sees_all_its_challenges_and_outsiders_see_none(): void
     {
         $classroom = $this->challenge->classroom;
         $otherModule = $this->moduleForClass($classroom);
-        $hidden = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
-        $hidden->modules()->attach($otherModule);
+        $otherModuleChallenge = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
+        $otherModuleChallenge->modules()->attach($otherModule);
         $moduleLess = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
 
-        $this->actingAs($this->teacher)->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 1)->where('challenges.0.id', $this->challenge->id));
-        foreach ([$hidden, $moduleLess] as $challenge) {
-            $this->get(route('challenges.show', $challenge))->assertNotFound();
-            $this->get(route('challenges.evidence.index', $challenge))->assertNotFound();
+        $this->actingAs($this->teacher)->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 3));
+        foreach ([$otherModuleChallenge, $moduleLess] as $challenge) {
+            $this->get(route('challenges.show', $challenge))->assertOk();
+            $this->get(route('challenges.evidence.index', $challenge))->assertRedirect();
         }
 
-        $otherModule->teachersFor($classroom->id)->attach($this->teacher, ['classroom_id' => $classroom->id]);
-        $this->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 2));
-        $this->get(route('challenges.show', $hidden))->assertOk();
-        $this->get(route('challenges.show', $moduleLess))->assertNotFound();
-
-        $this->actingAs(User::factory()->create(['role' => 'admin']))->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 3));
+        $outsider = User::factory()->create(['role' => 'teacher']);
+        $outsider->forceFill(['last_academic_year_id' => $classroom->academic_year_id])->save();
+        $this->actingAs($outsider)->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 0));
+        $this->get(route('challenges.show', $otherModuleChallenge))->assertNotFound();
+        $this->get(route('challenges.evidence.index', $otherModuleChallenge))->assertNotFound();
     }
 }

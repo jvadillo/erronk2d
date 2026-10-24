@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\AcademicContext;
+use App\Domain\Catalog;
 use App\Domain\Grades\ChallengeWriter;
 use App\Models\AcademicYear;
 use App\Models\AuditEvent;
@@ -15,6 +16,7 @@ use App\Models\Rubric;
 use App\Models\User;
 use Brick\Math\BigDecimal;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,9 +33,9 @@ class SetupController extends Controller
 
     public const NAVIGATION_LABELS = ['courses' => 'Cursos académicos', 'cycles' => 'Ciclos', 'modules' => 'Módulos', 'classrooms' => 'Grupos', 'teachers' => 'Profesores', 'students' => 'Estudiantes', 'rubrics' => 'Rúbricas', 'registrations' => 'Solicitudes'];
 
-    public const ADMIN_SECTIONS = ['courses', 'cycles', 'teachers', 'modules', 'registrations'];
+    public const ADMIN_SECTIONS = ['teachers', 'registrations'];
 
-    public function __construct(private AcademicContext $context) {}
+    public function __construct(private AcademicContext $context, private Catalog $catalog) {}
 
     public function index(Request $request, ?string $section = null): Response|RedirectResponse
     {
@@ -57,7 +59,9 @@ class SetupController extends Controller
 
         return Inertia::render('Setup', [
             'section' => $section, 'title' => self::SECTIONS[$section],
-            'years' => $section === 'courses' ? AcademicYear::orderByDesc('id')->get() : [],
+            'years' => $section === 'courses' ? ($actor->role === 'admin' ? AcademicYear::orderByDesc('id') : $this->context->availableYears($actor))->get() : [],
+            'openYears' => $section === 'classrooms' ? $this->openYears() : [],
+            'currentYearId' => $this->context->year()?->id,
             'classrooms' => $classes, 'users' => $people,
             'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->orderBy('name')->get(['id', 'name', 'role']),
             'cycles' => Cycle::orderBy('name')->get(),
@@ -104,11 +108,10 @@ class SetupController extends Controller
     {
         $actor = $request->user();
         abort_if($actor->role === 'student', 403);
-        $class = $this->context->classrooms($actor)->with('users:users.id,users.name', 'students:users.id,users.name,users.email', 'catalogModules', 'periods')->findOrFail($classroom);
+        $class = $this->context->classrooms($actor)->with('users:users.id,users.name,users.active', 'students:users.id,users.name,users.email,users.active', 'catalogModules', 'periods')->findOrFail($classroom);
         foreach ($class->catalogModules as $module) {
             $module->name = $module->pivot->name;
             $module->code = $module->pivot->code;
-            $module->setRelation('teachers', $module->teachersFor($class->id)->get(['users.id', 'users.name']));
         }
         $class->setAttribute('can_manage', $actor->canManageClassroom($class));
         $class->setRelation('modules', $class->catalogModules->filter(fn ($module) => $module->pivot->ended_at === null)->values());
@@ -120,8 +123,77 @@ class SetupController extends Controller
             'group' => $class,
             'catalog' => Module::where('cycle_id', $class->cycle_id)->where('level', $class->level)->orderBy('name')->get(['id', 'name', 'code']),
             'teachers' => User::whereIn('role', ['teacher', 'admin'])->where('active', true)->orderBy('name')->get(['id', 'name']),
+            'openYears' => $this->openYears(),
             'groupsUrl' => route('setup.section', ['section' => 'classrooms']),
+            'duplicateUrl' => route('groups.duplicate', ['classroom' => $class->id]),
         ]);
+    }
+
+    /**
+     * Copies the structure of a group (cycle, level, active modules, evaluations and chosen teachers)
+     * into a new group of an open academic year. Activity is never copied; enrollments only on request.
+     */
+    public function duplicate(Request $request, int $classroom): RedirectResponse
+    {
+        $actor = $request->user();
+        abort_unless(in_array($actor->role, ['admin', 'teacher'], true), 403);
+        [$copy, $summary] = DB::transaction(function () use ($request, $actor, $classroom) {
+            $source = $this->context->classrooms($actor)->with('periods', 'modules', 'cycle')->findOrFail($classroom);
+            $year = $this->targetYear($request);
+            $data = $request->validate([
+                'name' => ['required', 'string', 'max:100', Rule::unique('classrooms')->where('academic_year_id', $year->id)],
+                'user_ids' => 'present|array', 'user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)],
+                'student_ids' => 'present|array', 'student_ids.*' => 'integer|distinct',
+            ], ['name.unique' => 'Ya existe un grupo con ese nombre en el curso académico de destino.', 'user_ids.*.exists' => 'Solo se pueden incorporar profesores con la cuenta activa.']);
+            $students = $source->students()->where('users.active', true)->whereIn('users.id', $data['student_ids'])->pluck('users.id');
+            if ($students->count() !== count($data['student_ids'])) {
+                throw ValidationException::withMessages(['student_ids' => 'Solo puedes matricular alumnado activo del grupo de origen.']);
+            }
+            $copy = Classroom::create(['academic_year_id' => $year->id, 'name' => $data['name'], 'cycle_id' => $source->cycle_id, 'cycle_name' => $source->cycle?->name ?? $source->cycle_name, 'level' => $source->level, 'owner_id' => $actor->id]);
+            $copy->users()->sync(array_unique([...$data['user_ids'], $actor->id]));
+            $modules = Module::whereIn('id', $source->modules->modelKeys())->where('cycle_id', $source->cycle_id)->where('level', $source->level)->get();
+            foreach ($modules as $module) {
+                $copy->catalogModules()->attach($module->id, ['name' => $module->name, 'code' => $module->code]);
+            }
+            foreach ($source->periods as $period) {
+                $copy->periods()->create(['name' => $period->name, 'position' => $period->position]);
+            }
+            foreach ($students as $studentId) {
+                Enrollment::create(['classroom_id' => $copy->id, 'student_id' => $studentId]);
+            }
+            $summary = ['source_id' => $source->id, 'modules' => $modules->count(), 'teachers' => $copy->users()->count(), 'students' => $students->count()];
+            AuditEvent::create(['user_id' => $actor->id, 'action' => 'setup.classroom-duplicate', 'after' => [...$copy->only(['id', 'name', 'academic_year_id', 'owner_id']), ...$summary]]);
+
+            return [$copy, $summary];
+        });
+        $this->context->remember($request, $copy->academicYear);
+
+        return redirect()->route('groups.show', ['classroom' => $copy->id])->with('success', "Grupo duplicado con {$summary['modules']} módulos, {$summary['teachers']} profesores y {$summary['students']} estudiantes. No se han copiado retos ni notas.");
+    }
+
+    /**
+     * Open academic years where a group can be created.
+     */
+    private function openYears(): Collection
+    {
+        return AcademicYear::where('is_open', true)->orderByDesc('created_at')->orderByDesc('id')->get(['id', 'name', 'is_open']);
+    }
+
+    /**
+     * Resolves the open academic year chosen for a new group, or the active one when none is given.
+     */
+    private function targetYear(Request $request): AcademicYear
+    {
+        if (! $request->has('academic_year_id')) {
+            return $this->context->requireWritable($request);
+        }
+        $data = $request->validate(['academic_year_id' => 'required|integer'], ['academic_year_id.required' => 'Selecciona o crea un curso académico.']);
+        $year = $this->context->availableYears($request->user())->lockForUpdate()->find($data['academic_year_id']);
+        if (! $year?->is_open) {
+            throw ValidationException::withMessages(['academic_year_id' => 'Selecciona un curso académico abierto. Los cursos cerrados son de solo lectura.']);
+        }
+
+        return $year;
     }
 
     public function rubricEditor(Request $request, ?int $rubric = null): Response|RedirectResponse
@@ -142,16 +214,16 @@ class SetupController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $entity): RedirectResponse
+    public function store(Request $request, string $entity): RedirectResponse|JsonResponse
     {
         $actor = $request->user();
         abort_unless(in_array($actor->role, ['admin', 'teacher'], true), 403);
-        abort_unless(in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'classroom', 'group-module', 'group-periods', 'responsibility', 'student', 'teacher', 'enrollment', 'rubric', 'rubric-copy'], true), 404);
-        if (in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'teacher'], true)) {
-            abort_unless($actor->role === 'admin', 403);
+        abort_unless(in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'classroom', 'group-module', 'group-periods', 'student', 'teacher', 'enrollment', 'rubric', 'rubric-copy'], true), 404);
+        if (in_array($entity, ['year-status', 'cycle-module', 'teacher'], true) || (in_array($entity, ['year', 'cycle', 'module'], true) && $request->filled('id'))) {
+            abort_unless($actor->role === 'admin', 403, 'Solo administración puede modificar, cerrar o reorganizar el catálogo compartido y las cuentas del profesorado.');
         }
         $model = DB::transaction(function () use ($request, $entity, $actor) {
-            if (in_array($entity, ['classroom', 'group-module', 'group-periods', 'responsibility', 'enrollment'], true) || ($entity === 'student' && ($actor->role !== 'admin' || $request->filled('classroom_id')))) {
+            if (in_array($entity, ['group-module', 'group-periods', 'enrollment'], true) || ($entity === 'student' && ($actor->role !== 'admin' || $request->filled('classroom_id')))) {
                 $this->context->requireWritable($request);
             }
             $request->validate(['id' => 'nullable|integer']);
@@ -165,7 +237,6 @@ class SetupController extends Controller
                 'classroom' => $this->classroom($request, $id),
                 'group-module' => $this->groupModule($request),
                 'group-periods' => $this->groupPeriods($request),
-                'responsibility' => $this->responsibility($request),
                 'enrollment' => $this->enrollment($request),
                 'student', 'teacher' => $this->person($request, $entity, $id),
                 'rubric', 'rubric-copy' => $this->rubric($request, $entity === 'rubric-copy', $id),
@@ -174,7 +245,12 @@ class SetupController extends Controller
 
             return $model;
         });
+        if ($request->wantsJson() && in_array($entity, ['year', 'cycle', 'module'], true)) {
+            return response()->json(['item' => $model->toArray()]);
+        }
         if ($entity === 'classroom' && ! $request->integer('id')) {
+            $this->context->remember($request, $model->academicYear);
+
             return redirect()->route('groups.show', ['classroom' => $model->id])->with('success', 'Grupo creado. Revisa sus módulos, profesores y estudiantes.');
         }
 
@@ -183,12 +259,11 @@ class SetupController extends Controller
 
     private function year(Request $request, ?int $id): AcademicYear
     {
-        $model = $id ? AcademicYear::lockForUpdate()->findOrFail($id) : new AcademicYear;
+        $model = $id ? AcademicYear::lockForUpdate()->findOrFail($id) : new AcademicYear(['is_open' => true]);
         abort_if($id && ! $model->is_open, 403, 'Reabre el curso académico antes de editarlo.');
-        $data = $request->validate(['name' => ['required', 'string', 'max:100', Rule::unique('academic_years')->ignore($id)]]);
-        $model->fill($data)->save();
+        $data = $request->validate(['name' => 'required|string|max:100']);
 
-        return $model;
+        return $this->catalog->saveYear($model, $data['name']);
     }
 
     private function yearStatus(Request $request): AcademicYear
@@ -202,11 +277,10 @@ class SetupController extends Controller
 
     private function cycle(Request $request, ?int $id): Cycle
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:150', Rule::unique('cycles')->ignore($id)], 'code' => ['required', 'string', 'max:30', Rule::unique('cycles')->ignore($id)]]);
-        $model = $id ? Cycle::findOrFail($id) : new Cycle;
-        $model->fill($data)->save();
+        $data = $request->validate(['name' => 'required|string|max:150', 'code' => 'required|string|max:30']);
+        $model = $id ? Cycle::lockForUpdate()->findOrFail($id) : new Cycle;
 
-        return $model;
+        return $this->catalog->saveCycle($model, $data['name'], $data['code']);
     }
 
     private function cycleModule(Request $request): Module
@@ -223,33 +297,38 @@ class SetupController extends Controller
         if ($module->cycle_id !== null) {
             throw ValidationException::withMessages(['module_id' => 'Solo puedes añadir módulos que no estén asociados a un ciclo.']);
         }
-        if (Module::where('cycle_id', $data['cycle_id'])->where('level', $data['level'])->where('code', $module->code)->exists()) {
-            throw ValidationException::withMessages(['module_id' => 'Ya existe un módulo con ese código en el curso seleccionado.']);
+        $module->fill(['cycle_id' => (int) $data['cycle_id'], 'level' => (int) $data['level']]);
+        try {
+            $this->catalog->assertModuleIsNew($module);
+        } catch (ValidationException $duplicate) {
+            throw ValidationException::withMessages(['module_id' => collect($duplicate->errors())->flatten()->first()]);
         }
-        $module->update(['cycle_id' => $data['cycle_id'], 'level' => $data['level']]);
 
-        return $module;
+        return $this->catalog->persist($module, 'module_id', 'El ciclo acaba de recibir un módulo con ese nombre o código.');
     }
 
     private function module(Request $request, ?int $id): Module
     {
-        $model = $id ? Module::findOrFail($id) : new Module;
-        $data = $request->validate(['name' => 'required|string|max:150', 'code' => ['required', 'string', 'max:30', Rule::unique('modules')->where('cycle_id', $request->input('cycle_id'))->where('level', $request->input('level'))->ignore($id)], 'cycle_id' => 'nullable|integer|exists:cycles,id', 'level' => 'required|integer|between:1,4']);
-        if ($id && ($model->cycle_id !== (empty($data['cycle_id']) ? null : (int) $data['cycle_id']) || $model->level !== (int) $data['level'])) {
-            throw ValidationException::withMessages(['cycle_id' => 'Un módulo existente conserva su ciclo y nivel.']);
+        $model = $id ? Module::lockForUpdate()->findOrFail($id) : new Module;
+        $data = $request->validate(['name' => 'required|string|max:150', 'code' => 'required|string|max:30', 'cycle_id' => [$request->user()->role === 'admin' ? 'nullable' : 'required', 'integer', 'exists:cycles,id'], 'level' => 'required|integer|between:1,4'], ['cycle_id.required' => 'Selecciona el ciclo del módulo.']);
+        $cycleId = empty($data['cycle_id']) ? null : (int) $data['cycle_id'];
+        if ($id && ($model->cycle_id !== $cycleId || $model->level !== (int) $data['level'])) {
+            throw ValidationException::withMessages(['cycle_id' => 'Un módulo existente conserva su ciclo y curso / nivel.']);
         }
-        $model->fill($data)->save();
+        if ($cycleId) {
+            Cycle::lockForUpdate()->findOrFail($cycleId);
+        }
 
-        return $model;
+        return $this->catalog->saveModule($model, ['name' => $data['name'], 'code' => $data['code'], 'cycle_id' => $cycleId, 'level' => (int) $data['level']]);
     }
 
     private function classroom(Request $request, ?int $id): Classroom
     {
         $actor = $request->user();
-        $year = $this->context->year();
+        $year = $id ? $this->context->requireWritable($request) : $this->targetYear($request);
         $model = $id ? $this->context->classrooms($actor)->lockForUpdate()->findOrFail($id) : new Classroom;
         abort_if($id && ! $actor->canManageClassroom($model), 403);
-        $data = $request->validate(['name' => ['required', 'string', 'max:100', Rule::unique('classrooms')->where('academic_year_id', $year->id)->ignore($id)], 'cycle_id' => 'required|integer|exists:cycles,id', 'level' => 'required|integer|between:1,4', 'period_count' => 'sometimes|integer|between:1,12', 'user_ids' => 'present|array', 'user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)], 'owner_id' => ['sometimes', 'required', 'integer', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)]]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:100', Rule::unique('classrooms')->where('academic_year_id', $year->id)->ignore($id)], 'cycle_id' => 'required|integer|exists:cycles,id', 'level' => 'required|integer|between:1,4', 'period_count' => 'sometimes|integer|between:1,12', 'module_ids' => 'sometimes|array', 'module_ids.*' => 'integer|distinct', 'user_ids' => 'present|array', 'user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)], 'owner_id' => ['sometimes', 'required', 'integer', Rule::exists('users', 'id')->whereIn('role', ['teacher', 'admin'])->where('active', true)]], ['name.unique' => 'Ya existe un grupo con ese nombre en este curso académico.']);
         $ownerId = $id ? $model->owner_id : $actor->id;
         if (isset($data['owner_id']) && (int) $data['owner_id'] !== $ownerId) {
             abort_unless($actor->role === 'admin', 403, 'Solo administración puede transferir la propiedad.');
@@ -260,8 +339,18 @@ class SetupController extends Controller
         }
         $model->fill(['name' => $data['name'], 'academic_year_id' => $year->id, 'cycle_id' => $data['cycle_id'], 'level' => $data['level'], 'owner_id' => $ownerId, 'cycle_name' => $id ? $model->cycle_name : Cycle::findOrFail($data['cycle_id'])->name])->save();
         $model->users()->sync(array_unique([...$data['user_ids'], $ownerId]));
-        if (! $id) {
+        if (! $id && isset($data['module_ids'])) {
+            $modules = Module::where('cycle_id', $model->cycle_id)->where('level', $model->level)->whereIn('id', $data['module_ids'])->get();
+            if ($modules->count() !== count($data['module_ids'])) {
+                throw ValidationException::withMessages(['module_ids' => 'Selecciona módulos del ciclo y curso / nivel del grupo.']);
+            }
+            foreach ($modules as $module) {
+                $model->catalogModules()->attach($module->id, ['name' => $module->name, 'code' => $module->code]);
+            }
+        } elseif (! $id) {
             $model->syncCatalog();
+        }
+        if (! $id) {
             for ($position = 1; $position <= ($data['period_count'] ?? 3); $position++) {
                 $model->periods()->create(['name' => $position.'.ª Evaluación', 'position' => $position]);
             }
@@ -274,6 +363,7 @@ class SetupController extends Controller
     {
         $data = $request->validate(['classroom_id' => 'required|integer', 'module_id' => 'required|integer', 'active' => 'required|boolean']);
         $class = $this->context->classrooms($request->user())->lockForUpdate()->findOrFail($data['classroom_id']);
+        abort_unless($request->user()->canManageClassroom($class), 403, 'Solo el propietario del grupo o administración pueden cambiar sus módulos.');
         $module = Module::where('cycle_id', $class->cycle_id)->where('level', $class->level)->find($data['module_id']);
         if (! $module) {
             throw ValidationException::withMessages(['module_id' => 'Selecciona un módulo del mismo ciclo y nivel que el grupo.']);
@@ -295,6 +385,7 @@ class SetupController extends Controller
     {
         $data = $request->validate(['classroom_id' => 'required|integer', 'periods' => 'required|array|list|min:1|max:12', 'periods.*.id' => 'nullable|integer|min:1|distinct', 'periods.*.name' => 'required|string|max:100|distinct']);
         $class = $this->context->classrooms($request->user())->lockForUpdate()->findOrFail($data['classroom_id']);
+        abort_unless($request->user()->canManageClassroom($class), 403, 'Solo el propietario del grupo o administración pueden cambiar sus evaluaciones.');
         $existing = $class->periods()->withCount('challenges')->get();
         $ids = collect($data['periods'])->pluck('id')->filter();
         if ($ids->diff($existing->pluck('id'))->isNotEmpty()) {
@@ -312,24 +403,6 @@ class SetupController extends Controller
         foreach ($data['periods'] as $index => $item) {
             $period = empty($item['id']) ? $class->periods()->make() : $existing->firstWhere('id', (int) $item['id']);
             $period->fill(['name' => $item['name'], 'position' => $index + 1])->save();
-        }
-
-        return $class;
-    }
-
-    private function responsibility(Request $request): Classroom
-    {
-        $data = $request->validate(['classroom_id' => 'required|integer', 'module_id' => 'required|integer', 'teacher_ids' => 'present|array', 'teacher_ids.*' => 'integer|distinct']);
-        $class = $this->context->classrooms($request->user())->findOrFail($data['classroom_id']);
-        abort_unless($request->user()->canManageClassroom($class), 403);
-        $class->modules()->findOrFail($data['module_id']);
-        $members = $class->users()->where('users.active', true)->pluck('users.id');
-        if (collect($data['teacher_ids'])->diff($members)->isNotEmpty()) {
-            throw ValidationException::withMessages(['teacher_ids' => 'Los responsables deben ser profesores activos de este grupo.']);
-        }
-        DB::table('classroom_module_user')->where('classroom_id', $class->id)->where('module_id', $data['module_id'])->delete();
-        foreach ($data['teacher_ids'] as $teacherId) {
-            DB::table('classroom_module_user')->insert(['classroom_id' => $class->id, 'module_id' => $data['module_id'], 'user_id' => $teacherId]);
         }
 
         return $class;

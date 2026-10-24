@@ -29,7 +29,7 @@ class AcademicWorkflowTest extends TestCase
         return Rubric::create(['name' => 'Privada', 'kind' => 'team', 'owner_id' => $owner->id, 'items' => [['key' => 'quality', 'name' => 'Calidad', 'weight' => '1', 'module_id' => null, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo']]]]]);
     }
 
-    public function test_teacher_creates_class_with_automatic_modules_but_cannot_create_global_catalog(): void
+    public function test_teacher_creates_class_with_automatic_modules_but_cannot_modify_shared_catalog(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => []]);
         $year = AcademicYear::factory()->create();
@@ -42,13 +42,17 @@ class AcademicWorkflowTest extends TestCase
         $response->assertRedirect(route('groups.show', $class));
         $this->assertSame($teacher->id, $class->owner_id);
         $this->assertSame([$module->id], $class->modules()->pluck('modules.id')->all());
-        $this->postJson('/setup/year', ['name' => 'Otro', 'periods' => ['Primera']])->assertForbidden();
-        $this->postJson('/setup/module', ['name' => 'Otro'])->assertForbidden();
-        $this->assertDatabaseCount('academic_years', 1);
-        $this->assertDatabaseCount('modules', 1);
+        $this->postJson('/setup/year', ['id' => $year->id, 'name' => 'Otro'])->assertForbidden();
+        $this->postJson('/setup/year-status', ['id' => $year->id, 'is_open' => false])->assertForbidden();
+        $this->postJson('/setup/cycle', ['id' => $module->cycle_id, 'name' => 'Otro', 'code' => 'OTRO'])->assertForbidden();
+        $this->postJson('/setup/module', ['id' => $module->id, 'name' => 'Otro', 'code' => $module->code, 'cycle_id' => $module->cycle_id, 'level' => 2])->assertForbidden();
+        $this->postJson('/setup/cycle-module', ['cycle_id' => $module->cycle_id, 'module_id' => $module->id, 'active' => false, 'level' => 2])->assertForbidden();
+        $this->assertSame([$year->name, true], [$year->fresh()->name, $year->fresh()->is_open]);
+        $this->assertSame($module->name, $module->fresh()->name);
+        $this->assertSame($module->cycle_id, $module->fresh()->cycle_id);
     }
 
-    public function test_member_cannot_edit_class_or_assign_responsibles_and_admin_can_transfer_ownership(): void
+    public function test_member_cannot_edit_class_and_admin_can_transfer_ownership(): void
     {
         $class = Classroom::factory()->create();
         $member = User::factory()->create(['role' => 'teacher']);
@@ -172,22 +176,20 @@ class AcademicWorkflowTest extends TestCase
         $this->assertSame('Privada (copia)', $copy->name);
     }
 
-    public function test_module_responsibility_is_specific_to_class_and_revoked_with_membership(): void
+    public function test_group_membership_grants_and_revokes_access_to_all_its_challenges(): void
     {
         $class = Classroom::factory()->create();
-        $module = Module::factory()->create(['cycle_id' => $class->cycle_id]);
-        $class->syncCatalog();
-        $other = Classroom::factory()->create(['academic_year_id' => $class->academic_year_id, 'cycle_id' => $class->cycle_id]);
+        $this->moduleForClass($class);
+        $challenge = Challenge::factory()->create(['classroom_id' => $class->id]);
+        $challenge->modules()->sync($class->modules()->pluck('modules.id'));
         $teacher = User::factory()->create(['role' => 'teacher']);
         $class->users()->attach($teacher);
-        $this->select($class->owner, $class->academicYear);
 
-        $this->post('/setup/responsibility', ['classroom_id' => $class->id, 'module_id' => $module->id, 'teacher_ids' => [$teacher->id]])->assertSessionHasNoErrors();
-        $this->assertTrue($teacher->teaches($module->id, $class->id));
-        $this->assertFalse($teacher->teaches($module->id, $other->id));
+        $this->assertTrue($teacher->canAccessChallenge($challenge));
+        $this->actingAs($class->owner)->postJson('/setup/responsibility', ['classroom_id' => $class->id])->assertNotFound();
         $class->users()->detach($teacher);
-        $this->assertFalse($teacher->teaches($module->id, $class->id));
         $this->assertFalse($teacher->canAccessClassroom($class));
+        $this->assertFalse($teacher->canAccessChallenge($challenge));
     }
 
     public function test_catalog_renaming_keeps_original_class_module_names(): void

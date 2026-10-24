@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\AcademicContext;
+use App\Domain\Catalog;
 use App\Models\AuditEvent;
 use App\Models\Enrollment;
 use App\Models\Module;
@@ -100,10 +101,14 @@ class ImportController extends Controller
             $data = array_combine($header, array_map(fn ($v) => trim((string) $v), $row));
             $rules = $r->kind === 'module' ? ['name' => 'required|string|max:150', 'code' => 'required|string|max:30'] : ['name' => 'required|string|max:150', 'email' => 'required|email|max:255'];
             $validator = Validator::make($data, $rules);
-            $key = strtolower($data[$r->kind === 'module' ? 'code' : 'email'] ?? '');
+            $key = $r->kind === 'module' ? Catalog::key($data['code'] ?? '') : strtolower($data['email'] ?? '');
+            $nameKey = $r->kind === 'module' ? 'name:'.Catalog::key($data['name'] ?? '') : null;
             $existing = $r->kind !== 'module' ? User::whereRaw('LOWER(email) = ?', [$key])->first() : null;
-            $duplicateModule = $r->kind === 'module' && Module::where('cycle_id', $r->integer('cycle_id'))->where('level', $r->integer('level'))->whereRaw('LOWER(code) = ?', [$key])->exists();
+            $duplicateModule = $r->kind === 'module' && (isset($seen[$nameKey]) || Module::where('cycle_id', $r->integer('cycle_id'))->where(fn ($modules) => $modules->where('code_key', $key)->orWhere('name_key', Catalog::key($data['name'] ?? '')))->exists());
             $invalidAccount = $existing && ($r->kind !== 'student' || $existing->role !== 'student' || ! $existing->active);
+            if ($nameKey) {
+                $seen[$nameKey] = true;
+            }
             if ($validator->fails() || isset($seen[$key]) || $invalidAccount || $duplicateModule) {
                 $errors[] = ['row' => $i + 2, 'message' => $validator->fails() ? implode(' ', $validator->errors()->all()) : 'Duplicado o cuenta no disponible para matricular.'];
             } else {

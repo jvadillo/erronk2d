@@ -40,6 +40,7 @@ Route::middleware(['auth', 'active', 'academic'])->group(function () {
     Route::get('/setup/rubrics/create', [SetupController::class, 'rubricEditor'])->name('rubrics.create');
     Route::get('/setup/rubrics/{rubric}/edit', [SetupController::class, 'rubricEditor'])->whereNumber('rubric')->name('rubrics.edit');
     Route::get('/setup/classrooms/{classroom}', [SetupController::class, 'group'])->whereNumber('classroom')->name('groups.show');
+    Route::post('/setup/classrooms/{classroom}/duplicate', [SetupController::class, 'duplicate'])->whereNumber('classroom')->name('groups.duplicate');
     Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
     Route::get('/setup/{section}', [SetupController::class, 'index'])->name('setup.section');
     Route::post('/registrations/{registration}', [RegistrationController::class, 'update'])->name('registrations.update');
