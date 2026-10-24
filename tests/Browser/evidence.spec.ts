@@ -226,7 +226,15 @@ test('inicio del reto: cuatro secciones, accesos directos y secciones sin cabece
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await login(page);
-  await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) }).click();
+  const card = page.locator('.challenge-card').filter({ has: page.getByRole('heading', { name: 'Una web para nuestra comunidad' }) });
+  const cardTheme = await card.getAttribute('data-theme');
+  expect(cardTheme).toMatch(/^[a-z]+-[a-z]+$/);
+  expect(new Set(await page.locator('.challenge-card').evaluateAll(cards => cards.map(item => item.getAttribute('data-theme')))).size).toBeGreaterThan(1);
+  await expect(card.getByText('Grupo', { exact: true })).toHaveCount(1);
+  await page.reload();
+  await expect(card).toHaveAttribute('data-theme', cardTheme!);
+  await page.screenshot({ path: 'test-results/dashboard-cards.png', fullPage: true });
+  await card.click();
   await expect(page).toHaveURL(/\/challenges\/\d+$/);
   const challengeUrl = page.url();
   const title = page.getByRole('heading', { level: 1, name: 'Una web para nuestra comunidad', exact: true });
