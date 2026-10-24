@@ -1,9 +1,10 @@
 # Estado de la tarea
 
 ## Objetivo
-Simplificar rúbricas (sin compartir), botones de equipos en la cabecera y nuevas tarjetas de retos.
+Tarjetas de retos más modernas: color suave y forma propios de cada reto.
 
 ## Completado
+- `ChallengeCard.vue`: cabecera de 96px con uno de 8 colores suaves y una de 6 formas SVG, derivados del id del reto (siempre iguales; `data-theme`), sin icono genérico y con grupo, evaluación y equipos con iconos y sin bordes. Prueba «inicio del reto» correcta en el VPS y capturas de escritorio y móvil revisadas. Confirmado `d0b2426`; **pendiente de desplegar** (el usuario no lo pidió en esta petición).
 - Rúbricas solo del propietario (admin ve todas): retirados `sharedUsers`, `shared_user_ids`, el panel «Compartir» del editor, la etiqueta Propia/Compartida y la tabla `rubric_user` (migración `drop_rubric_user_table`; producción no tenía filas). «Añadir equipo»/«Guardar equipos» en la cabecera de Estudiantes y Equipos (solo con `manage_teams`). Tarjetas de retos con franja de color por estado, icono y datos de grupo, evaluación y equipos. Pint, 71 pruebas PHP de rúbricas/creación/reinicio/demo y la prueba Playwright de equipos correctas (por indicación del usuario no se repitió el resto); desplegado `d62b895` el 24 de octubre de 2026 con copia `backups/production-20261024-d62b895` de `03bb71b`.
 - Confirmación (modal) al pasar a «En evaluación» (autoevaluación y coevaluación) y a «Finalizado» (cierre y reapertura; deshabilitada si el reto no está completo). «Copiar rúbrica» junto a «Editar rúbrica» en rúbricas vacías: acción `copy_rubric` (`ChallengeRubricEditor::copy`/`copyable`: mismo tipo, con criterios, ciclo y curso del grupo o genéricas, solo módulos del reto) y prop `copyableRubrics`. 229 PHP y 17 Playwright correctas en el VPS; desplegado `03bb71b` el 24 de octubre de 2026 con copia `backups/production-20261024-03bb71b` de `5cd379a`.
 - Cabecera del reto: desplegable «Estado del reto» (En curso, En evaluación, Finalizado; solo con `manage_challenges` y reto abierto) en lugar de «Pasar a evaluación»/«Volver a En curso», y «Publicar notas». Retirado el desplegable de estado de Evaluación; «Introducción masiva» con icono. Tarjeta de equipo a media anchura aunque sea la única; `team-roster-heading` sustituido por `.team-card-count` («Sin integrantes», «1 persona», «N personas»). 16 Playwright correctas en el VPS y capturas revisadas; desplegado `5cd379a` el 24 de octubre de 2026 con copia `backups/production-20261024-5cd379a` de `39161ad`.
@@ -21,11 +22,12 @@ Simplificar rúbricas (sin compartir), botones de equipos en la cabecera y nueva
 - Visibilidad de retos: el profesorado solo ve y opera los retos de sus grupos con algún módulo del que es responsable (`Challenge::visibleTo`, `User::canAccessChallenge`); crear un reto exige serlo de algún módulo elegido. Admin sin cambios. Pruebas adaptadas, sin ejecutar (sin `vendor/` local).
 
 ## Pendiente
+- Desplegar `d0b2426` (tarjetas de retos) cuando el usuario lo indique.
 - Revisar si `/reports` debe filtrar por módulos del profesor (pendiente de decidir; no cambiado).
 - Las rúbricas creadas desde retos antes del enlace con la biblioteca no aparecen en ella (recuperación puntual solo si se pide).
 
 ## Archivos relevantes
-- `app/Models/Rubric.php`, `app/Http/Controllers/SetupController.php`, `resources/js/pages/RubricEditor.vue`, `resources/js/pages/Dashboard.vue`.
+- `app/Models/Rubric.php`, `app/Http/Controllers/SetupController.php`, `resources/js/pages/RubricEditor.vue`, `resources/js/pages/Dashboard.vue`, `resources/js/components/ChallengeCard.vue`.
 - `app/Domain/Grades/ChallengeRubricEditor.php`, `app/Http/Controllers/ChallengeController.php`, `tests/Feature/ChallengeRubricEditingTest.php`, `tests/Browser/empty-rubrics.spec.ts`.
 - `resources/js/pages/Challenge.vue`, `resources/js/components/ChallengeHub.vue`, `resources/css/app.css`, `tests/Browser/evidence.spec.ts`, `tests/Browser/workflows.spec.ts`.
 - `app/Http/Controllers/SetupController.php`, `routes/web.php`.
