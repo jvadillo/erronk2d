@@ -1,6 +1,11 @@
 # Despliegue de Erronk2D en este VPS
 
-**Producción en d62b895; desplegada el 24 de octubre de 2026.** Rúbricas privadas de su propietario sin uso compartido (migración `drop_rubric_user_table` aplicada; no había rúbricas compartidas), botones «Añadir equipo» y «Guardar equipos» en la cabecera de Estudiantes y Equipos y nuevas tarjetas de retos. Validación previa en el VPS: Pint, 71 pruebas PHP de las áreas afectadas en PostgreSQL y la prueba de navegador de equipos correctas; capturas revisadas. Imágenes desde `git archive d62b895`; `ops/deploy` con copia privada `backups/production-20261024-d62b895` de `03bb71b`. App/web ejecutan d62b895, saludables; `/up` y `/login` HTTP 200 por HTTPS; `rubric_user` eliminada y 7 rúbricas conservadas.
+**Producción en 52b626f; desplegada el 24 de octubre de 2026.** Tarjetas de retos con cabecera de color suave y forma propias de cada reto (derivadas de su id), sin icono genérico y con datos de grupo, evaluación y equipos con iconos. Validación previa en el VPS: build TypeScript/Vite y prueba de navegador «inicio del reto» correctas; capturas de escritorio y móvil revisadas. Imágenes desde `git archive 52b626f`; `ops/deploy` con copia privada `backups/production-20261024-52b626f` de `d62b895`; sin migraciones. App/web ejecutan 52b626f, saludables; `/up` y `/login` HTTP 200 por HTTPS.
+
+- `erronk2d-app:52b626f`: `sha256:2b834d111fed1f3b501fbbff10b587d2259f19f89f471b857e13d9f1dd43cac1`.
+- `erronk2d-web:52b626f`: `sha256:5ec7fe53d1d87916dc0f339874d19f15309764e9a3ef39c2fe4eb0e0a95c2542`.
+
+**Producción anterior en d62b895; desplegada el 24 de octubre de 2026.** Rúbricas privadas de su propietario sin uso compartido (migración `drop_rubric_user_table` aplicada; no había rúbricas compartidas), botones «Añadir equipo» y «Guardar equipos» en la cabecera de Estudiantes y Equipos y nuevas tarjetas de retos. Validación previa en el VPS: Pint, 71 pruebas PHP de las áreas afectadas en PostgreSQL y la prueba de navegador de equipos correctas; capturas revisadas. Imágenes desde `git archive d62b895`; `ops/deploy` con copia privada `backups/production-20261024-d62b895` de `03bb71b`. App/web ejecutan d62b895, saludables; `/up` y `/login` HTTP 200 por HTTPS; `rubric_user` eliminada y 7 rúbricas conservadas.
 
 - `erronk2d-app:d62b895`: `sha256:4ff5579987ce605c2e1e3691fdb1d7492b202d745482fbe338b3520e68bb69d2`.
 - `erronk2d-web:d62b895`: `sha256:9e104d85acec86211e6cb74d52b38cd3d510770428480052ace72c27d5b8205b`.
