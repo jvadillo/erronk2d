@@ -58,19 +58,19 @@ Los retos se realizan dentro de una clase.
 
 En cada reto participan uno o varios módulos.
 
-No existen profesores responsables por módulo. La pertenencia al grupo determina el acceso del profesorado: todos los profesores activos de un grupo pueden usar cualquiera de sus módulos activos en los retos y evaluar todos sus criterios, exámenes y defensas.
+No existen profesores responsables por módulo. Cada reto tiene sus profesores participantes, elegidos al crearlo entre los profesores del grupo junto con sus módulos participantes. Solo los participantes (y administración) ven el reto; todos ellos evalúan cualquiera de sus criterios, exámenes y defensas, añaden a otros profesores del grupo y añaden o quitan módulos del reto (un módulo con notas o con criterios en la rúbrica del reto no se puede quitar). Solo administración retira a un participante.
 
 Se distingue siempre entre «Curso académico» (por ejemplo, 2026-2027) y «Curso / nivel» (1.º a 4.º dentro de un ciclo).
 
 Preparación por el profesorado, sin depender de administración:
 
-- Cualquier profesor activo puede crear un curso académico, aunque todavía no exista ninguno. Queda abierto, se puede seleccionar de inmediato para crear grupos y no cierra los anteriores. Solo administración cierra, reabre o modifica cursos académicos; los cursos cerrados son de solo lectura para la actividad de grupos y retos.
+- Solo administración crea, cierra, reabre o modifica cursos académicos. Un curso nuevo queda abierto, se puede seleccionar de inmediato para crear grupos y no cierra los anteriores. Los cursos cerrados son de solo lectura para la actividad de grupos y retos.
 - El catálogo de ciclos y módulos es común. Cualquier profesor activo puede consultarlo, reutilizarlo, crear un ciclo que falte y añadir módulos indicando nombre, código, ciclo y curso / nivel. Antes de crear un elemento se muestran las coincidencias y se rechazan nombres o códigos repetidos, sin distinguir mayúsculas ni espacios irrelevantes, también ante altas simultáneas. Editar, eliminar o reorganizar el catálogo corresponde a administración, respetando los datos históricos de grupos y retos.
-- Desde la creación de un grupo se puede seleccionar o crear el curso académico, seleccionar o crear el ciclo, elegir curso / nivel y revisar o añadir sus módulos sin abandonar el formulario. Lo creado queda seleccionado y se conservan los demás datos.
+- Desde la creación de un grupo se selecciona un curso académico abierto y se puede seleccionar o crear el ciclo, elegir curso / nivel y revisar o añadir sus módulos sin abandonar el formulario. Lo creado queda seleccionado y se conservan los demás datos.
 - Un grupo tiene nombre, curso académico, ciclo, curso / nivel, evaluaciones (tres por defecto, de 1 a 12) y profesores participantes. Quien lo crea es su propietario y forma parte de él. El ciclo y el curso / nivel no cambian después.
-- «Duplicar grupo para otro curso académico»: cualquier profesor con acceso al grupo de origen, aunque su curso esté cerrado, puede copiarlo en un curso académico abierto (existente o creado en ese momento) indicando el nombre nuevo. Se copian ciclo, curso / nivel, módulos activos (reutilizados del catálogo) y evaluaciones (registros nuevos con los mismos nombres y orden). Se proponen los profesores activos del origen para revisarlos; nunca cuentas inactivas. Quien duplica es el propietario. No se copian retos, equipos, rúbricas de retos, valoraciones, notas, evidencias, repartos ni publicaciones. Las matrículas solo se copian si se seleccionan expresamente, eligiendo alumnado activo del origen y reutilizando sus cuentas sin cambiar credenciales, matrículas anteriores ni resultados. La duplicación es transaccional y no modifica el origen.
+- «Duplicar grupo para otro curso académico»: cualquier profesor con acceso al grupo de origen, aunque su curso esté cerrado, puede copiarlo en un curso académico abierto indicando el nombre nuevo. Se copian ciclo, curso / nivel, módulos activos (reutilizados del catálogo) y evaluaciones (registros nuevos con los mismos nombres y orden). Se proponen los profesores activos del origen para revisarlos; nunca cuentas inactivas. Quien duplica es el propietario. No se copian retos, equipos, rúbricas de retos, valoraciones, notas, evidencias, repartos ni publicaciones. Las matrículas solo se copian si se seleccionan expresamente, eligiendo alumnado activo del origen y reutilizando sus cuentas sin cambiar credenciales, matrículas anteriores ni resultados. La duplicación es transaccional y no modifica el origen.
 
-Recorrido principal del profesorado: entrar → seleccionar o crear curso académico → crear o duplicar grupo → completar ciclo, curso / nivel y módulos → incorporar profesores y alumnado → crear reto.
+Recorrido principal del profesorado: entrar → seleccionar curso académico (los crea administración) → crear o duplicar grupo → completar ciclo, curso / nivel y módulos → incorporar profesores y alumnado → crear reto con sus módulos y profesores participantes.
 
 ============================================================
 3. USUARIOS Y PERMISOS
@@ -111,7 +111,7 @@ Los estudiantes tendrán acceso únicamente a la información y procesos que les
 Permisos por grupo:
 
 - El propietario del grupo y administración modifican sus datos estructurales, evaluaciones, módulos y profesores participantes.
-- Todos los profesores activos del grupo gestionan sus matrículas, crean y gestionan retos, organizan equipos, editan las rúbricas de los retos, evalúan, introducen o corrigen notas de cualquiera de sus módulos y publican resultados, respetando los estados y restricciones vigentes. Se conservan la autoría de las evaluaciones, quién realizó cada modificación y el historial.
+- Todos los profesores activos del grupo gestionan sus matrículas y crean retos. Dentro de cada reto, sus profesores participantes organizan equipos, editan sus rúbricas, evalúan, introducen o corrigen notas de cualquiera de sus módulos, publican resultados, añaden participantes y cambian sus módulos, respetando los estados y restricciones vigentes. Los informes de un profesor solo incluyen los retos en los que participa. Se conservan la autoría de las evaluaciones, quién realizó cada modificación y el historial.
 - Solo administración transfiere la propiedad del grupo, gestiona las cuentas del profesorado y aprueba solicitudes de acceso.
 - Un profesor ajeno al grupo no accede a sus datos ni opera sobre él, aunque conozca sus identificadores o haya creado alguno de sus módulos: el catálogo común no concede acceso a los grupos que lo usan.
 - Las bibliotecas de rúbricas son privadas de cada profesor (administración accede a todas); pertenecer a un grupo no las comparte.
@@ -132,6 +132,7 @@ Un reto debe poder definir:
 - Fecha de finalización.
 - Estado.
 - Módulos participantes.
+- Profesores participantes (profesores del grupo).
 - Equipos.
 - Rúbricas de evaluación.
 - Competencias transversales.
@@ -1227,6 +1228,7 @@ Especialmente:
 - Notas de los niveles.
 - Ítems de rúbricas.
 - Módulos participantes.
+- Profesores participantes (profesores del grupo).
 - Existencia de defensas.
 - Límites de las defensas.
 - Tipos de actividades/exámenes.

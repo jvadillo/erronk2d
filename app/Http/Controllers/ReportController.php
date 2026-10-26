@@ -17,7 +17,7 @@ class ReportController extends Controller
         $query = app(AcademicContext::class)->classrooms($request->user());
         $classes = (clone $query)->with('academicYear')->get();
         $selected = $request->integer('classroom', $classes->first()?->id ?? 0);
-        $report = $selected ? $book->report((clone $query)->findOrFail($selected)) : null;
+        $report = $selected ? $book->report((clone $query)->findOrFail($selected), $request->user()) : null;
         if ($request->query('format') === 'csv' && $report) {
             return response()->streamDownload(function () use ($report) {
                 $out = fopen('php://output', 'w');

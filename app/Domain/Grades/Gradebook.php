@@ -28,7 +28,7 @@ final class Gradebook
 
     public function challenge(Challenge $challenge, ?Collection $previewAssessments = null): array
     {
-        $challenge->load(['students', 'modules', 'teams.memberships', 'assessments', 'moduleGrades', 'classroom.academicYear', 'classroom.users', 'period']);
+        $challenge->load(['students', 'modules', 'teams.memberships', 'assessments', 'moduleGrades', 'classroom.academicYear', 'teachers', 'period']);
         foreach ($challenge->modules as $module) {
             $module->name = $challenge->catalog_snapshot['modules'][$module->id]['name'] ?? $module->name;
             $module->code = $challenge->catalog_snapshot['modules'][$module->id]['code'] ?? $module->code;
@@ -146,21 +146,22 @@ final class Gradebook
             'challenge' => $challenge->only(['id', 'name', 'description', 'notes', 'status', 'weight', 'revision', 'classroom_id', 'period_id', 'starts_at', 'ends_at', 'distribution_enabled', 'clamp_grade', 'component_weights', 'transversal_weights', 'team_rubric', 'transversal_rubric']),
             'classroom' => $challenge->catalog_snapshot['classroom'] ?? $challenge->classroom->name, 'year' => $challenge->catalog_snapshot['year'] ?? $challenge->classroom->academicYear->name, 'period' => $challenge->catalog_snapshot['period'] ?? $challenge->period->name, 'cycle' => $challenge->catalog_snapshot['cycle'] ?? $challenge->classroom->cycle_name,
             'modules' => $challenge->modules->map(fn ($m) => ['id' => $m->id, 'code' => $m->code, 'name' => $m->name, 'defense_enabled' => (bool) $m->pivot->defense_enabled])->all(),
-            'teachers' => $challenge->classroom->users->where('active', true)->sortBy('name')->map->only(['id', 'name'])->values()->all(),
+            'teachers' => $challenge->teachers->where('active', true)->map->only(['id', 'name'])->values()->all(),
             'teams' => array_values($teams), 'rows' => $rows, 'issues' => $issues,
             'assessments' => $assessments->map->only(['kind', 'subject_id', 'scope_id', 'criterion', 'level', 'updated_by', 'updated_at'])->all(),
             'complete' => count($rows) > 0 && count($issues) === 0 && collect($rows)->every(fn ($r) => count($r['pending']) === 0),
         ];
     }
 
-    public function report(Classroom $classroom): array
+    public function report(Classroom $classroom, ?User $viewer = null): array
     {
         $classroom->load(['academicYear', 'periods', 'catalogModules']);
         foreach ($classroom->catalogModules as $module) {
             $module->name = $module->pivot->name;
             $module->code = $module->pivot->code;
         }
-        $challenges = $classroom->challenges()->with('publications')->get();
+        $challenges = $classroom->challenges()->when($viewer, fn ($query) => $query->visibleTo($viewer))->with('publications')->get();
+        $partial = $challenges->count() < $classroom->challenges()->count();
         $books = $challenges->mapWithKeys(fn ($ch) => [$ch->id => $this->challenge($ch)]);
         $rows = [];
         foreach (User::where('role', 'student')->where(function ($query) use ($classroom) {
@@ -206,6 +207,6 @@ final class Gradebook
             }
         }
 
-        return ['classroom' => $classroom, 'rows' => $rows];
+        return ['classroom' => $classroom, 'rows' => $rows, 'partial' => $partial];
     }
 }

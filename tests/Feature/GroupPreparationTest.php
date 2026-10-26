@@ -59,8 +59,10 @@ class GroupPreparationTest extends TestCase
         $teacher = User::factory()->create(['role' => 'teacher']);
         $colleague = User::factory()->create(['role' => 'teacher']);
         $this->actingAs($teacher)->get('/setup/classrooms')->assertInertia(fn (Assert $page) => $page->where('academic.year', null)->has('openYears', 0)->has('cycles', 0));
-
-        $year = $this->postJson('/setup/year', ['name' => '2027-2028'])->assertOk()->assertJsonPath('item.is_open', true)->json('item');
+        $this->postJson('/setup/year', ['name' => '2027-2028'])->assertForbidden();
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->postJson('/setup/year', ['name' => '2027-2028'])->assertOk()->assertJsonPath('item.is_open', true);
+        $year = AcademicYear::sole()->toArray();
+        $this->actingAs($teacher)->get('/setup/classrooms')->assertInertia(fn (Assert $page) => $page->has('openYears', 1));
         $cycle = $this->postJson('/setup/cycle', ['name' => 'Desarrollo de Aplicaciones Web', 'code' => 'DAW'])->assertOk()->json('item');
         $programming = $this->postJson('/setup/module', ['name' => 'Programación', 'code' => '0485', 'cycle_id' => $cycle['id'], 'level' => 1])->assertOk()->json('item');
         $this->postJson('/setup/module', ['name' => 'Sistemas informáticos', 'code' => '0483', 'cycle_id' => $cycle['id'], 'level' => 1])->assertOk();
@@ -83,19 +85,22 @@ class GroupPreparationTest extends TestCase
 
         $challenge = $group->challenges()->sole();
         $this->assertSame(['ane@example.test'], $challenge->students()->pluck('email')->all());
+        $this->assertSame([$colleague->id], $challenge->teachers()->pluck('users.id')->all());
+        $this->actingAs($teacher)->get(route('challenges.show', $challenge))->assertNotFound();
+        $this->actingAs($colleague);
         $this->post('/setup/student', ['name' => 'Jon', 'email' => 'jon@example.test', 'password' => 'TestingOnly123', 'active' => true, 'classroom_id' => $group->id])->assertSessionHasNoErrors();
         $this->assertSame(1, $challenge->students()->count());
     }
 
     public function test_shared_catalog_rejects_duplicates_that_only_differ_in_case_or_spaces(): void
     {
-        $teacher = User::factory()->create(['role' => 'teacher']);
-        $this->actingAs($teacher);
-        $this->postJson('/setup/year', ['name' => '2027-2028'])->assertOk();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)->postJson('/setup/year', ['name' => '2027-2028'])->assertOk();
+        $this->postJson('/setup/year', ['name' => ' 2027 - 2028 '])->assertUnprocessable()->assertJsonValidationErrors(['name' => 'Ya existe el curso académico «2027-2028». Selecciónalo en lugar de crearlo.']);
+        $this->actingAs(User::factory()->create(['role' => 'teacher']));
         $cycle = $this->postJson('/setup/cycle', ['name' => 'Desarrollo de Aplicaciones Web', 'code' => 'DAW'])->assertOk()->json('item');
         $this->postJson('/setup/module', ['name' => 'Programación', 'code' => '0485', 'cycle_id' => $cycle['id'], 'level' => 1])->assertOk();
 
-        $this->postJson('/setup/year', ['name' => ' 2027 - 2028 '])->assertUnprocessable()->assertJsonValidationErrors(['name' => 'Ya existe el curso académico «2027-2028». Selecciónalo en lugar de crearlo.']);
         $this->postJson('/setup/cycle', ['name' => 'desarrollo de  aplicaciones WEB', 'code' => 'NUEVO'])->assertUnprocessable()->assertJsonValidationErrors('name');
         $this->postJson('/setup/cycle', ['name' => 'Otro ciclo', 'code' => ' daw '])->assertUnprocessable()->assertJsonValidationErrors('code');
         $this->postJson('/setup/module', ['name' => 'Otro nombre', 'code' => '0485 ', 'cycle_id' => $cycle['id'], 'level' => 2])->assertUnprocessable()->assertJsonValidationErrors('code');
@@ -126,21 +131,22 @@ class GroupPreparationTest extends TestCase
         $this->assertDatabaseCount('cycles', 1);
     }
 
-    public function test_teacher_creates_open_years_without_closing_others_but_only_admin_changes_their_status(): void
+    public function test_only_admin_creates_and_changes_academic_years_and_new_years_do_not_close_others(): void
     {
         $existing = AcademicYear::factory()->create(['name' => '2026-2027']);
         $teacher = User::factory()->create(['role' => 'teacher']);
-        $this->actingAs($teacher)->postJson('/setup/year', ['name' => '2027-2028'])->assertOk();
+        $this->actingAs($teacher)->postJson('/setup/year', ['name' => '2027-2028'])->assertForbidden();
+        $this->get('/setup/courses')->assertForbidden();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)->postJson('/setup/year', ['name' => '2027-2028'])->assertOk();
 
         $this->assertTrue($existing->fresh()->is_open);
         $created = AcademicYear::where('name', '2027-2028')->sole();
         $this->assertTrue($created->is_open);
-        $this->get('/setup/courses')->assertInertia(fn (Assert $page) => $page->has('years', 2));
-        $this->postJson('/setup/year-status', ['id' => $created->id, 'is_open' => false])->assertForbidden();
+        $this->actingAs($teacher)->postJson('/setup/year-status', ['id' => $created->id, 'is_open' => false])->assertForbidden();
         $this->postJson('/setup/year', ['id' => $created->id, 'name' => 'Cambio'])->assertForbidden();
         $this->assertSame(['2027-2028', true], [$created->fresh()->name, $created->fresh()->is_open]);
 
-        $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)->post('/setup/year-status', ['id' => $created->id, 'is_open' => false])->assertSessionHasNoErrors();
         $cycle = Cycle::factory()->create();
         $this->actingAs($teacher)->postJson('/setup/classroom', ['name' => 'Cerrado', 'academic_year_id' => $created->id, 'cycle_id' => $cycle->id, 'level' => 1, 'user_ids' => []])

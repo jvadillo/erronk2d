@@ -60,18 +60,18 @@ class OrganizationNavigationTest extends TestCase
         $this->get('/setup/missing')->assertNotFound();
     }
 
-    public function test_teacher_can_consult_academic_structure_but_cannot_open_accounts_or_registration_requests(): void
+    public function test_teacher_can_consult_the_catalog_but_cannot_open_academic_years_accounts_or_registration_requests(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
         $this->actingAs($teacher);
 
-        foreach (['courses', 'cycles', 'modules', 'classrooms', 'students', 'rubrics'] as $section) {
+        foreach (['cycles', 'modules', 'classrooms', 'students', 'rubrics'] as $section) {
             $this->get('/setup/'.$section)->assertInertia(fn (Assert $page) => $page
-                ->where('section', $section)->has('setupNavigation', 6)
-                ->where('setupNavigation.0.section', 'courses')->where('setupNavigation.5.section', 'rubrics')->has('registrations', 0));
+                ->where('section', $section)->has('setupNavigation', 5)
+                ->where('setupNavigation.0.section', 'cycles')->where('setupNavigation.4.section', 'rubrics')->has('registrations', 0));
         }
         $this->get('/setup')->assertRedirect('/setup/classrooms');
-        foreach (['teachers', 'registrations'] as $section) {
+        foreach (['courses', 'teachers', 'registrations'] as $section) {
             $this->get('/setup/'.$section)->assertForbidden();
         }
     }

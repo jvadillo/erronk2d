@@ -25,6 +25,7 @@ class ChallengeTabsTest extends TestCase
         $this->teacher = User::factory()->create(['role' => 'teacher']);
         $this->student = User::factory()->create(['role' => 'student']);
         $this->challenge->modules()->attach($this->moduleForClass($this->challenge->classroom, [], $this->teacher));
+        $this->challenge->teachers()->attach($this->teacher);
         $this->enrollInClass($this->student, $this->challenge->classroom);
         $this->challenge->students()->attach($this->student);
         $this->withHeader('X-Academic-Year', (string) $this->challenge->classroom->academic_year_id);
@@ -100,19 +101,24 @@ class ChallengeTabsTest extends TestCase
         $this->assertDatabaseCount('challenge_evidences', 0);
     }
 
-    public function test_every_group_teacher_sees_all_its_challenges_and_outsiders_see_none(): void
+    public function test_group_teacher_only_sees_challenges_where_they_participate(): void
     {
         $classroom = $this->challenge->classroom;
         $otherModule = $this->moduleForClass($classroom);
         $otherModuleChallenge = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
         $otherModuleChallenge->modules()->attach($otherModule);
-        $moduleLess = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
+        $foreign = Challenge::factory()->create(['classroom_id' => $classroom->id, 'period_id' => $this->challenge->period_id]);
+        $foreign->teachers()->detach($this->teacher);
 
-        $this->actingAs($this->teacher)->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 3));
-        foreach ([$otherModuleChallenge, $moduleLess] as $challenge) {
-            $this->get(route('challenges.show', $challenge))->assertOk();
-            $this->get(route('challenges.evidence.index', $challenge))->assertRedirect();
-        }
+        $this->actingAs($this->teacher)->get('/')->assertInertia(fn (Assert $page) => $page->has('challenges', 2));
+        $this->get(route('challenges.show', $otherModuleChallenge))->assertOk();
+        $this->get(route('challenges.show', $foreign))->assertNotFound();
+        $this->get(route('challenges.evidence.index', $foreign))->assertNotFound();
+        $this->postJson(route('challenges.update', $foreign), ['revision' => $foreign->revision, 'action' => 'status', 'status' => 'evaluating'])->assertNotFound();
+        $this->actingAs($classroom->owner)->get(route('challenges.show', $foreign))->assertOk();
+        $foreign->teachers()->detach($classroom->owner);
+        $this->get(route('challenges.show', $foreign))->assertNotFound();
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->get(route('challenges.show', $foreign))->assertOk();
 
         $outsider = User::factory()->create(['role' => 'teacher']);
         $outsider->forceFill(['last_academic_year_id' => $classroom->academic_year_id])->save();

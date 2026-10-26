@@ -33,7 +33,7 @@ class SetupController extends Controller
 
     public const NAVIGATION_LABELS = ['courses' => 'Cursos académicos', 'cycles' => 'Ciclos', 'modules' => 'Módulos', 'classrooms' => 'Grupos', 'teachers' => 'Profesores', 'students' => 'Estudiantes', 'rubrics' => 'Rúbricas', 'registrations' => 'Solicitudes'];
 
-    public const ADMIN_SECTIONS = ['teachers', 'registrations'];
+    public const ADMIN_SECTIONS = ['courses', 'teachers', 'registrations'];
 
     public function __construct(private AcademicContext $context, private Catalog $catalog) {}
 
@@ -59,7 +59,7 @@ class SetupController extends Controller
 
         return Inertia::render('Setup', [
             'section' => $section, 'title' => self::SECTIONS[$section],
-            'years' => $section === 'courses' ? ($actor->role === 'admin' ? AcademicYear::orderByDesc('id') : $this->context->availableYears($actor))->get() : [],
+            'years' => $section === 'courses' ? AcademicYear::orderByDesc('id')->get() : [],
             'openYears' => $section === 'classrooms' ? $this->openYears() : [],
             'currentYearId' => $this->context->year()?->id,
             'classrooms' => $classes, 'users' => $people,
@@ -219,8 +219,8 @@ class SetupController extends Controller
         $actor = $request->user();
         abort_unless(in_array($actor->role, ['admin', 'teacher'], true), 403);
         abort_unless(in_array($entity, ['year', 'year-status', 'cycle', 'cycle-module', 'module', 'classroom', 'group-module', 'group-periods', 'student', 'teacher', 'enrollment', 'rubric', 'rubric-copy'], true), 404);
-        if (in_array($entity, ['year-status', 'cycle-module', 'teacher'], true) || (in_array($entity, ['year', 'cycle', 'module'], true) && $request->filled('id'))) {
-            abort_unless($actor->role === 'admin', 403, 'Solo administración puede modificar, cerrar o reorganizar el catálogo compartido y las cuentas del profesorado.');
+        if (in_array($entity, ['year', 'year-status', 'cycle-module', 'teacher'], true) || (in_array($entity, ['cycle', 'module'], true) && $request->filled('id'))) {
+            abort_unless($actor->role === 'admin', 403, 'Solo administración puede gestionar los cursos académicos, modificar o reorganizar el catálogo compartido y las cuentas del profesorado.');
         }
         $model = DB::transaction(function () use ($request, $entity, $actor) {
             if (in_array($entity, ['group-module', 'group-periods', 'enrollment'], true) || ($entity === 'student' && ($actor->role !== 'admin' || $request->filled('classroom_id')))) {

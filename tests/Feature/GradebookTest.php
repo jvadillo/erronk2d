@@ -213,7 +213,7 @@ class GradebookTest extends TestCase
         $this->assertSame(6, ModuleGrade::count());
     }
 
-    public function test_any_group_member_can_grade_and_correct_every_module_and_outsiders_cannot(): void
+    public function test_any_participating_teacher_can_grade_and_correct_every_module_and_others_cannot(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
         $url = '/challenges/'.$this->challenge->id;
@@ -224,6 +224,8 @@ class GradebookTest extends TestCase
         $this->assertSame(0, ModuleGrade::count());
 
         $this->classroom->users()->attach($teacher);
+        $this->get($url)->assertNotFound();
+        $this->challenge->teachers()->attach($teacher);
         $this->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page->where('book.teachers', fn ($teachers) => collect($teachers)->pluck('id')->contains($teacher->id))->missing('book.modules.0.teachers'));
         foreach ($this->modules as $module) {
             $this->write($exam($module->id, '8'), $teacher)->assertOk();
@@ -243,6 +245,7 @@ class GradebookTest extends TestCase
     {
         $teacher = User::factory()->create(['role' => 'teacher', 'permissions' => ['evaluate_transversal', 'modify_grades']]);
         $this->classroom->users()->attach($teacher);
+        $this->challenge->teachers()->attach($teacher);
         $data = ['action' => 'assess', 'kind' => 'teacher', 'entries' => [['subject_id' => $this->students[0]->id, 'criterion' => 'quality', 'level' => 1]]];
         $this->write($data)->assertOk();
         $data['entries'][0]['level'] = 2;
@@ -423,7 +426,7 @@ class GradebookTest extends TestCase
         $this->assertTrue(collect($snapshot['rows'])->firstWhere('id', $student->id)['modules'][$module->id]['not_enrolled']);
     }
 
-    public function test_not_enrolled_requires_group_membership_and_cannot_erase_existing_grades(): void
+    public function test_not_enrolled_requires_participation_and_cannot_erase_existing_grades(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
         $data = ['action' => 'grades', 'field' => 'not_enrolled', 'module_id' => $this->modules[0]->id, 'entries' => [['student_id' => $this->students[0]->id, 'value' => true]]];

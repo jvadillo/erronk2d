@@ -21,11 +21,21 @@ class Challenge extends Model
     }
 
     /**
-     * La pertenencia al grupo da acceso a todos sus retos.
+     * El profesorado solo accede a los retos de sus grupos en los que participa; administración, a todos.
      */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        return $query->whereIn('challenges.classroom_id', Classroom::visibleTo($user)->select('classrooms.id'));
+        $query->whereIn('challenges.classroom_id', Classroom::visibleTo($user)->select('classrooms.id'));
+        if ($user->role !== 'teacher') {
+            return $query;
+        }
+
+        return $query->whereHas('teachers', fn (Builder $teachers) => $teachers->where('users.id', $user->id));
+    }
+
+    public function teachers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'challenge_teacher')->orderBy('name');
     }
 
     public function classroom(): BelongsTo

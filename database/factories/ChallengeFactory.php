@@ -2,11 +2,20 @@
 
 namespace Database\Factories;
 
+use App\Models\Challenge;
 use App\Models\Classroom;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ChallengeFactory extends Factory
 {
+    /**
+     * The teachers already in the group take part in the challenge.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(fn (Challenge $challenge) => $challenge->teachers()->syncWithoutDetaching($challenge->classroom->users()->pluck('users.id')));
+    }
+
     public function definition(): array
     {
         $rubric = ['name' => 'Calidad', 'items' => [['key' => 'quality', 'name' => 'Calidad', 'weight' => '1', 'module_id' => null, 'levels' => [['score' => '4', 'description' => 'Inicial'], ['score' => '8', 'description' => 'Autónomo']]]]];

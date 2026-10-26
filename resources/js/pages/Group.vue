@@ -153,7 +153,7 @@ function withdraw(student: Person): void {
                 <button v-if="canManage" class="button small" :disabled="moduleForm.processing" :aria-label="`Quitar ${module.code}`" @click="setModule(module.id, false)">Quitar</button>
             </div>
             <p v-if="group.retired_modules.length" class="helper">Retirados: {{ group.retired_modules.map(module => module.code).join(', ') }}.</p>
-            <p class="helper">Todo el profesorado del grupo puede usar sus módulos activos en los retos y evaluarlos. Al quitar un módulo, sus retos y notas se conservan.<template v-if="writable && !canManage"> Solo el propietario del grupo o administración pueden cambiar los módulos.</template></p>
+            <p class="helper">Los módulos activos se pueden elegir en los retos del grupo; cada reto lo evalúa su profesorado participante. Al quitar un módulo, sus retos y notas se conservan.<template v-if="writable && !canManage"> Solo el propietario del grupo o administración pueden cambiar los módulos.</template></p>
         </section>
 
         <section v-if="activeTab === 'teachers'" id="group-panel-teachers" role="tabpanel" aria-labelledby="group-tab-teachers" class="panel">

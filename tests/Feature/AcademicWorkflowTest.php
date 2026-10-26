@@ -176,7 +176,7 @@ class AcademicWorkflowTest extends TestCase
         $this->assertSame('Privada (copia)', $copy->name);
     }
 
-    public function test_group_membership_grants_and_revokes_access_to_all_its_challenges(): void
+    public function test_challenge_access_requires_participation_and_group_membership(): void
     {
         $class = Classroom::factory()->create();
         $this->moduleForClass($class);
@@ -185,6 +185,8 @@ class AcademicWorkflowTest extends TestCase
         $teacher = User::factory()->create(['role' => 'teacher']);
         $class->users()->attach($teacher);
 
+        $this->assertFalse($teacher->canAccessChallenge($challenge));
+        $challenge->teachers()->attach($teacher);
         $this->assertTrue($teacher->canAccessChallenge($challenge));
         $this->actingAs($class->owner)->postJson('/setup/responsibility', ['classroom_id' => $class->id])->assertNotFound();
         $class->users()->detach($teacher);

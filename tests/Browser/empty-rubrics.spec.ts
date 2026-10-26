@@ -25,6 +25,7 @@ test('reto con rúbricas nuevas: avisos, contexto fijo, primeros criterios y eva
   await dialog.getByRole('combobox', { name: 'Evaluación', exact: true }).selectOption({ label: '1.ª Evaluación' });
   await dialog.getByLabel('PROG · Programación', { exact: true }).check();
   await dialog.getByLabel('DWEC · Desarrollo web en entorno cliente', { exact: true }).check();
+  await dialog.getByRole('group', { name: 'Profesores participantes' }).getByLabel('Ane Etxeberria').check();
   await dialog.getByRole('combobox', { name: 'Rúbrica del reto', exact: true }).selectOption({ label: 'Crear nueva rúbrica' });
   await dialog.getByRole('combobox', { name: 'Rúbrica transversal', exact: true }).selectOption({ label: 'Crear nueva rúbrica' });
   await dialog.getByRole('button', { name: 'Crear reto', exact: true }).click();
@@ -111,6 +112,7 @@ test('rúbrica vacía: copiar una rúbrica compatible de la biblioteca', async (
   await creation.getByRole('combobox', { name: 'Grupo', exact: true }).selectOption({ label: '2DAW-A · 2026-2027' });
   await creation.getByRole('combobox', { name: 'Evaluación', exact: true }).selectOption({ label: '1.ª Evaluación' });
   await creation.getByLabel('PROG · Programación', { exact: true }).check();
+  await creation.getByRole('group', { name: 'Profesores participantes' }).getByLabel('Ane Etxeberria').check();
   await creation.getByRole('combobox', { name: 'Rúbrica del reto', exact: true }).selectOption({ label: 'Crear nueva rúbrica' });
   await creation.getByRole('combobox', { name: 'Rúbrica transversal', exact: true }).selectOption({ label: 'Crear nueva rúbrica' });
   await creation.getByRole('button', { name: 'Crear reto', exact: true }).click();

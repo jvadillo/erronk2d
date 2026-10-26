@@ -23,12 +23,12 @@ const isAdmin = auth.role === 'admin';
 const duplicating = computed(() => props.mode === 'duplicate');
 
 /** Entries created from this form, kept until the page props include them. */
-const created = ref<{ year: CatalogItem[]; cycle: CatalogItem[]; module: CatalogItem[] }>({ year: [], cycle: [], module: [] });
+const created = ref<{ cycle: CatalogItem[]; module: CatalogItem[] }>({ cycle: [], module: [] });
 const merge = (items: CatalogItem[], extra: CatalogItem[]) => [...items, ...extra.filter(item => !items.some(existing => existing.id === item.id))];
-const yearOptions = computed(() => merge(props.years, created.value.year));
+const yearOptions = computed(() => props.years);
 const cycleOptions = computed(() => merge(props.cycles, created.value.cycle).sort((a, b) => a.name.localeCompare(b.name, 'es')));
 const moduleCatalog = computed(() => merge(props.modules, created.value.module));
-const adding = ref<'' | 'year' | 'cycle' | 'module'>('');
+const adding = ref<'' | 'cycle' | 'module'>('');
 
 const defaultYear = props.years.find(year => year.id === props.currentYearId && !duplicating.value)?.id ?? props.years[0]?.id ?? '';
 const form = useForm({
@@ -53,9 +53,8 @@ const activeStudents = computed(() => (props.source?.students ?? []).filter(stud
 watch(() => form.enroll_students, enabled => { form.student_ids = enabled ? activeStudents.value.map(student => student.id) : []; });
 const ownerId = computed(() => (isAdmin && !duplicating.value ? Number(form.owner_id) : auth.id));
 
-function select(kind: 'year' | 'cycle' | 'module', item: CatalogItem, isNew: boolean): void {
+function select(kind: 'cycle' | 'module', item: CatalogItem, isNew: boolean): void {
     if (isNew) created.value[kind].push(item);
-    if (kind === 'year') form.academic_year_id = item.id;
     if (kind === 'cycle') form.cycle_id = item.id;
     if (kind === 'module' && !form.module_ids.includes(item.id)) form.module_ids.push(item.id);
     adding.value = '';
@@ -77,12 +76,9 @@ function submit(): void {
     <form class="group-form" @submit.prevent="submit">
         <section class="group-form-step">
             <h3>1. Curso académico</h3>
-            <div class="group-form-row">
-                <label>Curso académico<select v-model="form.academic_year_id" required><option value="" disabled>{{ yearOptions.length ? 'Selecciona' : 'Todavía no hay cursos abiertos' }}</option><option v-for="year in yearOptions" :key="year.id" :value="year.id">{{ year.name }}</option></select></label>
-                <button type="button" class="button small" :aria-expanded="adding === 'year'" @click="adding = adding === 'year' ? '' : 'year'">{{ adding === 'year' ? 'Cancelar' : 'Crear curso académico' }}</button>
-            </div>
-            <CatalogQuickAdd v-if="adding === 'year'" kind="year" :items="yearOptions" @created="select('year', $event, true)" @select="select('year', $event, false)" @conflict="refreshCatalog" />
-            <p class="helper">Solo se muestran cursos académicos abiertos. Crear uno nuevo no cierra los anteriores.</p>
+            <label>Curso académico<select v-model="form.academic_year_id" required><option value="" disabled>{{ yearOptions.length ? 'Selecciona' : 'Todavía no hay cursos abiertos' }}</option><option v-for="year in yearOptions" :key="year.id" :value="year.id">{{ year.name }}</option></select></label>
+            <p v-if="!yearOptions.length" class="notice warning" role="status">No hay cursos académicos abiertos. Solo administración puede crearlos o reabrirlos.</p>
+            <p v-else class="helper">Solo se muestran cursos académicos abiertos. Los crea administración.</p>
         </section>
 
         <section class="group-form-step">

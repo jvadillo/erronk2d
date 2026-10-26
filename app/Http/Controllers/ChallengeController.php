@@ -43,7 +43,7 @@ class ChallengeController extends Controller
             'challenges' => $query->get()->map(function ($ch) {
                 return [...$ch->only(['id', 'name', 'description', 'status', 'weight']), 'classroom' => $ch->catalog_snapshot['classroom'] ?? $ch->classroom->name, 'year' => $ch->catalog_snapshot['year'] ?? $ch->classroom->academicYear->name, 'period' => $ch->catalog_snapshot['period'] ?? $ch->period->name, 'modules' => $ch->modules->map(fn ($module) => $ch->catalog_snapshot['modules'][$module->id]['code'] ?? $module->code), 'teams_count' => $ch->teams->count()];
             }),
-            'classrooms' => $request->user()->role === 'student' ? [] : $this->context->classrooms($request->user())->with('academicYear', 'periods', 'modules')->get()->each(function ($classroom) {
+            'classrooms' => $request->user()->role === 'student' ? [] : $this->context->classrooms($request->user())->with(['academicYear', 'periods', 'modules', 'users' => fn ($users) => $users->where('users.active', true)->orderBy('name')->select('users.id', 'users.name')])->get()->each(function ($classroom) {
                 foreach ($classroom->modules as $module) {
                     $module->name = $module->pivot->name;
                     $module->code = $module->pivot->code;
@@ -57,7 +57,7 @@ class ChallengeController extends Controller
     {
         abort_unless($request->user()->allows('manage_challenges'), 403);
         $this->context->requireWritable($request);
-        $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'team_rubric_id' => ['present', 'nullable', 'integer', Rule::exists('rubrics', 'id')->where('kind', 'team')], 'transversal_rubric_id' => ['present', 'nullable', 'integer', Rule::exists('rubrics', 'id')->where('kind', 'transversal')], 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean'], [
+        $data = $request->validate(['name' => 'required|string|max:200', 'description' => 'nullable|string|max:10000', 'classroom_id' => 'required|exists:classrooms,id', 'period_id' => 'required|exists:periods,id', 'module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct', 'teacher_ids' => 'sometimes|array', 'teacher_ids.*' => 'integer|distinct', 'team_rubric_id' => ['present', 'nullable', 'integer', Rule::exists('rubrics', 'id')->where('kind', 'team')], 'transversal_rubric_id' => ['present', 'nullable', 'integer', Rule::exists('rubrics', 'id')->where('kind', 'transversal')], 'weight' => ['required', 'numeric', 'gt:0', 'max:10000', ChallengeWriter::DECIMAL], 'distribution_enabled' => 'required|boolean'], [
             'team_rubric_id.exists' => 'Selecciona una rúbrica de equipo válida.',
             'transversal_rubric_id.exists' => 'Selecciona una rúbrica transversal válida.',
         ]);
@@ -68,6 +68,17 @@ class ChallengeController extends Controller
             }
             if (collect($data['module_ids'])->diff($class->modules->pluck('id'))->isNotEmpty()) {
                 throw ValidationException::withMessages(['module_ids' => 'Los módulos deben pertenecer al grupo seleccionado.']);
+            }
+            $groupTeachers = $class->users()->where('users.active', true)->pluck('users.id');
+            $teacherIds = collect($data['teacher_ids'] ?? [])->map(fn ($id) => (int) $id);
+            if ($teacherIds->diff($groupTeachers)->isNotEmpty()) {
+                throw ValidationException::withMessages(['teacher_ids' => 'Los profesores participantes deben ser profesores activos del grupo.']);
+            }
+            if ($groupTeachers->contains($request->user()->id)) {
+                $teacherIds->push($request->user()->id);
+            }
+            if ($teacherIds->isEmpty()) {
+                throw ValidationException::withMessages(['teacher_ids' => 'Selecciona al menos un profesor participante del grupo.']);
             }
             $rubrics = [];
             foreach (ChallengeRubricEditor::DEFAULT_NAMES as $kind => $name) {
@@ -90,6 +101,7 @@ class ChallengeController extends Controller
                 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30],
                 ...$rubrics]);
             $ch->modules()->sync($data['module_ids']);
+            $ch->teachers()->sync($teacherIds->unique()->values()->all());
             $ch->students()->sync($class->students()->where('active', true)->pluck('users.id'));
             AuditEvent::create(['user_id' => $request->user()->id, 'challenge_id' => $ch->id, 'action' => 'create', 'after' => $ch->toArray()]);
 
@@ -139,7 +151,9 @@ class ChallengeController extends Controller
             'challengeUrl' => route('challenges.show', $challenge),
             'evidenceStoreUrl' => route('challenges.evidence.store', $challenge), 'history' => $challenge->publications()->select('id', 'version', 'created_at')->orderByDesc('version')->get(),
             'rubricEditorUrls' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $kind])])->all(),
-            'copyableRubrics' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => $request->user()->allows('manage_challenges') && $challenge->{$kind.'_rubric'}['items'] === []
+            'groupTeachers' => $challenge->classroom->users()->where('users.active', true)->orderBy('name')->get(['users.id', 'users.name'])->map->only(['id', 'name'])->values(),
+            'groupModules' => $challenge->classroom->modules()->orderBy('classroom_module.code')->get()->map(fn ($module) => ['id' => $module->id, 'code' => $module->pivot->code, 'name' => $module->pivot->name])->values(),
+            'copyableRubrics' =>collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => $request->user()->allows('manage_challenges') && $challenge->{$kind.'_rubric'}['items'] === []
                 ? $rubrics->copyable($request->user(), $challenge, $kind)->map(fn (Rubric $rubric): array => ['id' => $rubric->id, 'name' => $rubric->name, 'criteria' => count($rubric->items)])->all()
                 : []])->all()]);
     }

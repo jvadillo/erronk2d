@@ -51,6 +51,10 @@ final class ChallengeWriter
                     break;
                 case 'configure': $this->configure($actor, $challenge, $input);
                     break;
+                case 'teachers': $this->teachers($actor, $challenge, $input);
+                    break;
+                case 'modules': $this->modules($actor, $challenge, $input);
+                    break;
                 case 'publish':
                     $this->permit($actor, 'publish_results');
                     if (! $before['complete']) {
@@ -98,6 +102,62 @@ final class ChallengeWriter
         if ($exists) {
             $this->permit($actor, 'modify_grades');
         }
+    }
+
+    /**
+     * Participating teachers add colleagues of the group; only administration can withdraw a participant.
+     */
+    private function teachers(User $actor, Challenge $ch, array $input): void
+    {
+        $this->permit($actor, 'manage_challenges');
+        Validator::make($input, ['teacher_ids' => 'required|array|min:1', 'teacher_ids.*' => 'required|integer|distinct'], ['teacher_ids.required' => 'Selecciona al menos un profesor participante.'])->validate();
+        $selected = collect($input['teacher_ids'])->map(fn ($id) => (int) $id);
+        $current = $ch->teachers()->pluck('users.id');
+        $active = $ch->classroom->users()->where('users.active', true)->pluck('users.id');
+        if ($selected->diff($current)->diff($active)->isNotEmpty()) {
+            throw ValidationException::withMessages(['teacher_ids' => 'Solo puedes añadir profesores activos del grupo.']);
+        }
+        if ($actor->role !== 'admin' && $current->diff($selected)->isNotEmpty()) {
+            throw ValidationException::withMessages(['teacher_ids' => 'Solo administración puede retirar profesores de un reto.']);
+        }
+        $ch->teachers()->sync($selected->all());
+    }
+
+    /**
+     * Adds active modules of the group or removes modules that have no grades nor rubric criteria.
+     */
+    private function modules(User $actor, Challenge $ch, array $input): void
+    {
+        $this->permit($actor, 'manage_challenges');
+        Validator::make($input, ['module_ids' => 'required|array|min:1', 'module_ids.*' => 'required|integer|distinct'], ['module_ids.required' => 'El reto necesita al menos un módulo.', 'module_ids.min' => 'El reto necesita al menos un módulo.'])->validate();
+        $selected = collect($input['module_ids'])->map(fn ($id) => (int) $id);
+        $current = $ch->modules()->pluck('modules.id');
+        $groupModules = $ch->classroom->modules()->get();
+        $added = $selected->diff($current);
+        if ($added->diff($groupModules->modelKeys())->isNotEmpty()) {
+            throw ValidationException::withMessages(['module_ids' => 'Solo puedes añadir módulos activos del grupo.']);
+        }
+        $criteria = collect($ch->team_rubric['items'] ?? [])->pluck('module_id')->filter()->map(fn ($id) => (int) $id);
+        foreach ($current->diff($selected) as $removed) {
+            $code = $ch->catalog_snapshot['modules'][$removed]['code'] ?? $removed;
+            if ($criteria->contains($removed)) {
+                throw ValidationException::withMessages(['module_ids' => "La rúbrica del reto tiene criterios de {$code}. Quítalos de la rúbrica antes de retirar el módulo."]);
+            }
+            if ($ch->moduleGrades()->where('module_id', $removed)->where(fn ($grades) => $grades->whereNotNull('exam')->orWhereNotNull('defense')->orWhere('not_enrolled', true))->exists()) {
+                throw ValidationException::withMessages(['module_ids' => "{$code} ya tiene notas en este reto y no se puede retirar."]);
+            }
+        }
+        $snapshot = $ch->catalog_snapshot;
+        foreach ($current->diff($selected) as $removed) {
+            unset($snapshot['modules'][$removed]);
+        }
+        foreach ($groupModules->whereIn('id', $added) as $module) {
+            $snapshot['modules'][$module->id] = ['name' => $module->pivot->name, 'code' => $module->pivot->code];
+        }
+        $ch->moduleGrades()->whereIn('module_id', $current->diff($selected))->delete();
+        $ch->modules()->detach($current->diff($selected)->all());
+        $ch->modules()->attach($added->all());
+        $ch->catalog_snapshot = $snapshot;
     }
 
     private function participants(User $actor, Challenge $challenge): void

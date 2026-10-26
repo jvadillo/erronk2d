@@ -80,6 +80,7 @@ class DatabaseSeeder extends Seeder
                 $ch = Challenge::create(['name' => $title, 'description' => $descriptions[$ci], 'classroom_id' => $class->id, 'period_id' => $periods[intdiv($ci, 2)]->id, 'status' => $ci === 5 ? 'active' : 'evaluating', 'weight' => $ci % 2 === 0 ? '2' : '3', 'distribution_enabled' => $ci !== 2, 'component_weights' => ['transversal' => 30, 'challenge' => 40, 'exam' => 30], 'transversal_weights' => ['self' => 10, 'peer' => 60, 'teacher' => 30], 'team_rubric' => ['name' => $tr->name, 'items' => $tr->items], 'transversal_rubric' => ['name' => $xr->name, 'items' => $xr->items], 'starts_at' => now()->addDays($ci * 14)->toDateString(), 'ends_at' => now()->addDays($ci * 14 + 12)->toDateString()]);
                 $ch->update(['catalog_snapshot' => ['classroom' => $class->name, 'cycle' => $cycle->name, 'level' => 2, 'year' => $year->name, 'period' => $periods[intdiv($ci, 2)]->name, 'modules' => collect($modules)->mapWithKeys(fn ($module) => [$module->id => $module->only(['name', 'code'])])->all()]]);
                 $ch->modules()->attach(array_map(fn ($m) => $m->id, $modules));
+                $ch->teachers()->attach(array_map(fn ($u) => $u->id, $teachers));
                 $ch->students()->attach(array_map(fn ($s) => $s->id, $students));
                 if ($ci === 2) {
                     foreach ($modules as $m) {
@@ -128,6 +129,7 @@ class DatabaseSeeder extends Seeder
             $empty->status = 'active';
             $empty->save();
             $empty->modules()->sync(array_map(fn ($module) => $module->id, $modules));
+            $empty->teachers()->sync(array_map(fn ($teacher) => $teacher->id, $teachers));
         });
     }
 }

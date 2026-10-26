@@ -30,7 +30,8 @@ test('creación de reto: rúbricas compatibles y validación sin perder el formu
   await dialog.getByLabel('Nombre del reto').fill('Regresión de creación');
   await dialog.getByLabel('Descripción', { exact: true }).fill('Conservar este texto al validar.');
   await dialog.getByRole('combobox', { name: 'Evaluación', exact: true }).selectOption({ label: '1.ª Evaluación' });
-  const modules = dialog.locator('fieldset').getByRole('checkbox');
+  await dialog.getByRole('group', { name: 'Profesores participantes' }).getByLabel('Ane Etxeberria').check();
+  const modules = dialog.getByRole('group', { name: 'Módulos participantes' }).getByRole('checkbox');
   const teamRubric = dialog.getByRole('combobox', { name: 'Rúbrica del reto', exact: true });
   const teamOption = teamRubric.getByRole('option', { name: /Proyecto web/ });
   await expect(teamOption).toHaveJSProperty('disabled', true);
@@ -336,6 +337,11 @@ test('curso académico: primer acceso, grupo propio, cambio entre pestañas y pr
 test('curso cerrado: histórico del estudiante y bloqueo de edición del profesorado', async ({ page }) => {
   await login(page);
   await page.goto('/setup/courses');
+  const destination = `Destino ${Date.now()}`;
+  await page.getByRole('button', { name: 'Curso académico', exact: true }).click();
+  await page.getByRole('dialog').getByLabel('Nombre del curso académico', { exact: true }).fill(destination);
+  await page.getByRole('dialog').getByRole('button', { name: 'Crear curso académico', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.locator('.setup-grid > section').filter({ has: page.getByRole('heading', { name: '2026-2027', exact: true }) }).getByRole('button', { name: 'Editar curso académico', exact: true }).click();
   const course = page.getByRole('dialog');
   await course.getByLabel('Nombre', { exact: true }).fill('Curso revisado en navegador');
@@ -368,11 +374,8 @@ test('curso cerrado: histórico del estudiante y bloqueo de edición del profeso
   await expect(duplicate.getByRole('checkbox', { name: 'Ane Etxeberria' })).toBeChecked();
   await expect(duplicate.getByRole('checkbox', { name: 'Matricular alumnado activo del grupo de origen', exact: true })).not.toBeChecked();
   await duplicate.getByLabel('Nombre del grupo', { exact: true }).fill('2DAW-A nuevo curso');
-  const destination = `Destino ${Date.now()}`;
-  await duplicate.getByRole('button', { name: 'Crear curso académico', exact: true }).click();
-  await duplicate.getByLabel('Nombre del curso académico', { exact: true }).fill(destination);
-  await duplicate.getByRole('button', { name: 'Crear curso académico', exact: true }).last().click();
-  await expect(duplicate.getByRole('combobox', { name: 'Curso académico', exact: true }).locator('option:checked')).toHaveText(destination);
+  await expect(duplicate.getByRole('button', { name: 'Crear curso académico' })).toHaveCount(0);
+  await duplicate.getByRole('combobox', { name: 'Curso académico', exact: true }).selectOption({ label: destination });
   await expect(duplicate.getByLabel('Nombre del grupo', { exact: true })).toHaveValue('2DAW-A nuevo curso');
   await duplicate.getByRole('button', { name: 'Duplicar grupo', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: /^2DAW-A nuevo curso/ })).toBeVisible();

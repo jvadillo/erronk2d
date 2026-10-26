@@ -5,7 +5,7 @@ cd -- "$(dirname -- "$0")/.."
 release="${1:?Indica una etiqueta de imágenes ya construidas y verificadas}"
 backup_destination="${2:?Indica un directorio NUEVO para la copia previa}"
 reset_academics="${3:-}"
-[[ -z "$reset_academics" || "$reset_academics" == "--reset-academics" ]] || { echo 'Opción no válida.' >&2; exit 1; }
+[[ -z "$reset_academics" || "$reset_academics" == "--reset-academics" || "$reset_academics" == "--reset-activity" ]] || { echo 'Opción no válida.' >&2; exit 1; }
 [[ "$release" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$ ]] || { echo 'Etiqueta no válida.' >&2; exit 1; }
 [[ ! -e "$backup_destination" ]] || { echo 'La copia requiere un directorio nuevo.' >&2; exit 1; }
 docker image inspect "erronk2d-app:$release" "erronk2d-web:$release" >/dev/null
@@ -36,6 +36,13 @@ if [[ "$reset_academics" == "--reset-academics" ]]; then
     "${compose[@]}" run --rm -T app php artisan erronk2d:reset-academics --execute --backup-confirmed --no-interaction
     "${compose[@]}" exec -T postgres psql -U erronk2d -d erronk2d -X -At -v ON_ERROR_STOP=1 -c "$retained_query" > "$backup_destination/retained-accounts-after.digest"
     cmp -- "$backup_destination/retained-accounts-before.digest" "$backup_destination/retained-accounts-after.digest"
+fi
+if [[ "$reset_academics" == "--reset-activity" ]]; then
+    retained_query="SELECT md5(concat_ws('|', (SELECT string_agg(row_to_json(u)::text, ',' ORDER BY id) FROM (SELECT id, name, email, password, role, active, google_id FROM users) u), (SELECT string_agg(row_to_json(c)::text, ',' ORDER BY id) FROM (SELECT id, name, code FROM cycles) c), (SELECT string_agg(row_to_json(m)::text, ',' ORDER BY id) FROM (SELECT id, cycle_id, level, name, code FROM modules) m), (SELECT string_agg(row_to_json(y)::text, ',' ORDER BY id) FROM (SELECT id, name, is_open FROM academic_years) y)));"
+    "${compose[@]}" exec -T postgres psql -U erronk2d -d erronk2d -X -At -v ON_ERROR_STOP=1 -c "$retained_query" > "$backup_destination/retained-catalog-before.digest"
+    "${compose[@]}" run --rm -T app php artisan erronk2d:reset-activity --execute --backup-confirmed --no-interaction
+    "${compose[@]}" exec -T postgres psql -U erronk2d -d erronk2d -X -At -v ON_ERROR_STOP=1 -c "$retained_query" > "$backup_destination/retained-catalog-after.digest"
+    cmp -- "$backup_destination/retained-catalog-before.digest" "$backup_destination/retained-catalog-after.digest"
 fi
 "${compose[@]}" run --rm -T app php artisan erronk2d:demo --no-interaction
 "${compose[@]}" up -d --no-deps --wait --wait-timeout 120 app web
