@@ -107,7 +107,7 @@ test('evidencias: modo lectura y acceso restringido al profesorado', async ({ pa
   await expect(page.locator('.evidence-student-option').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar anotación' })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Estudiantes y Equipos' }).click();
-  await expect(page.getByRole('button', { name: 'Guardar equipos' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^(Guardar equipos|Añadir equipo)$/ })).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: 'Nombre del equipo 1', exact: true })).toBeDisabled();
   await page.getByRole('tab', { name: 'Configuración', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Guardar configuración' })).toBeDisabled();

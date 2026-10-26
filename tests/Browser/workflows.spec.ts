@@ -342,6 +342,7 @@ test('curso cerrado: histórico del estudiante y bloqueo de edición del profeso
   await page.getByRole('dialog').getByLabel('Nombre del curso académico', { exact: true }).fill(destination);
   await page.getByRole('dialog').getByRole('button', { name: 'Crear curso académico', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: destination, exact: true })).toBeVisible();
   await page.locator('.setup-grid > section').filter({ has: page.getByRole('heading', { name: '2026-2027', exact: true }) }).getByRole('button', { name: 'Editar curso académico', exact: true }).click();
   const course = page.getByRole('dialog');
   await course.getByLabel('Nombre', { exact: true }).fill('Curso revisado en navegador');
