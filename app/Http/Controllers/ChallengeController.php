@@ -153,7 +153,7 @@ class ChallengeController extends Controller
             'rubricEditorUrls' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => route('challenges.rubrics.edit', ['challenge' => $challenge, 'kind' => $kind])])->all(),
             'groupTeachers' => $challenge->classroom->users()->where('users.active', true)->orderBy('name')->get(['users.id', 'users.name'])->map->only(['id', 'name'])->values(),
             'groupModules' => $challenge->classroom->modules()->orderBy('classroom_module.code')->get()->map(fn ($module) => ['id' => $module->id, 'code' => $module->pivot->code, 'name' => $module->pivot->name])->values(),
-            'copyableRubrics' =>collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => $request->user()->allows('manage_challenges') && $challenge->{$kind.'_rubric'}['items'] === []
+            'copyableRubrics' => collect(['team', 'transversal'])->mapWithKeys(fn (string $kind) => [$kind => $request->user()->allows('manage_challenges') && $challenge->{$kind.'_rubric'}['items'] === []
                 ? $rubrics->copyable($request->user(), $challenge, $kind)->map(fn (Rubric $rubric): array => ['id' => $rubric->id, 'name' => $rubric->name, 'criteria' => count($rubric->items)])->all()
                 : []])->all()]);
     }

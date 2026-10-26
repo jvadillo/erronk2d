@@ -244,6 +244,7 @@ class GroupPreparationTest extends TestCase
         $this->assertEqualsCanonicalizing([$students[0]->id, $students[1]->id], $copy->students()->pluck('users.id')->all());
         $this->assertSame(3, $source->students()->count());
         $this->assertSame($passwords, array_map(fn (User $student) => $student->fresh()->password, $students));
+        $this->select($source->owner, $source->academicYear);
         $this->postJson(route('groups.duplicate', $source), [...$payload, 'student_ids' => []])->assertUnprocessable()->assertJsonValidationErrors('name');
         $this->assertDatabaseCount('classrooms', 2);
     }
